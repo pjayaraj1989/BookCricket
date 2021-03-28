@@ -1,0 +1,147 @@
+{
+  "Teams": {
+    "KingsXI-Punjab": {
+      "players": [
+        {"name": "K.L. Rahul","batting": 9,"opener1": 1,"captain":1, "keeper":1},
+        {"name": "Mayank Agarwal","batting": 7,"opener2":  1},
+        {"name": "Chris Gayle","batting": 8,"bowling": 4, "spinner": 1},
+        {"name": "Nicholas Pooran","batting": 8},
+        {"name": "Glenn Maxwell","batting": 7,"bowling": 6, "spinner":1},
+        {"name": "Deepak Hooda","batting": 6,"bowling": 5, "spinner":1},
+        {"name": "Chris Jordan","batting": 5,"bowling": 8,"pacer": 1},
+        {"name": "Murugan Ashwin","batting": 3,"bowling": 7,"spinner": 1},
+        {"name": "Ravi Bishnoi","batting": 3,"bowling": 8, "spinner":1},
+        {"name": "Mohammad Shami", "batting": 4,"bowling": 8, "pacer":1, "openingbowler": 1},
+        {"name": "Arshdeep Singh","batting": 3,"bowling": 7, "pacer":1}
+      ],
+      "key": "KP",
+      "color": "lmagenta"
+    },
+
+	"MumbaiIndians": {
+      "players": [
+        {"name": "Rohit Sharma","batting": 9, "opener1":  1, "captain":1},
+        {"name": "Quinton deKock","batting": 8, "opener2": 1, "keeper":1 },
+        {"name": "Ishan Kishan","batting": 7},
+        {"name": "Suryakumar Yadav","batting": 8},
+        {"name": "Kieron Pollard","batting": 8,"bowling": 6},
+        {"name": "Hardik Pandya","batting": 7, "bowling":7, "pacer":1},
+        {"name": "Krunal Pandya","batting": 6,"bowling": 7, "spinner":1},
+        {"name": "Rahul Chahar","batting": 5,"bowling": 7,"spinner": 1},
+        {"name": "James Pattinson","batting": 4,"bowling": 7, "pacer":1},
+        {"name": "Jasprit Bumrah", "batting": 3,"bowling": 10, "pacer":1},
+        {"name": "Trent Boult","batting": 3,"bowling": 9, "openingbowler": 1, "pacer":1}
+      ],
+      "key": "MI",
+      "color": "lblue"
+    },
+
+	"ChennaiSuperKings": {
+      "players": [
+        {"name": "Rituraj Gaikwad","batting": 7, "opener1": 1},
+        {"name": "Faf duPlessis","batting": 8,"opener2": 1},
+        {"name": "Ambati Rayudu","batting": 8},
+        {"name": "M.S. Dhoni","batting": 8,"keeper": 1, "captain":1},
+        {"name": "Narayan Jagadeeshan","batting": 7},
+        {"name": "Sam Curran","batting": 7,"bowling": 7, "pacer":1},
+        {"name": "Ravindra  Jadeja","batting": 7, "bowling":8,"spinner":1},
+        {"name": "Mitchell Santner","batting": 5, "bowling":8,"spinner":1},
+        {"name": "Deepak Chahar","batting": 5,"bowling": 8, "openingbowler":1, "pacer":1},
+        {"name": "Piyush Chawla","batting": 5,"bowling": 7, "spinner":1},
+        {"name": "Josh Hazlewood", "batting": 4,"bowling": 8, "pacer":1}
+      ],
+      "key": "CSK",
+      "color": "lyellow"
+    },
+
+	"SunRisersHyderabad": {
+      "players": [
+        {"name": "David Warner","batting": 9 ,"opener1": 1, "captain":1},
+        {"name": "Johny Bairstow","batting": 8 , "opener2": 1, "keeper":1},
+        {"name": "Manish Pandey","batting": 8},
+        {"name": "Vijay Shankar","batting": 7,"bowling":7,"pacer":1},
+        {"name": "Priyam Garg","batting": 7},
+        {"name": "Abdul Samad","batting": 6,"bowling": 6, "spinner":1},
+        {"name": "Jason Holder","batting": 7,"bowling": 8, "pacer":1},
+        {"name": "Rashid Khan","batting": 5,"bowling": 10, "spinner":1},
+        {"name": "Bhuvneshwar Kumar", "batting": 5,"bowling": 9, "pacer":1, "openingbowler":1},
+        {"name": "Khaleel Ahmed","batting": 3,"bowling": 7, "pacer":1},
+        {"name": "T Natarajan","batting": 3,"bowling": 7, "pacer":1}
+      ],
+      "key": "SRH",
+      "color": "lred"
+    },
+
+	"RoyalChallengersBangalore": {
+      "players": [
+        {"name": "Devdutt Padikkal","batting": 8, "opener1": 1},
+        {"name": "Aaron Finch","batting": 8, "bowling":4,"spinner":1,"opener1": 2},
+        {"name": "Virat Kohli","batting": 9,"captain":1},
+        {"name": "A.B deVilliers","batting": 9, "keeper":1},
+        {"name": "Shivam Dube","batting": 7, "bowling":6},
+        {"name": "Washington Sundar","batting": 6,"bowling": 8, "spinner":1},
+        {"name": "Chris Morris","batting": 6,"bowling": 8, "pacer":1, "openingbowler":1},
+        {"name": "Isuru Udana","batting": 5,"bowling": 8, "pacer":1},
+        {"name": "Navdeep Saini","batting": 4,"bowling": 8, "pacer":1},
+        {"name": "Yuzvendra Chahal","batting": 4,"bowling": 9,"spinner":1},
+        {"name": "Mohammad Siraj", "batting": 2,"bowling": 7, "pacer":1}
+      ],
+      "key": "RCB",
+      "color": "red"
+    },
+
+	"RajasthanRoyals": {
+      "players": [
+        {"name": "Robin Utthappa","batting": 7,"opener1": 1},
+        {"name": "Ben Stokes","batting": 8,"bowling": 8, "pacer":1},
+        {"name": "Steve Smith","batting": 8, "captain":1},
+        {"name": "Sanju Samson","batting": 8, "keeper":1},
+        {"name": "Jos Buttler","batting": 9},
+        {"name": "Rahul Tewatia","batting": 7,"bowling": 7,"spinner":1},
+        {"name": "Riyan Parag","batting": 7},
+        {"name": "Jofra Archer","batting": 6,"bowling": 9, "openingbowler":1, "pacer":1},
+        {"name": "Shreyas Gopal","batting": 4,"bowling": 8, "spinner":1},
+        {"name": "Ankit Rajpoot","batting": 3,"bowling": 7, "pacer":1},
+        {"name": "Kartik Tyagi", "batting": 3,"bowling": 7, "pacer":1}
+      ],
+      "key": "RR",
+      "color": "lblue"},
+
+	"KolkataKnightRiders": {
+      "players": [
+        {"name": "Shubman Gill","batting": 8,"opener1": 1},
+        {"name": "Nitish Rana","batting": 8,"opener2": 1,"bowling": 3,"spinner":1},
+        {"name": "Rahul Tripathi","batting": 7},
+        {"name": "Sunil Narine","batting": 7, "bowling":9,"spinner":1},
+        {"name": "Eoin Morgan","batting": 8, "captain":1},
+        {"name": "Dinesh Karthik","batting": 8, "keeper":1},
+        {"name": "Andre Russel","batting": 8,"bowling": 7,"pacer":1},
+        {"name": "Pat Cummins","batting": 6,"bowling": 9,"openingbowler":1, "pacer":1},
+        {"name": "Kamlesh Nagarkoti", "batting": 4,"bowling": 7, "pacer":1},
+        {"name": "Varun Chakravathy","batting": 3,"bowling": 8, "spinner":1},
+        {"name": "Prasidh Krishna","batting": 3,"bowling": 7, "pacer":1}
+      ],
+      "key": "KKR",
+      "color": "grey"
+    },
+
+    "DelhiCapitals": {
+      "players": [
+        {"name": "Ajinkya Rahane", "batting": 8, "opener1":1},
+        {"name": "Shikhar Dhawan","batting": 8, "opener2":1},
+        {"name": "Shreyas Iyer", "batting": 8, "captain":1},
+        {"name": "Rishabh Pant","batting": 8,"keeper": 1},
+        {"name": "Marcus Stoinis","batting": 8,"bowling": 7},
+        {"name": "Shimron Hetmeyer", "batting": 7},
+        {"name": "Axar Patel","batting": 6, "bowling": 7,"spinner":1},
+        {"name": "Ravichandran Ashwin", "batting": 6,"bowling": 8,"spinner": 1},
+        {"name": "Kagiso Rabada","batting": 5,"bowling": 9,"openingbowler": 1, "pacer":1},
+        {"name": "Andrich Nortje","batting": 4, "bowling": 8, "pacer":1},
+        {"name": "Tushar Deshpande", "batting": 3,"bowling": 7, "pacer":1}
+      ],
+      "key": "DC",
+      "color": "blue"
+    }
+  }
+}
+

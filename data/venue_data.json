@@ -1,0 +1,91 @@
+{
+  "run_prob_t20":[0.05, 0.23, 0.33, 0.20, 0.01, 0.11, 0.03, 0.04],
+
+  "Venues": {
+    "England": {
+      "places": [
+        {"name": "Lords, London","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "Trentbridge, Nottingham","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "The Headingley Oval, Leeds","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "The Edgbaston, Birmingham","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "The Old Trafford, Manchester","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "The Sofia Gardens, Cardiff","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "The County Ground, Taunton","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]}
+      ],
+      "key": "ENG"
+    },
+    "India": {
+      "places": [
+        {"name": "The Wankhede, Mumbai","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "The Chinnaswamy Stadium, Bengaluru","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "The Eden Gardens, Kolkata","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "M.A Chidambaram Stadium, Chennai","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "P.C.A Stadium, Mohali","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "M.C.A Stadium, Pune","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "HPCA Stadium, Dharamshala","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]}
+      ],
+      "key": "IND"
+    },
+	"SouthAfrica": {
+      "places": [
+        {"name": "The Newlands, Cape Town","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "The Supersport Park, Centurion","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "Kingsmead, Durban","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "The Wanderers, Johannesburg","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "The Buffalo Park, East London","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "St George’s Park, Port Elizabeth","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "Boland Bank Park, Paarl","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]}
+      ],
+      "key": "SA"
+    },
+	"NewZealand": {
+      "places": [
+        {"name": "The EdenPark, Auckland","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "Victoria Park, Auckland","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "Lancaster Park, Christchurch","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "McLean Park, Napier","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "The University Oval, Dunedin","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "The Westpac Stadium, Wellington","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]}
+      ],
+      "key": "NZ"
+    },
+	"WestIndies": {
+      "places": [
+        {"name": "Kensington Oval, Bridgetown, Barbados","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "Queens Park Oval, Port of Spain, Trinidad&Tobago","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "Bourda, George Town, Guyana","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "Sabina Park, Kingston, Jamaica","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "ARG, St Johnns, Antigua","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "NCS St Georges, Grenada","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]}
+      ],
+      "key": "WI"
+    },
+	"Other": {
+      "places": [
+        {"name": "Galle International Stadium, Galle","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "R.Premadasa Stadium, Colombo","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "Sher-e-Bangla National Cricket Stadium, Dhaka","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "Gaddafi Stadium, Lahore","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "National Stadium, Karachi","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "The Dubai International Cricket Stadium, Dubai","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "The Sharjah Cricket Association Stadium, Sharjah","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "Toronto International Cricket Stadium, Toronto","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "Harare Sports Club, Harare","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "Queens Sports Club, Bulawayo","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]}
+      ],
+      "key": "Other"
+    },
+	"Australia": {
+      "places": [
+        {"name": "The MCG, Melbourne","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "The Adelaide Oval","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "The WACA ground, Perth","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "The GABBA, Brisbane","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "The S.C.G, Sydney","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		{"name": "The HCG, Hobart","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]}
+      ],
+      "key": "AUS"
+    }    
+  }
+}
+
