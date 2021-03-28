@@ -34,18 +34,18 @@ def ShowHighlights(match):
     batting_team.nrr = crr
 
     # default msg
-    msg = '{0} {1} / {2} ({3} Overs)'.format(batting_team.name,
+    msg = '%s %s / %s (%s Overs)' % (batting_team.name,
                                              str(batting_team.total_score),
                                              str(batting_team.wickets_fell),
                                              str(BallsToOvers(batting_team.total_balls)))
     # if overs done, don't print Run rate
     if batting_team.total_balls <= batting_team.total_overs * 6:
-        msg += ', Current RR: {0}'.format(str(crr))
+        msg += ', Current RR: %s' % (str(crr))
 
     if batting_team.batting_second:
         if batting_team.total_balls <= batting_team.total_overs * 6 or batting_team.total_score <= batting_team.target:
             reqd_rate = GetRequiredRate(batting_team)
-            msg += ", Reqd. Rate: {0}".format(str(reqd_rate))
+            msg += ", Reqd. Rate: %s" % (str(reqd_rate))
             if reqd_rate >= crr:
                 PrintInColor(Randomize(commentary.commentary_situation_reqd_rate_high) % batting_team.name,
                              Style.BRIGHT)
@@ -74,24 +74,24 @@ def DisplayScore(match, team):
     for p in team.team_array:
         name = GetShortName(p.name)
         if p.attr.iscaptain:    name = name + '(c)'
-        if p.attr.iskeeper: name = name + '(wk)'
+        if p.attr.iskeeper:     name = name + '(wk)'
         if p.status is True:  # * if not out
             if not p.onfield:
                 data_to_print.append([name, 'DNB', ''])
             else:
-                data_to_print.append([name, "not out", "{0}* ({1})".format(str(p.runs), str(p.balls))])
+                data_to_print.append([name, "not out", "%s* (%s)" % (str(p.runs), str(p.balls))])
         else:
-            data_to_print.append([name, p.dismissal, "{0} ({1})".format(str(p.runs), str(p.balls))])
+            data_to_print.append([name, p.dismissal, "%s (%s)" % (str(p.runs), str(p.balls))])
 
     PrintListFormatted(data_to_print, 0.01, logger)
 
-    msg = "Extras: " + str(team.extras)
+    msg = "Extras: %s" % str(team.extras)
     print(msg)
     logger.info(msg)
     print(' ')
     logger.info(' ')
 
-    msg = '{0} {1}/{2} from ({3} overs)'.format(team.name.upper(),
+    msg = '%s %s/%s from (%s overs)' % (team.name.upper(),
                                                 str(team.total_score),
                                                 str(team.wickets_fell),
                                                 str(BallsToOvers(team.total_balls)))
@@ -100,7 +100,7 @@ def DisplayScore(match, team):
 
     # show RR
     crr = GetCurrentRate(team)
-    msg = "RunRate: {0}".format(str(crr))
+    msg = "RunRate: %s" % (str(crr))
     print(msg)
     logger.info(msg)
     print(' ')
@@ -113,10 +113,10 @@ def DisplayScore(match, team):
         # get fow_array
         fow_array = []
         for f in team.fow:
-            fow_array.append('{0}/{1} {2}({3})'.format(str(f.runs),
-                                                       str(f.wkt),
-                                                       GetShortName(f.player_dismissed.name),
-                                                       str(BallsToOvers(f.total_balls))))
+            fow_array.append('%s/%s %s(%s)' % (str(f.runs),
+                                                str(f.wkt),
+                                                GetShortName(f.player_dismissed.name),
+                                                str(BallsToOvers(f.total_balls))))
         fow_str = ', '.join(fow_array)
         PrintInColor(fow_str, team.color)
         logger.info(fow_str)
@@ -126,7 +126,7 @@ def DisplayScore(match, team):
     PrintInColor(msg, Style.BRIGHT)
     logger.info(msg)
     for p in team.partnerships:
-        msg = '{0} - {1} :\t{2}'.format(GetShortName(p.batsman_onstrike.name),
+        msg = '%s - %s :\t%s' % (GetShortName(p.batsman_onstrike.name),
                                         GetShortName(p.batsman_dismissed.name),
                                         str(p.runs))
         print(msg)
@@ -146,7 +146,7 @@ def MatchSummary(match):
     PrintInColor(msg, Style.BRIGHT)
     logger.info(msg)
 
-    msg = '{0} vs {1}, at {2}'.format(result.team1.name, result.team2.name, match.venue.name)
+    msg = '%s vs %s, at %s' %(result.team1.name, result.team2.name, match.venue.name)
     PrintInColor(msg, Style.BRIGHT)
     logger.info(msg)
 
@@ -161,7 +161,7 @@ def MatchSummary(match):
     print(ch * 45)
     logger.info(ch * 45)
 
-    msg = '{0} {1}/{2} ({3})'.format(result.team1.key,
+    msg = '%s %s/%s (%s)' % (result.team1.key,
                                      str(result.team1.total_score),
                                      str(result.team1.wickets_fell),
                                      str(BallsToOvers(result.team1.total_balls)))
@@ -185,9 +185,9 @@ def MatchSummary(match):
             runs = str(most_runs[x].runs)
         # print
         data_to_print.append([GetShortName(most_runs[x].name),
-                              '{0}({1})'.format(runs, most_runs[x].balls),
+                              '%s(%s)' % (runs, most_runs[x].balls),
                               GetShortName(best_bowlers[x].name),
-                              '{0}/{1}'.format(best_bowlers[x].runs_given, best_bowlers[x].wkts)])
+                              '%s/%s' % (best_bowlers[x].runs_given, best_bowlers[x].wkts)])
 
     # print
     PrintListFormatted(data_to_print, 0.01, logger)
@@ -196,10 +196,10 @@ def MatchSummary(match):
     print(ch * 45)
     logger.info(ch * 45)
 
-    msg = '{0} {1}/{2} ({3})'.format(result.team2.key,
-                                     str(result.team2.total_score),
-                                     str(result.team2.wickets_fell),
-                                     str(BallsToOvers(result.team2.total_balls)))
+    msg = '%s %s/%s (%s)' % (result.team2.key,
+                                str(result.team2.total_score),
+                                str(result.team2.wickets_fell),
+                                str(BallsToOvers(result.team2.total_balls)))
     PrintInColor(msg, Style.BRIGHT)
     logger.info(msg)
 
@@ -215,9 +215,9 @@ def MatchSummary(match):
 
         # print
         data_to_print.append([GetShortName(most_runs[x].name),
-                              '{0}({1})'.format(runs, most_runs[x].balls),
+                              '%s(%s)' % (runs, most_runs[x].balls),
                               GetShortName(best_bowlers[x].name),
-                              '{0}/{1}'.format(best_bowlers[x].runs_given, best_bowlers[x].wkts)])
+                              '%s/%s' % (best_bowlers[x].runs_given, best_bowlers[x].wkts)])
 
     PrintListFormatted(data_to_print, 0.01, logger)
     print('-' * 43)

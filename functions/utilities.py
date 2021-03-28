@@ -14,11 +14,11 @@ def ChooseFromOptions(options, msg, tries):
     for x in range(len(options)):
         options_dict[str(x)] = options[x]
     msg = ''
-    for k, v in options_dict.items():    msg += '{0}.{1} '.format(k, v)
+    for k, v in options_dict.items():    msg += '%s.%s ' % (k, v)
     keys = list(options_dict.keys())
     n = tries
     while n > 0:
-        opt = input("Select from : {0}".format(msg))
+        opt = input("Select from : %s" % (msg))
         if opt not in keys:
             n -= 1
             if n == 0:
@@ -30,7 +30,7 @@ def ChooseFromOptions(options, msg, tries):
             for k, v in options_dict.items():
                 if opt == k:
                     option_selected = v
-                    print("Selected : " + v)
+                    print("Selected : %s" % v)
                     break
         break
     return option_selected
@@ -51,7 +51,7 @@ def CheckForConsecutiveElements(arr, element, N):
             temp = []
             for x in range(N):    temp.append(arr[i - x])
             # check for equal elements
-            if len(temp) > 0 and all(elem == element for elem in temp) == True:
+            if len(temp) > 0 and all(elem == element for elem in temp):
                 result = True
                 break
     return result
@@ -103,7 +103,7 @@ def Error_Exit(msg):
         print(msg)
     else:
         colorama.init()
-        PrintInColor("Error: " + msg, Fore.RED)
+        PrintInColor("Error: %s" % msg, Fore.RED)
     input('Press enter to continue..')
     sys.exit(0)
 

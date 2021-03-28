@@ -27,11 +27,11 @@ def CalculateResult(match):
     elif team1.total_score > team2.total_score:
         result.winner = team1
         loser = team2
-        result.result_str = "{0} won".format(team1.name)
+        result.result_str = "%s won" %(team1.name)
     elif team2.total_score > team1.total_score:
         result.winner = team2
         loser = team1
-        result.result_str = "{0} won".format(team2.name)
+        result.result_str = "%s won" % (team2.name)
     else:
         None
     if result.winner is not None:
@@ -40,13 +40,12 @@ def CalculateResult(match):
         if result.winner.batting_second:
             win_margin = 10 - result.winner.wickets_fell
             if win_margin != 0:
-                result.result_str += " by {0} wicket(s) with {1} ball(s) left".format(str(win_margin),
-                                                                                      str(
-                                                                                          match.overs * 6 - result.winner.total_balls))
+                result.result_str += " by %s wicket(s) with %s ball(s) left" % (str(win_margin),
+                                                                                str(match.overs * 6 - result.winner.total_balls))
         elif not result.winner.batting_second:
             win_margin = abs(result.winner.total_score - loser.total_score)
             if win_margin != 0:
-                result.result_str += " by {0} run(s)".format(str(win_margin))
+                result.result_str += " by %s run(s)" % (str(win_margin))
     match.result = result
 
 
@@ -133,6 +132,6 @@ def FindPlayerOfTheMatch(match):
     if len(common_players) != 0:    best_player = common_players[0]
 
     match.result.mom = best_player
-    msg = "Player of the match: {0}".format(best_player.name)
+    msg = "Player of the match: %s" % (best_player.name)
     PrintInColor(msg, Style.BRIGHT)
     match.logger.info(msg)

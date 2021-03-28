@@ -80,7 +80,7 @@ def GetMatchInfo(list_of_teams, venue):
             (int(overs) > 50) or \
             (int(overs) <= 0):
         overs = 5
-        print("Invalid entry, default {0} overs selected".format(overs))
+        print("Invalid entry, default %s overs selected" % (overs))
 
     overs = int(overs)
     # max overs allotted for each bowler
@@ -90,7 +90,7 @@ def GetMatchInfo(list_of_teams, venue):
     t1 = ChooseFromOptions(teams, "Select your team", 5)
     teams.remove(t1)
     t2 = ChooseFromOptions(teams, 'Select opponent', 5)
-    print('Selected {0} and {1}'.format(t1, t2))
+    print('Selected %s and %s' % (t1, t2))
     # find teams from user input
     for t in list_of_teams:
         if t.key == t1:    team1 = t
@@ -109,16 +109,19 @@ def GetMatchInfo(list_of_teams, venue):
         temp = 'Exhibition'
     else:
         temp = str(overs) + ' over'
-    PrintInColor('{4}, {0}, for the exciting {1} match between {2} and {3}'.format(venue.name,
-                                                                                   temp,
-                                                                                   team1.name,
-                                                                                   team2.name,
-                                                                                   intro), Fore.LIGHTCYAN_EX)
-    print('In the commentary box, myself {0} with {1}, and {2}'.format(commentator[0],
-                                                                       commentator[1],
-                                                                       commentator[2],
-                                                                       ))
-    print('Umpires: {0} and {1}'.format(umpire[0], umpire[1]))
+
+    msg = '%s, %s, for the exciting %s match between %s and %s' %(intro,
+                                                                  venue.name,
+                                                                  temp,
+                                                                  team1.name,
+                                                                  team2.name,)
+    PrintInColor(msg, Fore.LIGHTCYAN_EX)
+
+    print('In the commentary box, myself %s with %s, and %s' % (commentator[0],
+                                                                commentator[1],
+                                                                commentator[2],
+                                                                ))
+    print('Umpires: %s and %s' % (umpire[0], umpire[1]))
     input('press enter to continue..')
 
     # assign match properties
@@ -145,31 +148,31 @@ def Toss(match):
     print('Toss..')
     if match.team1.captain is None or match.team2.captain is None:
         Error_Exit('No captains assigned!')
-    print('We have the captains {0}({1}) and {2}({3}) in the middle'.format(match.team1.captain.name,
-                                                                            match.team1.name,
-                                                                            match.team2.captain.name,
-                                                                            match.team2.name))
+    print('We have the captains %s(%s) and %s(%s) in the middle' % (match.team1.captain.name,
+                                                                    match.team1.name,
+                                                                    match.team2.captain.name,
+                                                                    match.team2.name))
     # assign captain attribute to the players
     match.team1.captain.attr.iscaptain = True
     match.team2.captain.attr.iscaptain = True
 
-    print('{0} is gonna flip the coin'.format(match.team2.captain.name))
+    print('%s is gonna flip the coin' % (match.team2.captain.name))
     opts = ['1', '2']
-    call = input('{0}, Heads or tails? 1.Heads 2.Tails\n'.format(match.team1.captain.name))
+    call = input('%s, your call, Heads or tails? 1.Heads 2.Tails\n' % (match.team1.captain.name))
     if call == '' or call not in opts:
         call = Randomize(opts)
-        print("Invalid choice!..autoselected")
+        print("Invalid choice!..auto-selected")
     call = int(call)
     coin = Randomize([1, 2])
     coin = int(coin)
     if coin == call:
-        msg = '{0} won the toss, elected to bat first'.format(match.team1.captain.name)
+        msg = '%s won the toss, elected to bat first' % (match.team1.captain.name)
         PrintInColor(msg, match.team1.color)
         logger.info(msg)
         match.team1.batting_second = False
         match.team2.batting_second = True
     else:
-        msg = '{0} won the toss, elected to bat first'.format(match.team2.captain.name)
+        msg = '%s won the toss, elected to bat first' % (match.team2.captain.name)
         PrintInColor(msg, match.team2.color)
         logger.info(msg)
         match.team2.batting_second = False
@@ -189,14 +192,14 @@ def ValidateMatchTeams(match):
     for t in [match.team1, match.team2]:
         # check if 11 players
         if len(t.team_array) != 11:
-            Error_Exit('Only {0} members in team {1}'.format(len(t.team_array), t.name))
+            Error_Exit('Only %s members in team %s' % (len(t.team_array), t.name))
         # check if they have keeper
         if [plr for plr in t.team_array if plr.attr.iskeeper == True] is None or []:
-            Error_Exit('No keeper found in team {0}'.format(t.name))
+            Error_Exit('No keeper found in team %s' % (t.name))
         # get bowlers who has bowling attribute
         bowlers = [plr for plr in t.team_array if plr.attr.bowling > 0]
         if len(bowlers) < 6:
-            Error_Exit('Team {0} should have 6 bowlers in the playing XI'.format(t.name))
+            Error_Exit('Team %s should have 6 bowlers in the playing XI' % (t.name))
         else:
             t.bowlers = bowlers
             # assign max overs for bowlers
@@ -205,7 +208,7 @@ def ValidateMatchTeams(match):
     # ensure no common members in the teams
     common_players = list(set(match.team1.team_array).intersection(match.team2.team_array))
     if common_players:
-        Error_Exit("Common players in teams found! : {0}".format(','.join([p.name for p in common_players])))
+        Error_Exit("Common players in teams found! : %s" % (','.join([p.name for p in common_players])))
 
     # make first batsman on strike
     for t in [match.team1, match.team2]:
