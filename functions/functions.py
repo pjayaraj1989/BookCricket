@@ -566,6 +566,13 @@ def PlayOver(match, over, pair):
             prob = match.venue.run_prob
         else:
             prob = match.venue.run_prob_t20
+
+        #in the death, increase prob of boundaries and wickets
+        if batting_team.batting_second:
+            #if towin <=20 or (over == overs-1):
+            if (over == overs-1):
+                prob = [0.2, 0.2, 0, 0, 0, 0.2, 0.2, 0.2]
+
         run = choice([-1, 0, 1, 2, 3, 4, 5, 6], 1, p=prob, replace=False)[0]
 
         # check if maiden or not
