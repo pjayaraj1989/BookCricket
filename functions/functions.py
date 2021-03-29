@@ -246,8 +246,31 @@ def UpdateDismissal(match, bowler, pair, dismissal):
                               runs=partnership_runs)
     # update batting team partnership details
     batting_team.partnerships.append(partnership)
+    # if partnership is great
+    if partnership.runs > 50:
+        PrintInColor(Randomize(commentary.commentary_partnership_milestone) % (GetSurname(pair[0].name),
+                                                                               GetSurname(pair[1].name)),
+                     Style.BRIGHT)
+
+    PrintCommentaryDismissal(match, dismissal, pair, bowler)
+    # show score
+    ShowHighlights(match)
+    #get next batsman
+    GetNextBatsman(match, pair)
+    input('press enter to continue')
+
+    return
+
+
+#print commentary for dismissal
+def PrintCommentaryDismissal(match, dismissal, pair, bowler):
     # commentary
     comment = ' '
+
+    batting_team, bowling_team = match.batting_team, match.bowling_team
+    player_dismissed = next((x for x in pair if not x.status), None)
+    player_onstrike = next((x for x in pair if x.status), None)
+    keeper = next((x for x in bowling_team.team_array if x.attr.iskeeper), None)
 
     if 'runout' in dismissal:
         comment = Randomize(commentary.commentary_runout) % (GetSurname(player_dismissed.name),
@@ -294,11 +317,6 @@ def UpdateDismissal(match, bowler, pair, dismissal):
     # out first ball
     if player_dismissed.balls == 1:
         PrintInColor(Randomize(commentary.commentary_out_first_ball) % GetSurname(player_dismissed.name), Style.BRIGHT)
-    # if partnership is great
-    if partnership.runs > 50:
-        PrintInColor(Randomize(commentary.commentary_partnership_milestone) % (GetSurname(pair[0].name),
-                                                                               GetSurname(pair[1].name)),
-                     Style.BRIGHT)
 
     # calculate the situation
     if batting_team.batting_second and (7 <= batting_team.wickets_fell < 10):
@@ -307,13 +325,6 @@ def UpdateDismissal(match, bowler, pair, dismissal):
     # last man
     if batting_team.wickets_fell == 9:
         PrintInColor(Randomize(commentary.commentary_lastman), batting_team.color)
-
-    # show score
-    ShowHighlights(match)
-    #get next batsman
-    GetNextBatsman(match, pair)
-    input('press enter to continue')
-
     return
 
 
