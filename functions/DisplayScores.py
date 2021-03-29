@@ -73,10 +73,11 @@ def DisplayScore(match, team):
     data_to_print = []
     for p in team.team_array:
         name = GetShortName(p.name)
+        name = name.upper()
         if p.attr.iscaptain:
-            name = name + '(c)'
+            name += '(c)'
         if p.attr.iskeeper:
-            name = name + '(wk)'
+            name += '(wk)'
         if p.status is True:  # * if not out
             if not p.onfield:
                 data_to_print.append([name, 'DNB', ''])
@@ -257,7 +258,7 @@ def DisplayBowlingStats(match):
             eco = float(bowler.runs_given / overs)
             eco = round(eco, 2)
             bowler.eco = eco
-            data_to_print.append([GetShortName(bowler.name),
+            data_to_print.append([GetShortName(bowler.name).upper(),
                                   str(overs),
                                   str(bowler.maidens),
                                   str(bowler.runs_given),
@@ -279,6 +280,9 @@ def DisplayPlayingXI(match):
     for x in range(11):
         name1 = t1.team_array[x].name
         name2 = t2.team_array[x].name
+
+        name1 = name1.upper()
+        name2 = name2.upper()
 
         if t1.team_array[x] == t1.captain:
             name1 += '(c)'
