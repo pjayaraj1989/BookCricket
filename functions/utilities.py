@@ -14,11 +14,12 @@ def ChooseFromOptions(options, msg, tries):
     for x in range(len(options)):
         options_dict[str(x)] = options[x]
     msg = ''
-    for k, v in options_dict.items():    msg += '%s.%s ' % (k, v)
+    for k, v in options_dict.items():
+        msg += '%s.%s ' % (k, v)
     keys = list(options_dict.keys())
     n = tries
     while n > 0:
-        opt = input("Select from : %s" % (msg))
+        opt = input("Select from : %s" % msg)
         if opt not in keys:
             n -= 1
             if n == 0:
@@ -74,7 +75,6 @@ def GetShortName(name):
 
 # get second name
 def GetSurname(name):
-    surname = name
     return name.split(' ')[-1]
 
 

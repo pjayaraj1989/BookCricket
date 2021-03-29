@@ -178,7 +178,7 @@ class Partnership():
 #match details
 class Team():
     def __init__(self, **kwargs):
-        total_overs=drs_chances=team_array=total_score=innings_over=won=batting_second=target=name=wickets_fell=partnerships=total_balls=opening_pair=extras=key=last_bowler=bowlers=fow=captain=nrr=color=None
+        total_overs=drs_chances=team_array=total_score=innings_over=won=batting_second=target=name=wickets_fell=partnerships=total_balls=opening_pair=extras=key=last_bowler=bowlers=fow=captain=keeper=nrr=color=None
         #initialize default values
         self.total_overs=0
         self.drs_chances=2
@@ -200,6 +200,7 @@ class Team():
         #array of partnerships objs
         self.partnerships=[]
         self.captain=None
+        self.keeper=None
         self.nrr=0.0
         self.color=None
         if kwargs is not None:
@@ -221,6 +222,7 @@ class Team():
                 if k=='bowlers':    self.bowlers=kwargs[k]
                 if k=='fow':    self.fow=kwargs[k]
                 if k=='captain':    self.captain=kwargs[k]
+                if k=='keeper': self.keeper=kwargs[k]
                 if k=='nrr':    self.nrr=kwargs[k]
                 if k=='color':  self.color=kwargs[k]
                 if k=='partnerships':   self.partnerships=kwargs[k]

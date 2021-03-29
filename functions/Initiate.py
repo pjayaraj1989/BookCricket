@@ -69,7 +69,6 @@ def GetMatchInfo(list_of_teams, venue):
     match = None
     intro = Randomize(commentary.intro_dialogues)
     commentator = random.sample(set(resources.commentators), 3)
-    # umpire = Randomize(resources.umpires)
     umpire = random.sample(set(resources.umpires), 2)
 
     teams = [l.key for l in list_of_teams]
@@ -146,19 +145,14 @@ def GetMatchInfo(list_of_teams, venue):
 def Toss(match):
     logger = match.logger
     print('Toss..')
-    if match.team1.captain is None or match.team2.captain is None:
-        Error_Exit('No captains assigned!')
     print('We have the captains %s(%s) and %s(%s) in the middle' % (match.team1.captain.name,
                                                                     match.team1.name,
                                                                     match.team2.captain.name,
                                                                     match.team2.name))
-    # assign captain attribute to the players
-    match.team1.captain.attr.iscaptain = True
-    match.team2.captain.attr.iscaptain = True
 
-    print('%s is gonna flip the coin' % (match.team2.captain.name))
+    print('%s is gonna flip the coin' % match.team2.captain.name)
     opts = ['1', '2']
-    call = input('%s, your call, Heads or tails? 1.Heads 2.Tails\n' % (match.team1.captain.name))
+    call = input('%s, your call, Heads or tails? 1.Heads 2.Tails\n' % match.team1.captain.name)
     if call == '' or call not in opts:
         call = Randomize(opts)
         print("Invalid choice!..auto-selected")
@@ -166,13 +160,13 @@ def Toss(match):
     coin = Randomize([1, 2])
     coin = int(coin)
     if coin == call:
-        msg = '%s won the toss, elected to bat first' % (match.team1.captain.name)
+        msg = '%s won the toss, elected to bat first' % match.team1.captain.name
         PrintInColor(msg, match.team1.color)
         logger.info(msg)
         match.team1.batting_second = False
         match.team2.batting_second = True
     else:
-        msg = '%s won the toss, elected to bat first' % (match.team2.captain.name)
+        msg = '%s won the toss, elected to bat first' % match.team2.captain.name
         PrintInColor(msg, match.team2.color)
         logger.info(msg)
         match.team2.batting_second = False
@@ -189,22 +183,33 @@ def Toss(match):
 def ValidateMatchTeams(match):
     if match.team1 is None or match.team2 is None:
         Error_Exit('No teams found!')
+
     for t in [match.team1, match.team2]:
         # check if 11 players
         if len(t.team_array) != 11:
             Error_Exit('Only %s members in team %s' % (len(t.team_array), t.name))
+
         # check if they have keeper
-        if [plr for plr in t.team_array if plr.attr.iskeeper == True] is None or []:
-            Error_Exit('No keeper found in team %s' % (t.name))
+        t.keeper = next((x for x in t.team_array if x.attr.iskeeper), None)
+        # check if keeper exists
+        if t.keeper is None:
+            Error_Exit('No keeper found in team %s' % t.name)
+
+        # captain
+        t.captain = next((x for x in t.team_array if x.attr.iscaptain), None)
+        if t.captain is None:
+            Error_Exit('No captain found in team %s' % t.name)
+
         # get bowlers who has bowling attribute
         bowlers = [plr for plr in t.team_array if plr.attr.bowling > 0]
         if len(bowlers) < 6:
-            Error_Exit('Team %s should have 6 bowlers in the playing XI' % (t.name))
+            Error_Exit('Team %s should have 6 bowlers in the playing XI' % t.name)
         else:
             t.bowlers = bowlers
             # assign max overs for bowlers
             for bowler in t.bowlers:
                 bowler.max_overs = match.bowler_max_overs
+
     # ensure no common members in the teams
     common_players = list(set(match.team1.team_array).intersection(match.team2.team_array))
     if common_players:
@@ -220,7 +225,7 @@ def ValidateMatchTeams(match):
     # check if players have numbers, else assign randomly
     for t in [match.team1, match.team2]:
         for player in t.team_array:
-            if player.no == None:
+            if player.no is None:
                 player.no = random.choice(list(range(100)))
 
     PrintInColor('Validated teams', Style.BRIGHT)

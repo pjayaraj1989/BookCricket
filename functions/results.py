@@ -27,13 +27,14 @@ def CalculateResult(match):
     elif team1.total_score > team2.total_score:
         result.winner = team1
         loser = team2
-        result.result_str = "%s won" %(team1.name)
+        result.result_str = "%s won" %team1.name
     elif team2.total_score > team1.total_score:
         result.winner = team2
         loser = team1
-        result.result_str = "%s won" % (team2.name)
+        result.result_str = "%s won" % team2.name
     else:
-        None
+        result.result_str = "No result"
+
     if result.winner is not None:
         # if batting first, simply get diff between total runs
         # else get how many wkts remaining
@@ -100,9 +101,9 @@ def FindPlayerOfTheMatch(match):
                 best_batsman = best_batsmen[0]
             else:
                 # get who are not out
-                best_batsmen = [plr for plr in best_batsmen if plr.status == True]
+                best_batsmen = [plr for plr in best_batsmen if plr.status]
                 # if both are notout
-                if best_batsmen[0].status == best_batsmen[1].status == True:
+                if best_batsmen[0].status == best_batsmen[1].status:
                     # get random
                     best_batsman = random.choice([best_batsmen[0], best_batsmen[1]])
                 else:
@@ -132,6 +133,6 @@ def FindPlayerOfTheMatch(match):
     if len(common_players) != 0:    best_player = common_players[0]
 
     match.result.mom = best_player
-    msg = "Player of the match: %s" % (best_player.name)
+    msg = "Player of the match: %s" % best_player.name
     PrintInColor(msg, Style.BRIGHT)
     match.logger.info(msg)

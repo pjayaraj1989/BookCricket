@@ -35,9 +35,9 @@ def ShowHighlights(match):
 
     # default msg
     msg = '%s %s / %s (%s Overs)' % (batting_team.name,
-                                             str(batting_team.total_score),
-                                             str(batting_team.wickets_fell),
-                                             str(BallsToOvers(batting_team.total_balls)))
+                                     str(batting_team.total_score),
+                                     str(batting_team.wickets_fell),
+                                     str(BallsToOvers(batting_team.total_balls)))
     # if overs done, don't print Run rate
     if batting_team.total_balls <= batting_team.total_overs * 6:
         msg += ', Current RR: %s' % (str(crr))
@@ -92,9 +92,9 @@ def DisplayScore(match, team):
     logger.info(' ')
 
     msg = '%s %s/%s from (%s overs)' % (team.name.upper(),
-                                                str(team.total_score),
-                                                str(team.wickets_fell),
-                                                str(BallsToOvers(team.total_balls)))
+                                        str(team.total_score),
+                                        str(team.wickets_fell),
+                                        str(BallsToOvers(team.total_balls)))
     PrintInColor(msg, team.color)
     logger.info(msg)
 
@@ -114,9 +114,9 @@ def DisplayScore(match, team):
         fow_array = []
         for f in team.fow:
             fow_array.append('%s/%s %s(%s)' % (str(f.runs),
-                                                str(f.wkt),
-                                                GetShortName(f.player_dismissed.name),
-                                                str(BallsToOvers(f.total_balls))))
+                                               str(f.wkt),
+                                               GetShortName(f.player_dismissed.name),
+                                               str(BallsToOvers(f.total_balls))))
         fow_str = ', '.join(fow_array)
         PrintInColor(fow_str, team.color)
         logger.info(fow_str)
@@ -127,8 +127,8 @@ def DisplayScore(match, team):
     logger.info(msg)
     for p in team.partnerships:
         msg = '%s - %s :\t%s' % (GetShortName(p.batsman_onstrike.name),
-                                        GetShortName(p.batsman_dismissed.name),
-                                        str(p.runs))
+                                 GetShortName(p.batsman_dismissed.name),
+                                 str(p.runs))
         print(msg)
         logger.info(msg)
 
@@ -146,7 +146,7 @@ def MatchSummary(match):
     PrintInColor(msg, Style.BRIGHT)
     logger.info(msg)
 
-    msg = '%s vs %s, at %s' %(result.team1.name, result.team2.name, match.venue.name)
+    msg = '%s vs %s, at %s' % (result.team1.name, result.team2.name, match.venue.name)
     PrintInColor(msg, Style.BRIGHT)
     logger.info(msg)
 
@@ -162,9 +162,9 @@ def MatchSummary(match):
     logger.info(ch * 45)
 
     msg = '%s %s/%s (%s)' % (result.team1.key,
-                                     str(result.team1.total_score),
-                                     str(result.team1.wickets_fell),
-                                     str(BallsToOvers(result.team1.total_balls)))
+                             str(result.team1.total_score),
+                             str(result.team1.wickets_fell),
+                             str(BallsToOvers(result.team1.total_balls)))
     PrintInColor(msg, Style.BRIGHT)
     logger.info(msg)
 
@@ -197,9 +197,9 @@ def MatchSummary(match):
     logger.info(ch * 45)
 
     msg = '%s %s/%s (%s)' % (result.team2.key,
-                                str(result.team2.total_score),
-                                str(result.team2.wickets_fell),
-                                str(BallsToOvers(result.team2.total_balls)))
+                             str(result.team2.total_score),
+                             str(result.team2.wickets_fell),
+                             str(BallsToOvers(result.team2.total_balls)))
     PrintInColor(msg, Style.BRIGHT)
     logger.info(msg)
 
