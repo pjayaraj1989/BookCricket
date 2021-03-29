@@ -547,6 +547,29 @@ def UpdateExtras(match, bowler):
 
     return
 
+
+# generate run
+def GenerateRun(match, over):
+    ismaiden = True
+    prob = []
+    batting_team = match.batting_team
+    overs = match.overs
+    venue = match.venue
+
+    if overs == 50:
+        prob = venue.run_prob
+    else:
+        prob = venue.run_prob_t20
+
+    # in the death, increase prob of boundaries and wickets
+    if batting_team.batting_second:
+        if over == overs - 1:
+            prob = [0.2, 0.2, 0, 0, 0, 0.2, 0.2, 0.2]
+
+    run = choice([-1, 0, 1, 2, 3, 4, 5, 6], 1, p=prob, replace=False)[0]
+    return run
+
+
 # play an over
 def PlayOver(match, over, pair):
     overs = match.overs
@@ -569,10 +592,11 @@ def PlayOver(match, over, pair):
 
     GetBowlerComments(match, bowler)
 
-    ball = 1
     bowling_team.last_bowler = bowler
+
     ismaiden = True
     total_runs_in_over = 0
+    ball = 1
     while ball <= 6:
         if over == overs - 1 and ball == 6:
             if batting_team.batting_second:
@@ -608,36 +632,23 @@ def PlayOver(match, over, pair):
         else:
             input('press enter to continue..')
 
-        # generate run
-        prob = []
-        if match.overs == 50:
-            prob = match.venue.run_prob
-        else:
-            prob = match.venue.run_prob_t20
-
-        # in the death, increase prob of boundaries and wickets
-        if batting_team.batting_second:
-            if over == overs - 1:
-                prob = [0.2, 0.2, 0, 0, 0, 0.2, 0.2, 0.2]
-
-        run = choice([-1, 0, 1, 2, 3, 4, 5, 6], 1, p=prob, replace=False)[0]
-
+        # generate run, updates runs and maiden status
+        run = GenerateRun(match, over)
         # check if maiden or not
-        # if run > 0, change this flag
         if run not in [-1, 0]:
             ismaiden = False
-            if run == 5:
-                total_runs_in_over += 1
-            else:
-                total_runs_in_over += run
 
         # check if extra
         if run == 5:
             UpdateExtras(match, bowler)
+            total_runs_in_over += 1
+
         # if not wide
         else:
             Ball(match, run, pair, bowler)
             ball += 1
+            total_runs_in_over += run
+
             # check if 1st innings over
             if batting_team.batting_second is False and batting_team.total_balls == (match.overs * 6):
                 PrintInColor("End of innings", Fore.LIGHTCYAN_EX)
@@ -675,6 +686,7 @@ def PlayOver(match, over, pair):
                 match_status = False
                 input('press enter to continue...')
                 break
+
     # check if over is a maiden
     if ismaiden:
         bowler.maidens += 1
