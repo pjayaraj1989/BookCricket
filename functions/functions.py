@@ -570,6 +570,31 @@ def GenerateRun(match, over):
     return run
 
 
+# death over
+def DetectDeathOvers(match, over):
+    batting_team = match.batting_team
+    overs = match.overs
+    # towards the death overs, show a highlights
+    towin = abs(batting_team.target - batting_team.total_score)
+    # calculate if score is close
+    if batting_team.batting_second:
+        if towin <= 0:
+            # show batting team highlights
+            ShowHighlights(match)
+            PrintInColor("Match won!!", Fore.LIGHTGREEN_EX)
+            match.status = False
+        elif towin <= 20 or over == overs - 1:
+            ShowHighlights(match)
+            if towin == 1:
+                PrintInColor("Match tied!", Fore.LIGHTGREEN_EX)
+            else:
+                PrintInColor('To win: %s from %s' % (str(towin),
+                                                     str(overs * 6 - batting_team.total_balls)),
+                             Style.BRIGHT)
+        input('press enter to continue..')
+    return
+
+
 # play an over
 def PlayOver(match, over, pair):
     overs = match.overs
@@ -604,25 +629,9 @@ def PlayOver(match, over, pair):
             else:
                 PrintInColor(Randomize(commentary.commentary_last_ball_innings), Style.BRIGHT)
 
-        # towards the death overs, show a highlights
-        towin = abs(batting_team.target - batting_team.total_score)
-        # calculate if score is close
-        if batting_team.batting_second:
-            if towin <= 0:
-                # show batting team highlights
-                ShowHighlights(match)
-                PrintInColor("Match won!!", Fore.LIGHTGREEN_EX)
-                input('press enter to continue...')
-                break
-            elif towin <= 20 or over == overs - 1:
-                ShowHighlights(match)
-                if towin == 1:
-                    PrintInColor("Match tied!", Fore.LIGHTGREEN_EX)
-                else:
-                    PrintInColor('To win: %s from %s' % (str(towin),
-                                                         str(overs * 6 - batting_team.total_balls)),
-                                 Style.BRIGHT)
-                input('press enter to continue...')
+        DetectDeathOvers(match, over)
+        if match.status == False:
+            break
 
         print("Over: %s.%s" % (str(over), str(ball)))
         player_on_strike = next((x for x in pair if x.onstrike), None)
