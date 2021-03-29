@@ -1,6 +1,6 @@
 {
   "Teams": {
-    "India-Legends": {
+    "India": {
       "players": [
         {"name": "Virender Sehwag","batting": 8,"bowling": 4,"opener1":  1, "spinner":1},
         {"name": "Sachin Tendulkar", "batting": 8, "bowling": 6,"spinner":1, "opener2": 1},
@@ -18,7 +18,7 @@
       "color": "lcyan"
     },
 
-    "Australia-Legends": {
+    "Australia": {
       "players": [
         {"name": "Adam Gilchrist","batting": 8,"keeper": 1,"opener1":  1},
         {"name": "Matthew Hayden","batting": 8,"opener2": 1},
@@ -36,7 +36,7 @@
       "color": "lyellow"
     },
 
-	"SriLanka-Legends": {
+	"SriLanka": {
       "players": [
         {"name": "Marvan Atapattu","batting": 8,"opener1":  1},
         {"name": "Sanath Jayasuriya","batting": 8,"opener2": 1, "captain":1, "bowling":6,"spinner":1},
@@ -54,7 +54,7 @@
       "color": "lmagenta"
     },
 	
-	"NewZealand-Legends": {
+	"NewZealand": {
       "players": [
         {"name": "Stephen Fleming","batting": 8,"opener1":  1, "captain":1},
         {"name": "Craig McMillan","batting": 8,"opener2": 1,"bowling":6,"spinner":1},
@@ -72,7 +72,7 @@
       "color": "lblue"
     },
 	
-	"Pakistan-Legends": {
+	"Pakistan": {
       "players": [
         {"name": "Saeed Anwar","batting": 8, "opener1":  1},
         {"name": "Toufeeq Umer","batting": 8,"opener2": 1},
@@ -180,7 +180,7 @@
       "color": "grey"
     },
 	
-    "England-Legends": {
+    "England": {
       "players": [
         {"name": "Marcus Trescothick","batting": 8,"opener1":  1},
         {"name": "Nick Knight","batting": 8,"opener2": 1},

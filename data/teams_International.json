@@ -2,17 +2,17 @@
   "Teams": {
     "India": {
       "players": [
-        {"name": "Rohit Sharma","batting": 9,"opener1": 1 },
-        {"name": "Shikhar Dhawan","batting": 8,"bowling": 3,"opener2":  1},
-        {"name": "Virat Kohli","batting": 9,"bowling": 4, "spinner": 1, "captain": 1},
-        {"name": "Shreyas Iyer","batting": 8},
-        {"name": "K.L. Rahul","batting": 7,"keeper": 1},
-        {"name": "Hardik Pandya","batting": 7,"bowling": 7, "pacer":1},
-        {"name": "Ravindra Jadeja","batting": 7,"bowling": 8,"spinner": 1},
-        {"name": "Bhuvneshwar Kumar","batting": 5,"bowling": 8,"openingbowler": 1, "pacer":1},
-        {"name": "Kuldeep Yadav","batting": 4,"bowling": 8,"spinner": 1},
-        {"name": "Mohammad Shami", "batting": 4,"bowling": 7, "pacer":1},
-        {"name": "Jasprit Bumrah","batting": 3,"bowling": 9, "pacer":1}
+        {"name": "Rohit Sharma", "batting": 9, "opener1": 1 },
+        {"name": "Shikhar Dhawan", "batting": 8, "bowling": 3, "opener2":  1},
+        {"name": "Virat Kohli", "batting": 9, "bowling": 4, "captain": 1},
+        {"name": "K.L. Rahul", "batting": 7},
+        {"name": "Rishabh Pant", "batting": 8, "keeper": 1},
+        {"name": "Hardik Pandya", "batting": 7, "bowling": 7, "pacer":1},
+        {"name": "Ravindra Jadeja", "batting": 7, "bowling": 8,"spinner": 1},
+        {"name": "Washington Sundar", "batting": 4, "bowling": 8,"spinner": 1},
+        {"name": "Shardul Thakur", "batting": 4, "bowling": 7, "pacer":1},
+        {"name": "Bhuvneshwar Kumar", "batting": 5, "bowling": 8,"openingbowler": 1, "pacer":1},
+        {"name": "Jasprit Bumrah", "batting": 3, "bowling": 9, "pacer":1}
       ],
       "key": "IND",
       "color": "lcyan"
@@ -153,9 +153,9 @@
         {"name": "Ben Stokes", "batting": 8, "bowling": 7, "pacer":1},
         {"name": "Jos Buttler","batting": 7, "keeper": 1},
         {"name": "Moeen Ali", "batting": 7, "bowling": 7, "spinner": 1},
-        {"name": "Liam Plunkett", "batting": 6,"bowling": 8, "pacer":1},
-        {"name": "Chris Woakes", "batting": 6,"bowling": 9, "pacer":1},
-        {"name": "Joffra Archer", "batting": 5,"bowling": 9,"openingbowler": 1, "pacer":1},
+        {"name": "Sam Curran", "batting": 6,"bowling": 8, "pacer":1},
+        {"name": "Adil Rashid", "batting": 6,"bowling": 9, "spinner":1},
+        {"name": "Jofra Archer", "batting": 5,"bowling": 9,"openingbowler": 1, "pacer":1},
         {"name": "Mark Wood", "batting": 5, "bowling": 9, "pacer":1}
       ],
       "key": "ENG",

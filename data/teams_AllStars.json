@@ -28,7 +28,7 @@
         {"name": "Quinton deKock","batting": 8,"keeper": 1},
 		{"name": "Shakib Al-Hasan", "batting": 7,"bowling": 7, "spinner":1},
         {"name": "Ben Stokes","batting": 7,"bowling": 8, "pacer":1},                
-        {"name": "Joffra Archer","batting": 6,"bowling": 9,"pacer":1},
+        {"name": "Jofra Archer","batting": 6,"bowling": 9,"pacer":1},
 		{"name": "Mitchell Starc", "batting": 6,"bowling": 9,"openingbowler":1, "pacer":1},
         {"name": "Jasprit Bumrah","batting": 5,"bowling": 9, "pacer":1}
       ],

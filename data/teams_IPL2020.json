@@ -66,7 +66,7 @@
         {"name": "Rashid Khan","batting": 5,"bowling": 10, "spinner":1},
         {"name": "Bhuvneshwar Kumar", "batting": 5,"bowling": 9, "pacer":1, "openingbowler":1},
         {"name": "Khaleel Ahmed","batting": 3,"bowling": 7, "pacer":1},
-        {"name": "T Natarajan","batting": 3,"bowling": 7, "pacer":1}
+        {"name": "Thangarasu Natarajan","batting": 3,"bowling": 7, "pacer":1}
       ],
       "key": "SRH",
       "color": "lred"
