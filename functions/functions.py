@@ -310,7 +310,17 @@ def UpdateDismissal(match, bowler, pair, dismissal):
 
     # show score
     ShowHighlights(match)
+    #get next batsman
+    GetNextBatsman(match, pair)
+    input('press enter to continue')
 
+    return
+
+
+#get next batsman
+def GetNextBatsman(match, pair):
+    batting_team = match.batting_team
+    player_dismissed = next((x for x in pair if not x.status), None)
     if batting_team.wickets_fell < 10:
         ind = pair.index(player_dismissed)
         pair[ind] = batting_team.team_array[batting_team.wickets_fell + 1]
@@ -321,9 +331,7 @@ def UpdateDismissal(match, bowler, pair, dismissal):
             PrintInColor(Randomize(commentary.commentary_captain_to_bat_next), batting_team.color)
         # now new batter on field
         pair[ind].onfield = True
-    input('press enter to continue..')
-    return
-
+    return pair
 
 # play a ball
 def Ball(match, run, pair, bowler):
