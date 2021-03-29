@@ -73,8 +73,10 @@ def DisplayScore(match, team):
     data_to_print = []
     for p in team.team_array:
         name = GetShortName(p.name)
-        if p.attr.iscaptain:    name = name + '(c)'
-        if p.attr.iskeeper:     name = name + '(wk)'
+        if p.attr.iscaptain:
+            name = name + '(c)'
+        if p.attr.iskeeper:
+            name = name + '(wk)'
         if p.status is True:  # * if not out
             if not p.onfield:
                 data_to_print.append([name, 'DNB', ''])
@@ -171,14 +173,17 @@ def MatchSummary(match):
     # see who all bowled
     bowlers1 = [plr for plr in result.team1.team_array if plr.balls_bowled > 0]
     bowlers2 = [plr for plr in result.team2.team_array if plr.balls_bowled > 0]
-    # print first three top scorers
+
+    # print first N top scorers
+    n = 3
+
     most_runs = sorted(result.team1.team_array, key=lambda x: x.runs, reverse=True)
-    most_runs = most_runs[:2]
+    most_runs = most_runs[:n]
     best_bowlers = sorted(bowlers2, key=lambda x: x.wkts, reverse=True)
-    best_bowlers = best_bowlers[:2]
+    best_bowlers = best_bowlers[:n]
     # must be a nested list of fixed size elements
     data_to_print = []
-    for x in range(2):
+    for x in range(n):
         if most_runs[x].status:
             runs = str(most_runs[x].runs) + '*'
         else:
@@ -204,10 +209,10 @@ def MatchSummary(match):
     logger.info(msg)
 
     most_runs = sorted(result.team2.team_array, key=lambda x: x.runs, reverse=True)
-    most_runs = most_runs[:2]
+    most_runs = most_runs[:n]
     best_bowlers = sorted(bowlers1, key=lambda x: x.wkts, reverse=True)
-    best_bowlers = best_bowlers[:2]
-    for x in range(2):
+    best_bowlers = best_bowlers[:n]
+    for x in range(n):
         if most_runs[x].status:
             runs = str(most_runs[x].runs) + '*'
         else:
@@ -230,7 +235,7 @@ def DisplayBowlingStats(match):
     logger = match.logger
     team = match.bowling_team
     bowlers = team.bowlers
-    # here, remove the bowlers who didnt bowl
+    # here, remove the bowlers who did not bowl
     bowlers_updated = []
     char = '-'
     print(char * 45)
@@ -244,7 +249,7 @@ def DisplayBowlingStats(match):
     # nested list of fixed size elements
     data_to_print = [['Bowler', 'Ovrs', 'Mdns', 'Runs', 'Wkts', 'Eco']]
     for bowler in bowlers:
-        # dont print if he hasnt bowled
+        # do not print if he has not bowled
         if bowler.balls_bowled != 0:
             bowlers_updated.append(bowler)
             balls = bowler.balls_bowled
@@ -263,33 +268,27 @@ def DisplayBowlingStats(match):
     print(char * 45)
     logger.info(char * 45)
     input('press enter to continue..')
-    # team.bowlers = bowlers_updated
 
 
 # print playing XI
 def DisplayPlayingXI(match):
     t1, t2 = match.team1, match.team2
-    # assign captain roles
-    for t in [t1, t2]:
-        for player in t.team_array:
-            if player == t.captain:
-                player.attr.iscaptain = True
     # print the playing XI
     print('Playing XI:')
-    data_to_print = []
-    data_to_print.append([t1.name, t2.name])
-    data_to_print.append([' ', ' '])
+    data_to_print = [[t1.name, t2.name], [' ', ' ']]
     for x in range(11):
         name1 = t1.team_array[x].name
         name2 = t2.team_array[x].name
-        if t1.team_array[x].attr.iscaptain:
-            name1 = name1 + '(c)'
-        if t1.team_array[x].attr.iskeeper:
-            name1 = name1 + '(wk)'
-        if t2.team_array[x].attr.iscaptain:
-            name2 = name2 + '(c)'
-        if t2.team_array[x].attr.iskeeper:
-            name2 = name2 + '(wk)'
+
+        if t1.team_array[x] == t1.captain:
+            name1 += '(c)'
+        if t1.team_array[x] == t1.keeper:
+            name1 += '(wk)'
+        if t2.team_array[x] == t2.captain:
+            name2 += '(c)'
+        if t2.team_array[x] == t2.keeper:
+            name2 += '(wk)'
+
         data_to_print.append([name1, name2])
     # now print it
     PrintListFormatted(data_to_print, 0.1, None)

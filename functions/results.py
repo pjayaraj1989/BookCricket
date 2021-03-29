@@ -13,7 +13,7 @@ def CalculateResult(match):
     bowlers_t1 = match.team1.bowlers
     bowlers_t2 = match.team2.bowlers
 
-    # from the bowlers list, get rid of those who didnt bowl at all
+    # from the bowlers list, get rid of those who did not bowl at all
     bowlers_t1 = [plr for plr in bowlers_t1 if plr.balls_bowled > 0]
     bowlers_t2 = [plr for plr in bowlers_t2 if plr.balls_bowled > 0]
 
@@ -25,12 +25,10 @@ def CalculateResult(match):
         result.winner = None
         result.result_str = "Match Tied"
     elif team1.total_score > team2.total_score:
-        result.winner = team1
-        loser = team2
-        result.result_str = "%s won" %team1.name
+        result.winner, loser = team1, team2
+        result.result_str = "%s won" % team1.name
     elif team2.total_score > team1.total_score:
-        result.winner = team2
-        loser = team1
+        result.winner, loser = team2, team1
         result.result_str = "%s won" % team2.name
     else:
         result.result_str = "No result"
@@ -47,6 +45,7 @@ def CalculateResult(match):
             win_margin = abs(result.winner.total_score - loser.total_score)
             if win_margin != 0:
                 result.result_str += " by %s run(s)" % (str(win_margin))
+
     match.result = result
 
 
@@ -61,16 +60,19 @@ def FindBestPlayers(match):
     if len(most_runs) >= 3:
         most_runs = most_runs[:3]  # we need only top 3 scorers
     result.most_runs = most_runs
+
     # find most wkts
     most_wkts = sorted(bowlers_list, key=lambda x: x.wkts, reverse=True)
     if len(most_wkts) >= 3:
         most_wkts = most_wkts[:3]  # we need only top 3 scorers
     result.most_wkts = most_wkts
+
     # find best eco bowler
     best_eco = sorted(bowlers_list, key=lambda x: x.eco, reverse=False)
     if len(best_eco) >= 3:
         best_eco = best_eco[:3]  # we need only top 3 scorers
     result.besteco = best_eco
+
     return result
 
 

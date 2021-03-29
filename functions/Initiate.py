@@ -17,20 +17,27 @@ def GetVenue(venue_data):
     f = open(venue_data)
     data = json.load(f)
     countries = {}
-    if data is not None:    countries = data['Venues']
+    if data is None:
+        Error_Exit("No data read from file %s" % f)
+    countries = data['Venues']
+
     # now get venues for each countries
     country = ChooseFromOptions(list(countries.keys()), "Select Venue", 5)
+
     # now get venues in this
     venue = random.choice(countries[country]['places'])
-    print("Selected Stadium: " + venue['name'])
+    print("Selected Stadium: %s" % venue['name'])
     venue_obj = Venue(name=venue['name'], run_prob=venue['run_prob'])
+
     # populate run_prob_t20
     run_prob_t20 = data['run_prob_t20']
     venue_obj.run_prob_t20 = run_prob_t20
+
     # choose weather
     weather = choice(list(resources.weathers.keys()), 1, p=resources.weather_prob, replace=False)[0]
     venue_obj.weather = weather
     PrintInColor(resources.weathers[weather], Style.BRIGHT)
+
     return venue_obj
 
 
@@ -52,16 +59,25 @@ def ReadTeams(json_file):
                 if 'bowling' in plr:    p.attr.bowling = plr['bowling']
                 if 'spinner' in plr and plr['spinner'] == 1:    p.attr.isspinner = True
                 if 'pacer' in plr and plr['pacer'] == 1:  p.attr.ispacer = True
-                if 'keeper' in plr and plr['keeper'] == 1:    p.attr.iskeeper = True
+
+                # assign keeper and captain
+                if 'keeper' in plr and plr['keeper'] == 1:
+                    p.attr.iskeeper = True
+                    t.keeper = p
+                if 'captain' in plr and plr['captain'] == 1:
+                    p.attr.iscaptain = True
+                    t.captain = p
+
                 if 'openingbowler' in plr and plr['openingbowler'] == 1:    p.attr.isopeningbowler = True
                 t.team_array.append(p)
-                if 'captain' in plr and plr['captain'] == 1: t.captain = p
+
             t.key = v["key"]
             t.opening_pair = [t.team_array[0], t.team_array[1]]
             # color
             t.color = resources.color_map[v["color"]]
             Teams_List.append(t)
-    return (Teams_List)
+
+    return Teams_List
 
 
 # get match info
@@ -71,15 +87,19 @@ def GetMatchInfo(list_of_teams, venue):
     commentator = random.sample(set(resources.commentators), 3)
     umpire = random.sample(set(resources.umpires), 2)
 
+    #get list of teams
     teams = [l.key for l in list_of_teams]
+
     # select overs
     overs = input('Select overs (multiple of 5)\n')
+
+    # if not multiple of 5 or invalid entry, it selects default (5 overs)
     if (not overs.isdigit()) or \
             (int(overs) % 5 != 0) or \
             (int(overs) > 50) or \
             (int(overs) <= 0):
         overs = 5
-        print("Invalid entry, default %s overs selected" % (overs))
+        print("Invalid entry, default %s overs selected" % overs)
 
     overs = int(overs)
     # max overs allotted for each bowler
@@ -90,16 +110,20 @@ def GetMatchInfo(list_of_teams, venue):
     teams.remove(t1)
     t2 = ChooseFromOptions(teams, 'Select opponent', 5)
     print('Selected %s and %s' % (t1, t2))
+
     # find teams from user input
     for t in list_of_teams:
-        if t.key == t1:    team1 = t
-        if t.key == t2:    team2 = t
+        if t.key == t1:
+            team1 = t
+        if t.key == t2:
+            team2 = t
 
     # initialize match with teams, overs
     match = Match(team1=team1,
                   team2=team2,
                   overs=overs,
                   result=None)
+
     if overs == 50:
         temp = 'ODI'
     elif overs == 20:
@@ -109,7 +133,7 @@ def GetMatchInfo(list_of_teams, venue):
     else:
         temp = str(overs) + ' over'
 
-    msg = '%s, %s, for the exciting %s match between %s and %s' %(intro,
+    msg = '%s, %s, for the exciting %s match between %s and %s' % (intro,
                                                                   venue.name,
                                                                   temp,
                                                                   team1.name,
@@ -134,10 +158,12 @@ def GetMatchInfo(list_of_teams, venue):
 
     # display squad
     DisplayPlayingXI(match)
-    # Want to skip balls?
+
+    # Want to play only highlights?
     opt = ChooseFromOptions(['y', 'n'], "Do you want to play only highlights? y/n?", 5)
     if opt.lower() == 'y':
         match.autoplay = True
+
     return match
 
 
@@ -172,10 +198,11 @@ def Toss(match):
         match.team2.batting_second = False
         match.team1.batting_second = True
     # now find out who is batting first
-    batting_first = next((x for x in [match.team1, match.team2] if x.batting_second == False), None)
-    batting_second = next((x for x in [match.team1, match.team2] if x.batting_second == True), None)
+    batting_first = next((x for x in [match.team1, match.team2] if not x.batting_second), None)
+    batting_second = next((x for x in [match.team1, match.team2] if x.batting_second), None)
     match.batting_first = batting_first
     match.batting_second = batting_second
+
     return match
 
 
@@ -189,14 +216,11 @@ def ValidateMatchTeams(match):
         if len(t.team_array) != 11:
             Error_Exit('Only %s members in team %s' % (len(t.team_array), t.name))
 
-        # check if they have keeper
-        t.keeper = next((x for x in t.team_array if x.attr.iskeeper), None)
         # check if keeper exists
         if t.keeper is None:
             Error_Exit('No keeper found in team %s' % t.name)
 
-        # captain
-        t.captain = next((x for x in t.team_array if x.attr.iscaptain), None)
+        # check for captain
         if t.captain is None:
             Error_Exit('No captain found in team %s' % t.name)
 
@@ -217,10 +241,8 @@ def ValidateMatchTeams(match):
 
     # make first batsman on strike
     for t in [match.team1, match.team2]:
-        t.opening_pair[0].onstrike = True
-        t.opening_pair[0].onfield = True
-        t.opening_pair[1].onstrike = False
-        t.opening_pair[1].onfield = True
+        t.opening_pair[0].onstrike, t.opening_pair[1].onstrike = True, False
+        t.opening_pair[0].onfield, t.opening_pair[1].onfield = True, True
 
     # check if players have numbers, else assign randomly
     for t in [match.team1, match.team2]:
