@@ -84,7 +84,7 @@
         {"name": "Moeen Ali", "batting": 7,"bowling": 7, "spinner":1},        
 		{"name": "Mitchell Johnson", "batting": 6,"bowling": 9, "pacer":1},
         {"name": "Tim Southee","batting": 5,"bowling": 9, "pacer":1},
-		{"name": "Lasith Malinga","batting": 6,"bowling": 9,"openingbowler":1}
+		{"name": "Lasith Malinga","batting": 6,"bowling": 9, "pacer":1, "openingbowler":1}
       ],
       "key": "MC",
       "color": "yellow"

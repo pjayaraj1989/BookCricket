@@ -3,7 +3,7 @@ from functions.helper import Result
 from operator import attrgetter
 import random
 from colorama import Style
-from functions.utilities import PrintInColor
+from functions.utilities import PrintInColor, BallsToOvers
 
 
 # calculate match result
@@ -40,7 +40,8 @@ def CalculateResult(match):
             win_margin = 10 - result.winner.wickets_fell
             if win_margin != 0:
                 result.result_str += " by %s wicket(s) with %s ball(s) left" % (str(win_margin),
-                                                                                str(match.overs * 6 - result.winner.total_balls))
+                                                                                str(
+                                                                                    match.overs * 6 - result.winner.total_balls))
         elif not result.winner.batting_second:
             win_margin = abs(result.winner.total_score - loser.total_score)
             if win_margin != 0:
@@ -135,6 +136,20 @@ def FindPlayerOfTheMatch(match):
     if len(common_players) != 0:    best_player = common_players[0]
 
     match.result.mom = best_player
-    msg = "Player of the match: %s" % best_player.name
+    msg = "Player of the match: %s (%s)" % (best_player.name,
+                                            GetMomStat(best_player))
     PrintInColor(msg, Style.BRIGHT)
     match.logger.info(msg)
+
+
+def GetMomStat(player):
+    res = ''
+    if player.runs > 0:
+        res += "scored %s runs off %s balls" % (str(player.runs),
+                                                str(player.balls))
+    if player.balls_bowled > 0:
+        overs = BallsToOvers(player.balls_bowled)
+        res += ",took %s wkt(s),conceding %s run(s) in %s over(s)" % (str(player.wkts),
+                                                                        str(player.runs_given),
+                                                                        str(overs))
+    return res
