@@ -501,6 +501,52 @@ def AssignBowler(match):
     return bowler
 
 
+# get bowler comments
+def GetBowlerComments(match, bowler):
+    # check if bowler is captain
+    if bowler.attr.iscaptain:
+        PrintInColor(Randomize(commentary.commentary_captain_to_bowl), Style.BRIGHT)
+    # check if spinner or seamer
+    if bowler.attr.isspinner:
+        PrintInColor(Randomize(commentary.commentary_spinner_into_attack), Style.BRIGHT)
+    elif bowler.attr.ispacer:
+        PrintInColor(Randomize(commentary.commentary_pacer_into_attack), Style.BRIGHT)
+    else:
+        PrintInColor(Randomize(commentary.commentary_medium_into_attack), Style.BRIGHT)
+    # check if it is his last over!
+    if (BallsToOvers(bowler.balls_bowled) == match.bowler_max_overs - 1) and (bowler.balls_bowled != 0):
+        PrintInColor(Randomize(commentary.commentary_bowler_last_over), Style.BRIGHT)
+        if bowler.wkts >= 3 or bowler.eco <= 5.0:
+            PrintInColor(Randomize(commentary.commentary_bowler_good_spell), Style.BRIGHT)
+        elif bowler.eco >= 7.0:
+            PrintInColor(Randomize(commentary.commentary_bowler_bad_spell), Style.BRIGHT)
+    return
+
+
+# update extras
+def UpdateExtras(match, bowler):
+    batting_team, bowling_team = match.batting_team, match.bowling_team
+    logger = match.logger
+    bowler.runs_given += 1
+    batting_team.extras += 1
+    batting_team.total_score += 1
+    # generate wide or no ball
+    extra = random.choice(['wd', 'nb'])
+    if extra == 'wd':
+        # add this to bowlers history
+        bowler.ball_history.append('WD')
+        PrintInColor("WIDE...!", Fore.LIGHTCYAN_EX)
+        PrintInColor(Randomize(commentary.commentary_wide) % match.umpire, Style.BRIGHT)
+        logger.info("WIDE")
+    elif extra == 'nb':
+        # no balls
+        bowler.ball_history.append('NB')
+        PrintInColor("NO BALL...!", Fore.LIGHTCYAN_EX)
+        PrintInColor(Randomize(commentary.commentary_no_ball), Style.BRIGHT)
+        logger.info("NO BALL")
+
+    return
+
 # play an over
 def PlayOver(match, over, pair):
     overs = match.overs
@@ -521,24 +567,7 @@ def PlayOver(match, over, pair):
         eco = round(eco, 2)
         bowler.eco = eco
 
-    # check if bowler is captain
-    if bowler.attr.iscaptain:
-        PrintInColor(Randomize(commentary.commentary_captain_to_bowl), Style.BRIGHT)
-
-    # check if spinner or seamer
-    if bowler.attr.isspinner:
-        PrintInColor(Randomize(commentary.commentary_spinner_into_attack), Style.BRIGHT)
-    elif bowler.attr.ispacer:
-        PrintInColor(Randomize(commentary.commentary_pacer_into_attack), Style.BRIGHT)
-    else:
-        PrintInColor(Randomize(commentary.commentary_medium_into_attack), Style.BRIGHT)
-    # check if it is his last over!
-    if (BallsToOvers(bowler.balls_bowled) == match.bowler_max_overs - 1) and (bowler.balls_bowled != 0):
-        PrintInColor(Randomize(commentary.commentary_bowler_last_over), Style.BRIGHT)
-        if bowler.wkts >= 3 or bowler.eco <= 5.0:
-            PrintInColor(Randomize(commentary.commentary_bowler_good_spell), Style.BRIGHT)
-        elif bowler.eco >= 7.0:
-            PrintInColor(Randomize(commentary.commentary_bowler_bad_spell), Style.BRIGHT)
+    GetBowlerComments(match, bowler)
 
     ball = 1
     bowling_team.last_bowler = bowler
@@ -550,6 +579,7 @@ def PlayOver(match, over, pair):
                 PrintInColor(Randomize(commentary.commentary_last_ball_match), Style.BRIGHT)
             else:
                 PrintInColor(Randomize(commentary.commentary_last_ball_innings), Style.BRIGHT)
+
         # towards the death overs, show a highlights
         towin = abs(batting_team.target - batting_team.total_score)
         # calculate if score is close
@@ -570,11 +600,9 @@ def PlayOver(match, over, pair):
                                  Style.BRIGHT)
                 input('press enter to continue...')
 
-        msg = "Over: %s.%s" % (str(over), str(ball))
-        print(msg)
+        print("Over: %s.%s" % (str(over), str(ball)))
         player_on_strike = next((x for x in pair if x.onstrike), None)
-        msg = '%s to %s' % (GetShortName(bowler.name), GetShortName(player_on_strike.name))
-        print(msg)
+        print("%s to %s" % (GetShortName(bowler.name), GetShortName(player_on_strike.name)))
         if match.autoplay:
             time.sleep(1)
         else:
@@ -589,7 +617,6 @@ def PlayOver(match, over, pair):
 
         # in the death, increase prob of boundaries and wickets
         if batting_team.batting_second:
-            # if towin <=20 or (over == overs-1):
             if over == overs - 1:
                 prob = [0.2, 0.2, 0, 0, 0, 0.2, 0.2, 0.2]
 
@@ -606,26 +633,7 @@ def PlayOver(match, over, pair):
 
         # check if extra
         if run == 5:
-            # generate wide or no ball
-            extra = random.choice(['wd', 'nb'])
-            if extra == 'wd':
-                # add this to bowlers history
-                bowler.ball_history.append('WD')
-                PrintInColor("WIDE...!", Fore.LIGHTCYAN_EX)
-                PrintInColor(Randomize(commentary.commentary_wide) % match.umpire, Style.BRIGHT)
-                logger.info("WIDE")
-                bowler.runs_given += 1
-                batting_team.extras += 1
-                batting_team.total_score += 1
-            elif extra == 'nb':
-                # no balls
-                bowler.ball_history.append('NB')
-                PrintInColor("NO BALL...!", Fore.LIGHTCYAN_EX)
-                PrintInColor(Randomize(commentary.commentary_no_ball), Style.BRIGHT)
-                logger.info("NO BALL")
-                bowler.runs_given += 1
-                batting_team.extras += 1
-                batting_team.total_score += 1
+            UpdateExtras(match, bowler)
         # if not wide
         else:
             Ball(match, run, pair, bowler)
@@ -766,17 +774,15 @@ def Play(match):
         if batting_team.batting_second and match.venue.weather == "rainy":
             if over == over_interrupt - 5:
                 PrintInColor(Randomize(commentary.commentary_rain_cloudy), Style.BRIGHT)
-                input("Press enter to continue")
             elif over == over_interrupt - 3:
                 PrintInColor(Randomize(commentary.commentary_rain_drizzling), Style.BRIGHT)
-                input("Press enter to continue")
             elif over == over_interrupt - 1:
                 PrintInColor(Randomize(commentary.commentary_rain_heavy), Style.BRIGHT)
-                input("Press enter to continue")
             elif over == over_interrupt:
                 MatchAbandon(match)
                 match.result.result_str = "No result"
                 Error_Exit("Match abandoned due to rain!!")
+            input("Press enter to continue")
 
         # check if last over
         if over == overs - 1:
