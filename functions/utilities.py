@@ -6,9 +6,9 @@ import sys
 import os
 
 
-#function used to fill class attributes based on input arguments
+# function used to fill class attributes based on input arguments
 def FillAttributes(obj, attrs, kwargs):
-    for k,v in attrs.items():
+    for k, v in attrs.items():
         setattr(obj, k, attrs[k])
     if kwargs is not None:
         for k, v in kwargs.items():
@@ -50,8 +50,8 @@ def ChooseFromOptions(options, msg, tries):
 
 
 # randomize
-def Randomize(list):
-    op = random.choice(list)
+def Randomize(mylist):
+    op = random.choice(mylist)
     return op
 
 
@@ -62,7 +62,8 @@ def CheckForConsecutiveElements(arr, element, N):
     if len(arr) >= N:
         for i in range(l):
             temp = []
-            for x in range(N):    temp.append(arr[i - x])
+            for x in range(N):
+                temp.append(arr[i - x])
             # check for equal elements
             if len(temp) > 0 and all(elem == element for elem in temp):
                 result = True
@@ -72,10 +73,8 @@ def CheckForConsecutiveElements(arr, element, N):
 
 # get short name
 def GetShortName(name):
-    shortname = name
     # get first part and make it initial
     pieces = name.split(' ')
-    initials = ' '
     firstname, lastname = pieces[0], pieces[-1]
     if '.' in firstname:
         initials = firstname

@@ -178,9 +178,9 @@ def MatchSummary(match):
     # print first N top scorers
     n = 3
 
-    most_runs = sorted(result.team1.team_array, key=lambda x: x.runs, reverse=True)
+    most_runs = sorted(result.team1.team_array, key=lambda t: t.runs, reverse=True)
     most_runs = most_runs[:n]
-    best_bowlers = sorted(bowlers2, key=lambda x: x.wkts, reverse=True)
+    best_bowlers = sorted(bowlers2, key=lambda b: b.wkts, reverse=True)
     best_bowlers = best_bowlers[:n]
     # must be a nested list of fixed size elements
     data_to_print = []
@@ -209,9 +209,9 @@ def MatchSummary(match):
     PrintInColor(msg, Style.BRIGHT)
     logger.info(msg)
 
-    most_runs = sorted(result.team2.team_array, key=lambda x: x.runs, reverse=True)
+    most_runs = sorted(result.team2.team_array, key=lambda t: t.runs, reverse=True)
     most_runs = most_runs[:n]
-    best_bowlers = sorted(bowlers1, key=lambda x: x.wkts, reverse=True)
+    best_bowlers = sorted(bowlers1, key=lambda b: b.wkts, reverse=True)
     best_bowlers = best_bowlers[:n]
     for x in range(n):
         if most_runs[x].status:

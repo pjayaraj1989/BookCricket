@@ -34,9 +34,9 @@ def ReadData():
 def PlayMatch(match):
     # logging
     log_file = 'log_%s_v_%s_%s_%s_ovrs.log' % (match.team1.name,
-                                                       match.team2.name,
-                                                       match.venue.name.replace(' ', '_'),
-                                                       str(match.overs))
+                                               match.team2.name,
+                                               match.venue.name.replace(' ', '_'),
+                                               str(match.overs))
     log_folder = os.path.join(ScriptPath, 'logs')
     if not os.path.exists(log_folder):
         os.makedirs(log_folder)
@@ -90,7 +90,7 @@ def MatchAbandon(match):
     nrr = GetRequiredRate(batting_team)
     crr = GetCurrentRate(batting_team)
     result = Result(team1=match.team1, team2=match.team2)
-    result_str = ''
+
     remaining_overs = match.overs - BallsToOvers(batting_team.total_balls)
     simulated_score = int(round(remaining_overs * crr)) + batting_team.total_score
 
@@ -114,7 +114,6 @@ def CheckDRS(match, pair):
     result = False
     team = match.batting_team
 
-    impact_outside_bat_involved = False
     if team.drs_chances <= 0:
         PrintInColor(Randomize(commentary.commentary_lbw_nomore_drs), Fore.LIGHTRED_EX)
         return result
@@ -237,9 +236,7 @@ def GenerateDismissal(bowler, bowling_team):
 
 # update dismissal
 def UpdateDismissal(match, bowler, pair, dismissal):
-    logger = match.logger
     batting_team, bowling_team = match.batting_team, match.bowling_team
-    keeper = bowling_team.keeper
     if 'runout' in dismissal:
         bowler.ball_history.append('RO')
     else:
@@ -435,7 +432,6 @@ def Ball(match, run, pair, bowler):
                 break
             # decision stays
             else:
-                run = -1
                 UpdateDismissal(match, bowler, pair, dismissal)
                 return
         else:
@@ -556,10 +552,10 @@ def AssignBowler(match):
                 bowler = Randomize(temp)
             # else pick bowler
             else:
-                choice = input('Pick next bowler: {0} [Press Enter to auto-select]'.format(
+                next_bowler = input('Pick next bowler: {0} [Press Enter to auto-select]'.format(
                     ' / '.join([str(x.no) + '.' + GetShortName(x.name) for x in temp])))
-                bowler = next((x for x in temp if (str(choice) == str(x.no)
-                                                   or choice.lower() in GetShortName(x.name).lower())),
+                bowler = next((x for x in temp if (str(next_bowler) == str(x.no)
+                                                   or next_bowler.lower() in GetShortName(x.name).lower())),
                               None)
                 if bowler is None:
                     bowler = Randomize(temp)
@@ -619,8 +615,6 @@ def UpdateExtras(match, bowler):
 
 # generate run
 def GenerateRun(match, over):
-    ismaiden = True
-    prob = []
     batting_team = match.batting_team
     overs = match.overs
     venue = match.venue
@@ -699,7 +693,7 @@ def PlayOver(match, over, pair):
                 PrintInColor(Randomize(commentary.commentary_last_ball_innings), Style.BRIGHT)
 
         DetectDeathOvers(match, over)
-        if match.status == False:
+        if not match.status:
             break
 
         print("Over: %s.%s" % (str(over), str(ball)))
@@ -791,7 +785,7 @@ def CheckMilestone(match, pair):
         # first fifty
         if p.runs >= 50 and p.fifty == 0:
             p.fifty += 1
-            msg = "50 for %s!" % (p.name)
+            msg = "50 for %s!" % p.name
             PrintInColor(msg, batting_team.color)
             logger.info(msg)
             PrintInColor("%s fours and %s sixes" % (str(p.fours), str(p.sixes)), Style.BRIGHT)

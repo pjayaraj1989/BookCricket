@@ -53,10 +53,14 @@ def ReadTeams(json_file):
             # now create team array from the array of values
             for plr in v['players']:
                 p = Player(name=plr['name'])
-                if 'batting' in plr:    p.attr.batting = plr['batting']
-                if 'bowling' in plr:    p.attr.bowling = plr['bowling']
-                if 'spinner' in plr and plr['spinner'] == 1:    p.attr.isspinner = True
-                if 'pacer' in plr and plr['pacer'] == 1:  p.attr.ispacer = True
+                if 'batting' in plr:
+                    p.attr.batting = plr['batting']
+                if 'bowling' in plr:
+                    p.attr.bowling = plr['bowling']
+                if 'spinner' in plr and plr['spinner'] == 1:
+                    p.attr.isspinner = True
+                if 'pacer' in plr and plr['pacer'] == 1:
+                    p.attr.ispacer = True
 
                 # assign keeper and captain
                 if 'keeper' in plr and plr['keeper'] == 1:
@@ -65,13 +69,14 @@ def ReadTeams(json_file):
                 if 'captain' in plr and plr['captain'] == 1:
                     p.attr.iscaptain = True
                     t.captain = p
+                if 'openingbowler' in plr and plr['openingbowler'] == 1:
+                    p.attr.isopeningbowler = True
 
-                if 'openingbowler' in plr and plr['openingbowler'] == 1:    p.attr.isopeningbowler = True
                 t.team_array.append(p)
 
             t.key = v["key"]
             t.opening_pair = [t.team_array[0], t.team_array[1]]
-            # color
+            # assign color
             t.color = resources.color_map[v["color"]]
             Teams_List.append(t)
 

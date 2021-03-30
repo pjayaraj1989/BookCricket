@@ -10,12 +10,6 @@ from functions.utilities import PrintInColor, BallsToOvers
 def CalculateResult(match):
     team1 = match.team1
     team2 = match.team2
-    bowlers_t1 = match.team1.bowlers
-    bowlers_t2 = match.team2.bowlers
-
-    # from the bowlers list, get rid of those who did not bowl at all
-    bowlers_t1 = [plr for plr in bowlers_t1 if plr.balls_bowled > 0]
-    bowlers_t2 = [plr for plr in bowlers_t2 if plr.balls_bowled > 0]
 
     result = Result(team1=team1,
                     team2=team2)
@@ -39,9 +33,9 @@ def CalculateResult(match):
         if result.winner.batting_second:
             win_margin = 10 - result.winner.wickets_fell
             if win_margin != 0:
-                result.result_str += " by %s wicket(s) with %s ball(s) left" % (str(win_margin),
-                                                                                str(
-                                                                                    match.overs * 6 - result.winner.total_balls))
+                result.result_str += " by %s wicket(s) with %s ball(s) left" % \
+                                     (str(win_margin),
+                                      str(match.overs * 6 - result.winner.total_balls))
         elif not result.winner.batting_second:
             win_margin = abs(result.winner.total_score - loser.total_score)
             if win_margin != 0:
@@ -133,7 +127,8 @@ def FindPlayerOfTheMatch(match):
 
     # if a player is found in both top batsmen and bowler list he is my MOM
     common_players = list(set(best_bowlers).intersection(best_batsmen))
-    if len(common_players) != 0:    best_player = common_players[0]
+    if len(common_players) != 0:
+        best_player = common_players[0]
 
     match.result.mom = best_player
     msg = "Player of the match: %s (%s)" % (best_player.name,
@@ -150,6 +145,6 @@ def GetMomStat(player):
     if player.balls_bowled > 0:
         overs = BallsToOvers(player.balls_bowled)
         res += ",took %s wkt(s),conceding %s run(s) in %s over(s)" % (str(player.wkts),
-                                                                        str(player.runs_given),
-                                                                        str(overs))
+                                                                      str(player.runs_given),
+                                                                      str(overs))
     return res
