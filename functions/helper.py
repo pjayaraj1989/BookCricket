@@ -2,34 +2,42 @@ from functions.utilities import FillAttributes
 
 
 # mainly used classes
+# add the default attributes and values here
+# the FillAttributes function will populate it accordingly
 
 class Tournament():
     def __init__(self, **kwargs):
-        attrs = {'name': ' ', 'teams': []}
+        attrs = {'name': ' ',
+                 'teams': []}
         self = FillAttributes(self, attrs, kwargs)
 
 
 class Venue():
     def __init__(self, **kwargs):
-        attrs = {'name': ' ', 'run_prob': [], 'run_prob_t20': [], 'weather': None}
+        attrs = {'name': ' ',
+                 'run_prob': [],
+                 'run_prob_t20': [],
+                 'weather': None}
         self = FillAttributes(self, attrs, kwargs)
 
 
 class PlayerAttr():
     def __init__(self, **kwargs):
-        attrs = {'batting': 0, 'bowling': 0, 'iskeeper': False, 'iscaptain': False, 'isopeningbowler': False,
-                 'isspinner': False, 'ispacer': False}
+        attrs = {'batting': 0,
+                 'bowling': 0,
+                 'iskeeper': False, 'iscaptain': False, 'isopeningbowler': False, 'isspinner': False, 'ispacer': False}
         self = FillAttributes(self, attrs, kwargs)
 
 
 class Player():
     def __init__(self, **kwargs):
-        attrs = {'attr': PlayerAttr(), 'no': 0, 'runs': 0, 'balls': 0, 'wkts': 0, 'fifty': 0, 'hundred': 0,
-                 'hattricks': 0,
-                 'balls_bowled': 0, 'runs_given': 0, 'maidens': 0, 'name': ' ', 'max_overs': 0, 'ball_history': [],
-                 'status': True, 'onfield': False, 'dismissal': ' ', 'eco': 0.0, 'strikerate': 0.0, 'fours': 0,
-                 'sixes': 0, 'singles': 0,
-                 'doubles': 0, 'threes': 0, 'onstrike': False, 'iscaptain': False, 'isopeningbowler': False,
+        attrs = {'attr': PlayerAttr(),
+                 'name': ' ', 'dismissal': ' ',
+                 'no': 0, 'runs': 0, 'balls': 0, 'wkts': 0, 'fifty': 0, 'hundred': 0, 'hattricks': 0, 'doubles': 0,
+                 'threes': 0, 'balls_bowled': 0, 'runs_given': 0, 'maidens': 0, 'max_overs': 0, 'fours': 0, 'sixes': 0,
+                 'singles': 0, 'eco': 0.0, 'strikerate': 0.0,
+                 'ball_history': [],
+                 'status': True, 'onfield': False, 'onstrike': False, 'iscaptain': False, 'isopeningbowler': False,
                  'isspinner': False, 'ispacer': False}
         self = FillAttributes(self, attrs, kwargs)
 
