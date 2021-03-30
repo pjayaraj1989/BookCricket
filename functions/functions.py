@@ -476,9 +476,8 @@ def Ball(match, run, pair, bowler):
             bowler.ball_history.append(0)
             if not used_drs:
                 if bowler.attr.ispacer:
-                    comment = Randomize(commentary.commentary_dot_ball_pacer) + '\n' + \
-                              Randomize(commentary.commentary_dot_ball) % (GetSurname(bowler.name),
-                                                                           on_strike.name)
+                    comment = Randomize(commentary.commentary_dot_ball_pacer) % (GetSurname(bowler.name),
+                                                                                 on_strike.name)
                 else:
                     comment = Randomize(commentary.commentary_dot_ball) % (GetSurname(bowler.name),
                                                                            GetSurname(on_strike.name))

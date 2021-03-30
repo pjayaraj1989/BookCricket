@@ -145,7 +145,7 @@ def MatchSummary(match):
     ch = '-'
     result = match.result
 
-    msg = ch * 10 + 'Match Summary' + ch * 10
+    msg = '%s Match Summary %s' % (ch*10, ch*10)
     PrintInColor(msg, Style.BRIGHT)
     logger.info(msg)
 
@@ -242,7 +242,7 @@ def DisplayBowlingStats(match):
     print(char * 45)
     logger.info(char * 45)
 
-    msg = char * 15 + '-Bowling Stats-' + char * 15
+    msg = '%s-Bowling Stats-%s' % (char*15, char*15)
     PrintInColor(msg, Style.BRIGHT)
     logger.info(msg)
     print(char * 45)
