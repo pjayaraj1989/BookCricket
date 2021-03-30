@@ -13,10 +13,8 @@ from colorama import Fore, Style
 
 
 def GetVenue(venue_data):
-    venue_obj = None
     f = open(venue_data)
     data = json.load(f)
-    countries = {}
     if data is None:
         Error_Exit("No data read from file %s" % f)
     countries = data['Venues']
@@ -82,12 +80,11 @@ def ReadTeams(json_file):
 
 # get match info
 def GetMatchInfo(list_of_teams, venue):
-    match = None
     intro = Randomize(commentary.intro_dialogues)
     commentator = random.sample(set(resources.commentators), 3)
     umpire = random.sample(set(resources.umpires), 2)
 
-    #get list of teams
+    # get list of teams
     teams = [l.key for l in list_of_teams]
 
     # select overs
@@ -134,10 +131,10 @@ def GetMatchInfo(list_of_teams, venue):
         temp = str(overs) + ' over'
 
     msg = '%s, %s, for the exciting %s match between %s and %s' % (intro,
-                                                                  venue.name,
-                                                                  temp,
-                                                                  team1.name,
-                                                                  team2.name,)
+                                                                   venue.name,
+                                                                   temp,
+                                                                   team1.name,
+                                                                   team2.name,)
     PrintInColor(msg, Fore.LIGHTCYAN_EX)
 
     print('In the commentary box, myself %s with %s, and %s' % (commentator[0],
