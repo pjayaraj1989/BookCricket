@@ -6,6 +6,30 @@ import sys
 import os
 
 
+#function used to fill class attributes based on input arguments
+def FillAttributes(obj, attrs, kwargs):
+    for k,v in attrs.items():
+        if type(attrs[k]) is str:
+            setattr(obj, k, ' ')
+        if type(attrs[k]) is list:
+            setattr(obj, k, [])
+        if type(attrs[k]) is int:
+            setattr(obj, k, 0)
+        if type(attrs[k]) is float:
+            setattr(obj, k, 0.0)
+        if attrs[k] is None:
+            setattr(obj, k, None)
+        #default, could be a class instance
+        else:
+            setattr(obj, k, attrs[k])
+    if kwargs is not None:
+        for k, v in kwargs.items():
+            for attr in attrs:
+                if k == attr:
+                    setattr(obj, attr, v)
+    return obj
+
+
 # choose from options a list
 def ChooseFromOptions(options, msg, tries):
     print(msg)
