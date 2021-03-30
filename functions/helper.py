@@ -1,18 +1,17 @@
 from functions.utilities import FillAttributes
 
-
 # mainly used classes
 # add the default attributes and values here
 # the FillAttributes function will populate it accordingly
 
-class Tournament():
+class Tournament:
     def __init__(self, **kwargs):
         attrs = {'name': ' ',
                  'teams': []}
         self = FillAttributes(self, attrs, kwargs)
 
 
-class Venue():
+class Venue:
     def __init__(self, **kwargs):
         attrs = {'name': ' ',
                  'run_prob': [],
@@ -21,7 +20,7 @@ class Venue():
         self = FillAttributes(self, attrs, kwargs)
 
 
-class PlayerAttr():
+class PlayerAttr:
     def __init__(self, **kwargs):
         attrs = {'batting': 0,
                  'bowling': 0,
@@ -29,11 +28,11 @@ class PlayerAttr():
         self = FillAttributes(self, attrs, kwargs)
 
 
-class Player():
+class Player:
     def __init__(self, **kwargs):
         attrs = {'attr': PlayerAttr(),
                  'name': ' ', 'dismissal': ' ',
-                 'no': 0, 'runs': 0, 'balls': 0, 'wkts': 0, 'fifty': 0, 'hundred': 0, 'hattricks': 0, 'doubles': 0,
+                 'no': None, 'runs': 0, 'balls': 0, 'wkts': 0, 'fifty': 0, 'hundred': 0, 'hattricks': 0, 'doubles': 0,
                  'threes': 0, 'balls_bowled': 0, 'runs_given': 0, 'maidens': 0, 'max_overs': 0, 'fours': 0, 'sixes': 0,
                  'singles': 0, 'eco': 0.0, 'strikerate': 0.0,
                  'ball_history': [],
@@ -42,7 +41,7 @@ class Player():
         self = FillAttributes(self, attrs, kwargs)
 
 
-class Match():
+class Match:
     def __init__(self, **kwargs):
         attrs = {'status': False, 'overs': 0, 'bowler_max_overs': 0,
                  'logger': None, 'result': None, 'team1': None, 'team2': None, 'venue': None, 'umpire': None,
@@ -51,26 +50,26 @@ class Match():
         self = FillAttributes(self, attrs, kwargs)
 
 
-class Fow():
+class Fow:
     def __init__(self, **kwargs):
         attrs = {'total_balls': 0, 'wkt': 0, 'runs': 0, 'player_dismissed': None, 'player_onstrike': None}
         self = FillAttributes(self, attrs, kwargs)
 
 
-class Partnership():
+class Partnership:
     def __init__(self, **kwargs):
         attrs = {'balls': 0, 'runs': 0, 'batsman_dismissed': None, 'batsman_onstrike': None}
         self = FillAttributes(self, attrs, kwargs)
 
 
-class Result():
+class Result:
     def __init__(self, **kwargs):
         attrs = {'team1': None, 'team2': None, 'winner': None, 'most_runs': None, 'most_wkts': None, 'best_eco': None,
                  'mom': None, 'result_str': ' '}
         self = FillAttributes(self, attrs, kwargs)
 
 
-class Team():
+class Team:
     def __init__(self, **kwargs):
         attrs = {'total_overs': 0, 'drs_chances': 2, 'total_score': 0, 'target': 0, 'wickets_fell': 0, 'total_balls': 0,
                  'extras': 0,
