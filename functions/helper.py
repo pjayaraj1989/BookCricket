@@ -45,7 +45,8 @@ class Player:
 class Match:
     def __init__(self, **kwargs):
         attrs = {'status': False, 'overs': 0, 'bowler_max_overs': 0,
-                 'logger': None, 'result': None, 'team1': None, 'team2': None, 'venue': None, 'umpire': None,
+                 'logger': None, 'result': None, 'team1': None, 'team2': None, 'winner': None, 'loser': None,
+                 'venue': None, 'umpire': None,
                  'batting_first': None, 'batting_second': None, 'won': False, 'autoplay': False, 'batting_team': None,
                  'bowling_team': None}
         self = FillAttributes(self, attrs, kwargs)
@@ -73,7 +74,7 @@ class Result:
 class Team:
     def __init__(self, **kwargs):
         attrs = {'total_overs': 0, 'drs_chances': 2, 'total_score': 0, 'target': 0, 'wickets_fell': 0, 'total_balls': 0,
-                 'extras': 0,
+                 'extras': 0, 'top_scorer': None, 'most_wkts': None,
                  'innings_over': False, 'batting_second': False, 'name': ' ', 'key': ' ',
                  'last_bowler': None, 'captain': None, 'keeper': None, 'color': None,
                  'team_array': [], 'opening_pair': [], 'bowlers': [], 'fow': [], 'partnerships': []}

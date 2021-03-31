@@ -3,7 +3,7 @@ from functions.helper import Result
 from operator import attrgetter
 import random
 from colorama import Style
-from functions.utilities import PrintInColor, BallsToOvers
+from functions.utilities import PrintInColor, BallsToOvers, Randomize
 
 
 # calculate match result
@@ -75,52 +75,48 @@ def FindBestPlayers(match):
 def FindPlayerOfTheMatch(match):
     # find which team won
     if match.team1.total_score == match.team2.total_score:
-        team_won, team_lost = (match.team1, match.team2)
+        match.winner = Randomize([match.team1, match.team2])
     else:
-        team_won = max([match.team1, match.team2], key=attrgetter('total_score'))
-        team_lost = min([match.team1, match.team2], key=attrgetter('total_score'))
-
-    best_batsman = None
-    best_bowler = None
+        match.winner, match.loser = max([match.team1, match.team2], key=attrgetter('total_score')),\
+                                    min([match.team1, match.team2], key=attrgetter('total_score'))
 
     # find best batsman, bowler from winning team
     # always two batsmen will play
-    best_batsmen = sorted(team_won.team_array, key=attrgetter('runs'), reverse=True)
-    best_bowlers = sorted(team_won.bowlers, key=attrgetter('wkts'), reverse=True)
+    best_batsmen = sorted(match.winner.team_array, key=attrgetter('runs'), reverse=True)
+    best_bowlers = sorted(match.winner.bowlers, key=attrgetter('wkts'), reverse=True)
 
-    # now process these lists
-    # if both have same runs, pick who is not out
+    # we need only two best batters
     if len(best_batsmen) > 2:
         best_batsmen = best_batsmen[:2]
-        if best_batsmen[0].runs == best_batsmen[1].runs:
-            # workaround, if both are 0 and both are out
-            if best_batsmen[0].runs == best_batsmen[1].runs == 0:
-                best_batsman = best_batsmen[0]
-            else:
-                # get who are not out
-                best_batsmen = [plr for plr in best_batsmen if plr.status]
-                # if both are notout
-                if best_batsmen[0].status == best_batsmen[1].status:
-                    # get random
-                    best_batsman = random.choice([best_batsmen[0], best_batsmen[1]])
-                else:
-                    best_batsman = best_batsmen[0]
-        else:
-            best_batsman = best_batsmen[0]
-
-    # if same no of wkts, check eco
     if len(best_bowlers) > 2:
         best_bowlers = best_bowlers[:2]
-        if best_bowlers[0].wkts == best_bowlers[1].wkts:
-            best_bowler = sorted(best_bowlers, key=attrgetter('eco'), reverse=False)[0]
-        else:
-            best_bowler = best_bowlers[0]
 
-    # if scores tied, select randomly
-    if team_won.total_score == team_lost.total_score:
-        best_player = max(team_won.team_array, key=attrgetter('runs'))
+    # if both of them have same runs,
+    if best_batsmen[0].runs == best_batsmen[1].runs:
+        # find who is not out among these
+        # if neither one is not out, get best SR
+        if not [plr for plr in best_batsmen if plr.status]:
+            best_batsman = sorted(best_batsmen, key=attrgetter('strikerate'), reverse=True)[0]
+        #if there is one not out among them
+        else:
+            best_batsmen = [plr for plr in best_batsmen if plr.status][0]
+            # if both are not out, select randomly
+            if len(best_batsmen) == 2:
+                best_batsman = sorted(best_batsmen, key=attrgetter('strikerate'), reverse=True)[0]
+            elif len (best_batsmen) == 1:
+                best_batsman = best_batsmen[0]
+
+    else:
+        best_batsman = best_batsmen[0]
+
+    # if same wkts, get best economy bowler
+    if best_bowlers[0].wkts == best_bowlers[1].wkts:
+        best_bowler = sorted(best_bowlers, key=attrgetter('eco'), reverse=False)[0]
+    else:
+        best_bowler = best_bowlers[0]
+
     # check if win margin is >50% , if so, give credit to bowlers, else batsmen
-    elif float(team_won.total_score / team_lost.total_score) >= 1.2:
+    if float(match.winner.total_score / match.loser.total_score) >= 1.2:
         best_player = best_bowler
     else:
         best_player = best_batsman

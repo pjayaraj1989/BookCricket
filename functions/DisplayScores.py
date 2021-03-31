@@ -179,6 +179,7 @@ def MatchSummary(match):
     n = 3
 
     most_runs = sorted(result.team1.team_array, key=lambda t: t.runs, reverse=True)
+
     most_runs = most_runs[:n]
     best_bowlers = sorted(bowlers2, key=lambda b: b.wkts, reverse=True)
     best_bowlers = best_bowlers[:n]

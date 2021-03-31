@@ -333,7 +333,7 @@ class commentary():
                       'given out, %s is not happy at all',
                       '%s doesnt look happy! he is shaking his head!',
                       '%s shakes his head',
-                      'he knew it.. %s walks away..'
+                      'he knew it.. %s walks away..',
                       '%s looks unhappy, he thinks it was outside the line', ]
     commentary_lbw_nomore_drs = ['they do not have any more DRS reviews left!',
                                  'they have used all their review chances!',
