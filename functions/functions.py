@@ -245,6 +245,9 @@ def UpdateDismissal(match, bowler, pair, dismissal):
         bowler.ball_history.append('Wkt')
         batting_team.ball_history.append('Wkt')
         bowler.wkts += 1
+        # check if he had batted well in the first innings
+        if bowler.runs > 50:
+            PrintInColor(Randomize(commentary.commentary_all_round_bowler) % bowler.name, bowling_team.color)
 
     # update wkts, balls, etc
     bowler.balls_bowled += 1
@@ -275,7 +278,12 @@ def UpdateDismissal(match, bowler, pair, dismissal):
 
     # detect a hat-trick!
     arr = [x for x in bowler.ball_history if x != 'WD' or x != 'NB']
+    isOnAHattrick = CheckForConsecutiveElements(arr, 'Wkt', 2)
     isHattrick = CheckForConsecutiveElements(arr, 'Wkt', 3)
+
+    if isOnAHattrick:
+        PrintInColor(Randomize(commentary.commentary_on_a_hattrick), bowling_team.color)
+
     if isHattrick:
         bowler.hattricks += 1
         PrintInColor(Randomize(commentary.commentary_hattrick), bowling_team.color)

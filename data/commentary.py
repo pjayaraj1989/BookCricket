@@ -111,6 +111,12 @@ class commentary():
                               'not timed well but lazy fielding, bowler is not happy!',
                               'singles and doubles will surely irritate the fielding captain']
 
+    #if taken a wicket as well as scored runs in the first innings
+    commentary_all_round_bowler = ['it was %s with the bat, now with the ball!',
+                                   'oh %s is a brilliant all rounder!',
+                                   'a brilliant bowler %s is, who had a great innings earlier today as well!',
+                                   '%s had a good day with the bat, now he strikes with the ball too!',]
+
     # first boundary of the innings
     commentary_first_four_team = ['first boundary of this innings!',
                                   'there is the first one to cross the fence!',
@@ -492,6 +498,10 @@ class commentary():
                            'Hat-trick for the bowler!',
                            '3 in 3! This man is on absolute fire!',
                            'hat-trick for the bowler! what a performance from him!', ]
+    commentary_on_a_hattrick = ['he is on a hattrick now!',
+                                'two in two and he is on a hattrick here!',
+                                'hattrick ball coming up.. crowd on their feet!',]
+
     commentary_match_won = ['that\'s it, that\'s the end of the match!',
                             'that\'s it, they have won the match!',
                             'that\'s the end of the match!']
