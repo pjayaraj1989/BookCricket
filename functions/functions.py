@@ -239,9 +239,11 @@ def UpdateDismissal(match, bowler, pair, dismissal):
     batting_team, bowling_team = match.batting_team, match.bowling_team
     if 'runout' in dismissal:
         bowler.ball_history.append('RO')
+        batting_team.ball_history.append('RO')
     else:
         # add this to bowlers history
         bowler.ball_history.append('Wkt')
+        batting_team.ball_history.append('Wkt')
         bowler.wkts += 1
 
     # update wkts, balls, etc
@@ -443,6 +445,13 @@ def Ball(match, run, pair, bowler):
         # appropriate commentary for 4s and 6s
         if run == 4:
             bowler.ball_history.append(4)
+            batting_team.ball_history.append(4)
+
+            #check if first 4 of the innings
+            if batting_team.fours == 0:
+                PrintInColor(Randomize(commentary.commentary_first_four_team), Fore.LIGHTGREEN_EX)
+            batting_team.fours += 1
+
             field = Randomize(resources.fields[4])
             comment = Randomize(commentary.commentary_four)
             PrintInColor(field + " FOUR! " + comment, Fore.LIGHTGREEN_EX)
@@ -458,7 +467,14 @@ def Ball(match, run, pair, bowler):
             on_strike.fours += 1
         elif run == 6:
             bowler.ball_history.append(6)
-            # check uf furst ball is hit
+            batting_team.ball_history.append(6)
+
+            #check if first six
+            if batting_team.sixes == 0:
+                PrintInColor(Randomize(commentary.commentary_first_six_team), Fore.LIGHTGREEN_EX)
+            batting_team.sixes += 1
+
+            # check uf first ball is hit
             if on_strike.balls == 0:
                 PrintInColor(Randomize(commentary.commentary_firstball_six), Fore.LIGHTGREEN_EX)
             # hattrick sixes
@@ -474,6 +490,7 @@ def Ball(match, run, pair, bowler):
         # dot ball
         elif run == 0:
             bowler.ball_history.append(0)
+            batting_team.ball_history.append(0)
             if not used_drs:
                 if bowler.attr.ispacer:
                     comment = Randomize(commentary.commentary_dot_ball_pacer) % (GetSurname(bowler.name),
@@ -489,6 +506,7 @@ def Ball(match, run, pair, bowler):
         else:
             logger.info(str(run))
             bowler.ball_history.append(run)
+            batting_team.ball_history.append(run)
             field = Randomize(resources.fields["ground_shot"])
             comment = Randomize(commentary.commentary_ground_shot)
             if run == 1:
@@ -502,15 +520,33 @@ def Ball(match, run, pair, bowler):
                 on_strike.doubles += 1
             elif run == 3:
                 on_strike.threes += 1
+
         # update balls runs
         bowler.balls_bowled += 1
         bowler.runs_given += run
         PairFaceBall(pair, run)
         batting_team.total_balls += 1
         batting_team.total_score += run
+
         # check for milestones
         CheckMilestone(match, pair)
 
+        # check for ball history
+
+    return
+
+
+# check ball history so far
+def GetBallHistory(match):
+    batting_team = match.batting_team
+    # check extras
+    noballs = batting_team.ball_history.count('NB')
+    wides = batting_team.ball_history.count('WD')
+    runouts = batting_team.ball_history.count('RO')
+    sixes = batting_team.ball_history.count(6)
+    fours = batting_team.ball_history.count(4)
+
+    return
 
 # update last partnership
 def UpdateLastPartnership(match, pair):
@@ -599,12 +635,14 @@ def UpdateExtras(match, bowler):
     if extra == 'wd':
         # add this to bowlers history
         bowler.ball_history.append('WD')
+        batting_team.ball_history.append('WD')
         PrintInColor("WIDE...!", Fore.LIGHTCYAN_EX)
         PrintInColor(Randomize(commentary.commentary_wide) % match.umpire, Style.BRIGHT)
         logger.info("WIDE")
     elif extra == 'nb':
         # no balls
         bowler.ball_history.append('NB')
+        batting_team.ball_history.append('NB')
         PrintInColor("NO BALL...!", Fore.LIGHTCYAN_EX)
         PrintInColor(Randomize(commentary.commentary_no_ball), Style.BRIGHT)
         logger.info("NO BALL")

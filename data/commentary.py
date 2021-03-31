@@ -111,6 +111,22 @@ class commentary():
                               'not timed well but lazy fielding, bowler is not happy!',
                               'singles and doubles will surely irritate the fielding captain']
 
+    # first boundary of the innings
+    commentary_first_four_team = ['first boundary of this innings!',
+                                  'there is the first one to cross the fence!',
+                                  'first 4 of the innings',
+                                  'first boundary, and it came in style!',
+                                  'that\'s the first boundary, no wonder it came from him!',
+                                  ]
+
+    commentary_first_six_team = ['first sixer of this innings!',
+                                 'there is the first one to sail over the fence!',
+                                 'first 6 of the innings!',
+                                 'first six!, and it came in style!',
+                                 'there is the first biggie.. it came in style!',
+                                 'that\'s the first maximum, no wonder it came from his bat!',
+                                 ]
+
     # four first  ball
     commentary_firstball_four = ['what a way to start the innings!',
                                  'glorious start to the innings!',

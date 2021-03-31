@@ -9,7 +9,7 @@
         {"name": "Yuvraj Singh","batting": 8,"bowling": 7,"spinner": 1},
         {"name": "M.S Dhoni","batting": 7, "keeper":1, "captain":1},
         {"name": "Suresh Raina","batting": 7,"bowling": 7,"spinner": 1},
-        {"name": "Ravichandran Ashwin","batting": 6,"bowling": 8,"spinner": 1},
+        {"name": "Harbhajan Singh","batting": 6,"bowling": 8,"spinner": 1},
         {"name": "Zaheer Khan","batting": 6,"bowling": 9, "pacer":1, "openingbowler":1},
         {"name": "Santhakumaran Sreesanth","batting": 5, "bowling": 9,"pacer":1},
         {"name": "Munaf Patel","batting": 5,"bowling": 9, "pacer":1}
@@ -27,9 +27,9 @@
         {"name": "Cameron White","batting": 8,"bowling": 6, "spinner":1},
         {"name": "Michael Hussey", "batting": 7},
         {"name": "David Hussey","batting": 7,"bowling": 6, "spinner":  1},
-        {"name": "Jason Krejza","batting": 6,"bowling": 8,  "spinner": 1 },
-        {"name": "Mitchell Johnson", "batting": 6,"bowling": 9, "pacer":1},
         {"name": "Brett Lee", "batting": 5,"bowling": 9, "pacer":1,"openingbowler":1},
+        {"name": "Mitchell Johnson", "batting": 6,"bowling": 9, "pacer":1},
+        {"name": "Jason Krejza","batting": 6,"bowling": 8,  "spinner": 1 },
         {"name": "Shaun Tait","batting": 5,"bowling": 9,"pacer":1}
       ],
       "key": "AUS",
