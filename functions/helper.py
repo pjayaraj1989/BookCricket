@@ -60,7 +60,7 @@ class Fow:
 
 class Partnership:
     def __init__(self, **kwargs):
-        attrs = {'balls': 0, 'runs': 0, 'batsman_dismissed': None, 'batsman_onstrike': None}
+        attrs = {'balls': 0, 'runs': 0, 'batsman_dismissed': None, 'batsman_onstrike': None, 'both_notout': False}
         self = FillAttributes(self, attrs, kwargs)
 
 

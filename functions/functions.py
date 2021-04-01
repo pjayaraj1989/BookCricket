@@ -567,12 +567,17 @@ def UpdateLastPartnership(match, pair):
         last_partnership = Partnership(batsman_dismissed=pair[0],
                                        batsman_onstrike=pair[1],
                                        runs=last_partnership_runs)
+        #not all out
+        if batting_team.wickets_fell < 10:
+            last_partnership.both_notout=True
+
         batting_team.partnerships.append(last_partnership)
     # if no wkt fell
     elif batting_team.wickets_fell == 0:
         last_partnership_runs = batting_team.total_score
         last_partnership = Partnership(batsman_dismissed=pair[0],
                                        batsman_onstrike=pair[1],
+                                       both_notout=True,
                                        runs=last_partnership_runs)
         batting_team.partnerships.append(last_partnership)
 

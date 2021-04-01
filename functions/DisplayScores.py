@@ -132,6 +132,8 @@ def DisplayScore(match, team):
         msg = '%s - %s :\t%s' % (GetShortName(p.batsman_onstrike.name),
                                  GetShortName(p.batsman_dismissed.name),
                                  str(p.runs))
+        if p.batsman_dismissed.status and p.batsman_onstrike.status:
+            msg += '*'
         print(msg)
         logger.info(msg)
 
