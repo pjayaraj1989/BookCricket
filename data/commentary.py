@@ -116,6 +116,9 @@ class commentary():
                                    'oh %s is a brilliant all rounder!',
                                    'a brilliant bowler %s is, who had a great innings earlier today as well!',
                                    '%s had a good day with the bat, now he strikes with the ball too!',]
+    commentary_all_round_batsman = ['he had a good day with the bat and with the ball !',
+                                    'he is a master all rounder!',
+                                    'he is all over the ground today, earlier with the ball, now with the bat!']
 
     # first boundary of the innings
     commentary_first_four_team = ['first boundary of this innings!',

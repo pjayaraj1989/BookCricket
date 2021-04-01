@@ -455,7 +455,7 @@ def Ball(match, run, pair, bowler):
             bowler.ball_history.append(4)
             batting_team.ball_history.append(4)
 
-            #check if first 4 of the innings
+            # check if first 4 of the innings
             if batting_team.fours == 0:
                 PrintInColor(Randomize(commentary.commentary_first_four_team), Fore.LIGHTGREEN_EX)
             batting_team.fours += 1
@@ -477,7 +477,7 @@ def Ball(match, run, pair, bowler):
             bowler.ball_history.append(6)
             batting_team.ball_history.append(6)
 
-            #check if first six
+            # check if first six
             if batting_team.sixes == 0:
                 PrintInColor(Randomize(commentary.commentary_first_six_team), Fore.LIGHTGREEN_EX)
             batting_team.sixes += 1
@@ -555,6 +555,7 @@ def GetBallHistory(match):
     fours = batting_team.ball_history.count(4)
 
     return
+
 
 # update last partnership
 def UpdateLastPartnership(match, pair):
@@ -669,12 +670,20 @@ def GenerateRun(match, over):
     else:
         prob = venue.run_prob_t20
 
+    # run array
+    run_array = [-1, 0, 1, 2, 3, 4, 5, 6]
+
     # in the death, increase prob of boundaries and wickets
     if batting_team.batting_second:
         if over == overs - 1:
             prob = [0.2, 0.2, 0, 0, 0, 0.2, 0.2, 0.2]
 
-    run = choice([-1, 0, 1, 2, 3, 4, 5, 6], 1, p=prob, replace=False)[0]
+        # if need 1 to win, don't take 2 or if 2 to win, don't take 3
+        if batting_team.target - batting_team.total_score == 1:
+            prob = [1/7, 1/7, 1/7, 0, 1/7, 1/7, 1/7, 1/7, ]
+        if batting_team.target - batting_team.total_score == 2:
+            prob = [1/7, 1/7, 1/7, 1/7, 0, 1/7, 1/7, 1/7, ]
+    run = choice(run_array, 1, p=prob, replace=False)[0]
     return run
 
 
@@ -838,7 +847,11 @@ def CheckMilestone(match, pair):
             if p.attr.iscaptain:
                 PrintInColor(Randomize(commentary.commentary_captain_leading), batting_team.color)
             PrintInColor(Randomize(commentary.commentary_milestone) % GetSurname(p.name), batting_team.color)
-            input('press enter to continue..')
+
+            #  check if he had a good day with the ball as well
+            if p.wkts >= 2:
+                PrintInColor(Randomize(commentary.commentary_all_round_batsman), batting_team.color)
+
         elif p.runs >= 100 and (p.fifty == 1 and p.hundred == 0):
             # after first fifty is done
             p.hundred += 1
@@ -851,7 +864,7 @@ def CheckMilestone(match, pair):
             if p.attr.iscaptain:
                 PrintInColor(Randomize(commentary.commentary_captain_leading), batting_team.color)
             PrintInColor(Randomize(commentary.commentary_milestone) % p.name, batting_team.color)
-            input('press enter to continue..')
+
         elif p.runs >= 200 and (p.hundred == 1):
             # after first fifty is done
             p.hundred += 1
@@ -863,7 +876,9 @@ def CheckMilestone(match, pair):
             if p.attr.iscaptain:
                 PrintInColor(Randomize(commentary.commentary_captain_leading), batting_team.color)
             PrintInColor(Randomize(commentary.commentary_milestone) % p.name, batting_team.color)
-            input('press enter to continue..')
+
+    input('press enter to continue..')
+    return
 
 
 # play!
