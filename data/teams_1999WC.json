@@ -2,7 +2,7 @@
   "Teams": {
     "India": {
       "players": [
-        {"name": "Sourav Ganguly", "batting": 8,"bowling": 6,"captain": 1},
+        {"name": "Sourav Ganguly", "batting": 8,"bowling": 6},
         {"name": "Sachin Tendulkar", "batting": 8, "bowling": 6,"spinner":1, "opener2": 1},
         {"name": "Rahul Dravid", "batting": 8},
         {"name": "Mohammad Azharuddin","batting": 8, "captain":  1},

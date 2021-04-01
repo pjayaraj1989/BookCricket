@@ -51,7 +51,6 @@ class resources():
                     'Danny Morrison',
                     'Mark Nicholas',
                     'Michael Holding',
-                    'Pommie Mbangwa',
                     ]
 
     umpires = ['Kumar Dharmasena',
