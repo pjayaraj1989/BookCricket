@@ -182,9 +182,14 @@ def MatchSummary(match):
 
     most_runs = sorted(result.team1.team_array, key=lambda t: t.runs, reverse=True)
 
-    most_runs = most_runs[:n]
+    #there will be always two batsmen and two bowlers
+    if len(most_runs) > 2:
+        most_runs = most_runs[:n]
+
     best_bowlers = sorted(bowlers2, key=lambda b: b.wkts, reverse=True)
-    best_bowlers = best_bowlers[:n]
+
+    if len(best_bowlers) > 2:
+        best_bowlers = best_bowlers[:n]
     # must be a nested list of fixed size elements
     data_to_print = []
     for x in range(n):
