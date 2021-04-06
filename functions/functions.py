@@ -665,7 +665,7 @@ def UpdateExtras(match, bowler):
 
 
 # generate run
-def GenerateRun(match, over):
+def GenerateRun(match, over, player_on_strike, bowler):
     batting_team = match.batting_team
     overs = match.overs
     venue = match.venue
@@ -678,7 +678,7 @@ def GenerateRun(match, over):
     # run array
     run_array = [-1, 0, 1, 2, 3, 4, 5, 6]
 
-    # in the death, increase prob of boundaries and wickets
+    # in the death overs, increase prob of boundaries and wickets
     if batting_team.batting_second:
         if over == overs - 1:
             prob = [0.2, 0.2, 0, 0, 0, 0.2, 0.2, 0.2]
@@ -688,7 +688,16 @@ def GenerateRun(match, over):
             prob = [1/7, 1/7, 1/7, 0, 1/7, 1/7, 1/7, 1/7, ]
         if batting_team.target - batting_team.total_score == 2:
             prob = [1/7, 1/7, 1/7, 1/7, 0, 1/7, 1/7, 1/7, ]
+
+    # but, if batsman is poor and bowler is skilled, more chances of getting out
+    # override all above probs
+    if bowler.attr.bowling > 7 and player_on_strike.attr.batting < 6:
+        #       -1     0     1      2   3   4   5    6
+        prob = [0.25, 0.20, 0.20, 0.15, 0.05, 0.05, 0.05, 0.05]
+
+    # select from final run_array with the given probability distribution
     run = choice(run_array, 1, p=prob, replace=False)[0]
+
     return run
 
 
@@ -764,7 +773,7 @@ def PlayOver(match, over, pair):
             input('press enter to continue..')
 
         # generate run, updates runs and maiden status
-        run = GenerateRun(match, over)
+        run = GenerateRun(match, over, player_on_strike, bowler)
         # check if maiden or not
         if run not in [-1, 0]:
             ismaiden = False
