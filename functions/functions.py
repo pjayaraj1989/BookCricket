@@ -43,49 +43,68 @@ def PlayMatch(match):
     log = os.path.join(log_folder, log_file)
     if os.path.isfile(log):
         os.remove(log)
+
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
     handler = logging.FileHandler(log)
     logger.addHandler(handler)
+
     # add logger to match
     match.logger = logger
+
     # see if teams are valid
     ValidateMatchTeams(match)
+
     # toss, select who is batting first
     match = Toss(match)
-    match.team1 = match.batting_first
-    match.team2 = match.batting_second
-    # play one inns
+    match.team1, match.team2 = match.batting_first, match.batting_second
+
     # match start
     match.status = True
+    match.batting_team, match.bowling_team = match.team1, match.team2
 
-    match.batting_team = match.team1
-    match.bowling_team = match.team2
+    # play
     Play(match)
+
+    # display batting and bowling scorecard
     DisplayScore(match, match.team1)
     DisplayBowlingStats(match)
+
     # play second inns with target
     match.team2.target = match.team1.total_score + 1
 
-    match.batting_team = match.team2
-    match.bowling_team = match.team1
+    # swap teams now
+    match.batting_team, match.bowling_team = match.team2, match.team1
+
+    # play
     Play(match)
+
+    # show batting and bowling scores
     DisplayScore(match, match.team2)
     DisplayBowlingStats(match)
+
+    # match ended
     match.status = False
+
     # show results
     CalculateResult(match)
     MatchSummary(match)
     FindPlayerOfTheMatch(match)
+
+    # close log handler
     handler.close()
+
+    return
 
 
 # match abandon due to rain
 def MatchAbandon(match):
     batting_team, bowling_team = match.batting_team, match.bowling_team
+
     # abandon due to rain
     PrintInColor(Randomize(commentary.commentary_rain_interrupt), Style.BRIGHT)
     input("Press any key to continue")
+
     # check nrr and crr
     nrr = GetRequiredRate(batting_team)
     crr = GetCurrentRate(batting_team)
@@ -95,16 +114,19 @@ def MatchAbandon(match):
     simulated_score = int(round(remaining_overs * crr)) + batting_team.total_score
 
     result_str = "%s wins by %s run(s) using D/L method!"
+
     if crr >= nrr:
         # calculate win margin
         result_str = result_str % (batting_team.name, str(abs(simulated_score - batting_team.target)))
     else:
         result_str = result_str % (bowling_team.name, str(abs(batting_team.target - simulated_score)))
     input("Press any key to continue")
+
     match.status = False
     result.result_str = result_str
     DisplayScore(match, batting_team)
     DisplayBowlingStats(match)
+
     # change result string
     match.result = result
     MatchSummary(match)
@@ -155,17 +177,17 @@ def PairFaceBall(pair, run):
         Error_Exit("Error! both cant be on strike!")
     player_on_strike = next((x for x in pair if x.onstrike), None)
     ind = pair.index(player_on_strike)
+
     alt_ind = 0
     if ind == 0:
         alt_ind = 1
-    elif ind == 1:
-        alt_ind = 0
+
     pair[ind].runs += run
     pair[ind].balls += 1
     # now if runs is 1 / 3
     if run % 2 != 0:
-        pair[ind].onstrike = False
-        pair[alt_ind].onstrike = True
+        pair[ind].onstrike, pair[alt_ind].onstrike = False, True
+
     return pair
 
 
@@ -176,8 +198,8 @@ def RotateStrike(pair):
     alt_ind = 0
     if ind == 0:
         alt_ind = 1
-    elif ind == 1:
-        alt_ind = 0
+    #elif ind == 1:
+    #    alt_ind = 0
     pair[ind].onstrike = False
     pair[alt_ind].onstrike = True
 
@@ -567,9 +589,9 @@ def UpdateLastPartnership(match, pair):
         last_partnership = Partnership(batsman_dismissed=pair[0],
                                        batsman_onstrike=pair[1],
                                        runs=last_partnership_runs)
-        #not all out
+        # not all out
         if batting_team.wickets_fell < 10:
-            last_partnership.both_notout=True
+            last_partnership.both_notout = True
 
         batting_team.partnerships.append(last_partnership)
     # if no wkt fell
@@ -669,11 +691,11 @@ def GenerateRun(match, over, player_on_strike, bowler):
     batting_team = match.batting_team
     overs = match.overs
     venue = match.venue
+    prob = venue.run_prob_t20
 
+    # if ODI, override the prob
     if overs == 50:
         prob = venue.run_prob
-    else:
-        prob = venue.run_prob_t20
 
     # run array
     run_array = [-1, 0, 1, 2, 3, 4, 5, 6]
@@ -685,9 +707,9 @@ def GenerateRun(match, over, player_on_strike, bowler):
 
         # if need 1 to win, don't take 2 or if 2 to win, don't take 3
         if batting_team.target - batting_team.total_score == 1:
-            prob = [1/7, 1/7, 1/7, 0, 1/7, 1/7, 1/7, 1/7, ]
+            prob = [1 / 7, 1 / 7, 1 / 7, 0, 1 / 7, 1 / 7, 1 / 7, 1 / 7, ]
         if batting_team.target - batting_team.total_score == 2:
-            prob = [1/7, 1/7, 1/7, 1/7, 0, 1/7, 1/7, 1/7, ]
+            prob = [1 / 7, 1 / 7, 1 / 7, 1 / 7, 0, 1 / 7, 1 / 7, 1 / 7, ]
 
     # but, if batsman is poor and bowler is skilled, more chances of getting out
     # override all above probs

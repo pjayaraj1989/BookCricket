@@ -193,10 +193,11 @@ def MatchSummary(match):
     # must be a nested list of fixed size elements
     data_to_print = []
     for x in range(n):
+        runs = str(most_runs[x].runs)
+        # if not out, put a * in the end
         if most_runs[x].status:
-            runs = str(most_runs[x].runs) + '*'
-        else:
-            runs = str(most_runs[x].runs)
+            runs += '*'
+
         # print
         data_to_print.append([GetShortName(most_runs[x].name),
                               '%s(%s)' % (runs, most_runs[x].balls),
@@ -222,10 +223,10 @@ def MatchSummary(match):
     best_bowlers = sorted(bowlers1, key=lambda b: b.wkts, reverse=True)
     best_bowlers = best_bowlers[:n]
     for x in range(n):
+        runs = str(most_runs[x].runs)
+        # if not out, put a *
         if most_runs[x].status:
-            runs = str(most_runs[x].runs) + '*'
-        else:
-            runs = str(most_runs[x].runs)
+            runs += '*'
 
         # print
         data_to_print.append([GetShortName(most_runs[x].name),

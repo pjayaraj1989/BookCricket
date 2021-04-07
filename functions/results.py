@@ -1,7 +1,6 @@
 # routines to calculate results
 from functions.helper import Result
 from operator import attrgetter
-import random
 from colorama import Style
 from functions.utilities import PrintInColor, BallsToOvers, Randomize
 
@@ -74,10 +73,13 @@ def FindBestPlayers(match):
 # Man of the match
 def FindPlayerOfTheMatch(match):
     # find which team won
+    # if tied
     if match.team1.total_score == match.team2.total_score:
         match.winner = Randomize([match.team1, match.team2])
+        match.loser = match.winner
+    # if any team won
     else:
-        match.winner, match.loser = max([match.team1, match.team2], key=attrgetter('total_score')),\
+        match.winner, match.loser = max([match.team1, match.team2], key=attrgetter('total_score')), \
                                     min([match.team1, match.team2], key=attrgetter('total_score'))
 
     # find best batsman, bowler from winning team
@@ -97,13 +99,13 @@ def FindPlayerOfTheMatch(match):
         # if neither one is not out, get best SR
         if not [plr for plr in best_batsmen if plr.status]:
             best_batsman = sorted(best_batsmen, key=attrgetter('strikerate'), reverse=True)[0]
-        #if there is one not out among them
+        # if there is one not out among them
         else:
             best_batsmen = [plr for plr in best_batsmen if plr.status][0]
             # if both are not out, select randomly
             if len(best_batsmen) == 2:
                 best_batsman = sorted(best_batsmen, key=attrgetter('strikerate'), reverse=True)[0]
-            elif len (best_batsmen) == 1:
+            elif len(best_batsmen) == 1:
                 best_batsman = best_batsmen[0]
 
     else:
@@ -135,12 +137,31 @@ def FindPlayerOfTheMatch(match):
 
 def GetMomStat(player):
     res = ''
+    char_notout = ''
     if player.runs > 0:
-        res += "scored %s runs off %s balls" % (str(player.runs),
-                                                str(player.balls))
+        # if not out, give a *
+        if player.status:
+            char_notout = '*'
+        res += "scored %s%s off %s balls" % (str(player.runs),
+                                             char_notout,
+                                             str(player.balls))
+
+    char_runs_given = ''
+    char_overs = ''
+    char_wkts = ''
     if player.balls_bowled > 0:
         overs = BallsToOvers(player.balls_bowled)
-        res += ",took %s wkt(s),conceding %s run(s) in %s over(s)" % (str(player.wkts),
-                                                                      str(player.runs_given),
-                                                                      str(overs))
+        if player.runs_given > 1:
+            char_runs_given = 's'
+        if overs > 1:
+            char_overs = 's'
+        if player.wkts > 1:
+            char_wkts = 's'
+        res += " Took %s wkt%s,conceding %s run%s in %s over%s" % (str(player.wkts),
+                                                                   char_wkts,
+                                                                   str(player.runs_given),
+                                                                   char_runs_given,
+                                                                   str(overs),
+                                                                   char_overs,
+                                                                   )
     return res
