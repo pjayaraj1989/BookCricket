@@ -90,7 +90,7 @@ def GetMatchInfo(list_of_teams, venue):
     umpire = random.sample(set(resources.umpires), 2)
 
     # get list of teams
-    teams = [l.key for l in list_of_teams]
+    teams = [team.key for team in list_of_teams]
 
     # select overs
     overs = input('Select overs (multiple of 5)\n')
@@ -120,26 +120,32 @@ def GetMatchInfo(list_of_teams, venue):
         if t.key == t2:
             team2 = t
 
+    match_type = str(overs) + ' overs'
+
+    if overs == 50:
+        match_type = 'ODI'
+    elif overs == 20:
+        match_type = 'T20'
+    elif overs == 5:
+        match_type = 'Exhibition'
+
     # initialize match with teams, overs
     match = Match(team1=team1,
                   team2=team2,
                   overs=overs,
+                  match_type=match_type,
+                  venue=venue,
+                  bowler_max_overs=bowler_max_overs,
+                  umpire=umpire[0],
                   result=None)
 
-    if overs == 50:
-        temp = 'ODI'
-    elif overs == 20:
-        temp = 'T20'
-    elif overs == 5:
-        temp = 'Exhibition'
-    else:
-        temp = str(overs) + ' over'
-
-    msg = '%s, %s, for the exciting %s match between %s and %s' % (intro,
-                                                                   venue.name,
-                                                                   temp,
-                                                                   team1.name,
-                                                                   team2.name,)
+    match_descriptions = ['exciting', 'most awaited', 'much awaited', ]
+    msg = '%s, %s, for the %s %s match between %s and %s' % (intro,
+                                                             venue.name,
+                                                             Randomize(match_descriptions),
+                                                             match.match_type,
+                                                             team1.name,
+                                                             team2.name,)
     PrintInColor(msg, Fore.LIGHTCYAN_EX)
 
     print('In the commentary box, myself %s with %s, and %s' % (commentator[0],
@@ -149,22 +155,12 @@ def GetMatchInfo(list_of_teams, venue):
     print('Umpires: %s and %s' % (umpire[0], umpire[1]))
     input('press enter to continue..')
 
-    # assign match properties
-    match.venue = venue
-    match.umpire = umpire[0]
-    match.bowler_max_overs = bowler_max_overs
-
     # set overs to team also
     for t in [match.team1, match.team2]:
         t.total_overs = match.overs
 
     # display squad
     DisplayPlayingXI(match)
-
-    # Want to play only highlights?
-    opt = ChooseFromOptions(['y', 'n'], "Do you want to play only highlights? y/n?", 5)
-    if opt.lower() == 'y':
-        match.autoplay = True
 
     return match
 
@@ -221,6 +217,12 @@ def ValidateMatchTeams(match):
         # check if keeper exists
         if t.keeper is None:
             Error_Exit('No keeper found in team %s' % t.name)
+
+        # check if more than one keeper or captain
+        if len([plr for plr in t.team_array if plr.attr.iskeeper]) > 1:
+            Error_Exit("More than one keeper found")
+        if len([plr for plr in t.team_array if plr.attr.iscaptain]) > 1:
+            Error_Exit("More than one captain found")
 
         # check for captain
         if t.captain is None:

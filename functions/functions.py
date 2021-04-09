@@ -18,11 +18,11 @@ import time
 def ReadData():
     # input teams to play    # now get the json files available
     json_files = [f for f in os.listdir(data_path) if (f.startswith('teams_') and f.endswith('.json'))]
-    leagues = [l.lstrip('teams_').strip('.json') for l in json_files]
+    leagues = [json_file.lstrip('teams_').strip('.json') for json_file in json_files]
     # welcome text
     PrintInColor(commentary.intro_game, Style.BRIGHT)
     league = ChooseFromOptions(leagues, "Choose league", 5)
-    data_file = [l for l in json_files if league in l][0]
+    data_file = [json_file for json_file in json_files if league in json_file][0]
     team_data = os.path.join(data_path, data_file)
     teams = ReadTeams(team_data)
     # now read venue data
@@ -33,10 +33,10 @@ def ReadData():
 # play match :  start
 def PlayMatch(match):
     # logging
-    log_file = 'log_%s_v_%s_%s_%s_ovrs.log' % (match.team1.name,
-                                               match.team2.name,
-                                               match.venue.name.replace(' ', '_'),
-                                               str(match.overs))
+    log_file = 'log_%s_v_%s_%s_%s_overs.log' % (match.team1.name,
+                                                match.team2.name,
+                                                match.venue.name.replace(' ', '_'),
+                                                str(match.overs))
     log_folder = os.path.join(ScriptPath, 'logs')
     if not os.path.exists(log_folder):
         os.makedirs(log_folder)
@@ -198,8 +198,7 @@ def RotateStrike(pair):
     alt_ind = 0
     if ind == 0:
         alt_ind = 1
-    #elif ind == 1:
-    #    alt_ind = 0
+
     pair[ind].onstrike = False
     pair[alt_ind].onstrike = True
 
@@ -257,8 +256,10 @@ def GenerateDismissal(bowler, bowling_team):
 
 
 # update dismissal
-def UpdateDismissal(match, bowler, pair, dismissal):
+def UpdateDismissal(match, bowler, dismissal):
     batting_team, bowling_team = match.batting_team, match.bowling_team
+    pair = batting_team.current_pair
+
     if 'runout' in dismissal:
         bowler.ball_history.append('RO')
         batting_team.ball_history.append('RO')
@@ -349,20 +350,21 @@ def UpdateDismissal(match, bowler, pair, dismissal):
                                                                                GetSurname(pair[1].name)),
                      Style.BRIGHT)
 
-    PrintCommentaryDismissal(match, dismissal, pair, bowler)
+    PrintCommentaryDismissal(match, dismissal, bowler)
     # show score
     ShowHighlights(match)
     # get next batsman
-    GetNextBatsman(match, pair)
+    GetNextBatsman(match)
     input('press enter to continue')
 
     return
 
 
 # print commentary for dismissal
-def PrintCommentaryDismissal(match, dismissal, pair, bowler):
+def PrintCommentaryDismissal(match, dismissal, bowler):
     # commentary
     comment = ' '
+    pair = match.batting_team.current_pair
 
     batting_team, bowling_team = match.batting_team, match.bowling_team
     player_dismissed = next((x for x in pair if not x.status), None)
@@ -426,8 +428,9 @@ def PrintCommentaryDismissal(match, dismissal, pair, bowler):
 
 
 # get next batsman
-def GetNextBatsman(match, pair):
+def GetNextBatsman(match):
     batting_team = match.batting_team
+    pair = batting_team.current_pair
     player_dismissed = next((x for x in pair if not x.status), None)
     if batting_team.wickets_fell < 10:
         ind = pair.index(player_dismissed)
@@ -439,13 +442,16 @@ def GetNextBatsman(match, pair):
             PrintInColor(Randomize(commentary.commentary_captain_to_bat_next), batting_team.color)
         # now new batter on field
         pair[ind].onfield = True
+
+    batting_team.current_pair = pair
     return pair
 
 
 # play a ball
-def Ball(match, run, pair, bowler):
+def Ball(match, run, bowler):
     batting_team, bowling_team = match.batting_team, match.bowling_team
     logger = match.logger
+    pair = batting_team.current_pair
     # get who is on strike
     on_strike = next((x for x in pair if x.onstrike), None)
     off_strike = next((x for x in pair if not x.onstrike), None)
@@ -464,10 +470,10 @@ def Ball(match, run, pair, bowler):
                 break
             # decision stays
             else:
-                UpdateDismissal(match, bowler, pair, dismissal)
+                UpdateDismissal(match, bowler, dismissal)
                 return
         else:
-            UpdateDismissal(match, bowler, pair, dismissal)
+            UpdateDismissal(match, bowler, dismissal)
             return
 
     # other than dismissal
@@ -749,7 +755,8 @@ def DetectDeathOvers(match, over):
 
 
 # play an over
-def PlayOver(match, over, pair):
+def PlayOver(match, over):
+    pair = match.batting_team.current_pair
     overs = match.overs
     batting_team, bowling_team = match.batting_team, match.bowling_team
     match_status = True
@@ -807,7 +814,7 @@ def PlayOver(match, over, pair):
 
         # if not wide
         else:
-            Ball(match, run, pair, bowler)
+            Ball(match, run, bowler)
             ball += 1
             total_runs_in_over += run
 
@@ -972,7 +979,8 @@ def Play(match):
                 PrintInColor(Randomize(commentary.commentary_last_over_innings), Style.BRIGHT)
 
         # play an over
-        status = PlayOver(match, over, pair)
+        match.batting_team.current_pair = pair
+        status = PlayOver(match, over)
         if status is False:
             break
 

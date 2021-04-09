@@ -1,6 +1,6 @@
 # resources needed
 
-class resources():
+class resources:
     # color maps
     from colorama import Fore
     color_map = {"lcyan": Fore.LIGHTCYAN_EX,

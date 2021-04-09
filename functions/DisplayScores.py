@@ -147,7 +147,7 @@ def MatchSummary(match):
     ch = '-'
     result = match.result
 
-    msg = '%s Match Summary %s' % (ch*10, ch*10)
+    msg = '%s Match Summary %s' % (ch * 10, ch * 10)
     PrintInColor(msg, Style.BRIGHT)
     logger.info(msg)
 
@@ -182,7 +182,7 @@ def MatchSummary(match):
 
     most_runs = sorted(result.team1.team_array, key=lambda t: t.runs, reverse=True)
 
-    #there will be always two batsmen and two bowlers
+    # there will be always two batsmen and two bowlers
     if len(most_runs) > 2:
         most_runs = most_runs[:n]
 
@@ -251,7 +251,7 @@ def DisplayBowlingStats(match):
     print(char * 45)
     logger.info(char * 45)
 
-    msg = '%s-Bowling Stats-%s' % (char*15, char*15)
+    msg = '%s-Bowling Stats-%s' % (char * 15, char * 15)
     PrintInColor(msg, Style.BRIGHT)
     logger.info(msg)
     print(char * 45)
