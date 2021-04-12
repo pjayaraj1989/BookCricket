@@ -413,6 +413,9 @@ def PrintCommentaryDismissal(match, dismissal):
     # if he missed a fifty or century
     if 90 <= player_dismissed.runs < 100:
         PrintInColor(Randomize(commentary.commentary_nineties) % GetSurname(player_dismissed.name), Style.BRIGHT)
+    # if lost fifty
+    if 40 <= player_dismissed.runs < 50:
+        PrintInColor(Randomize(commentary.commentary_forties) % GetSurname(player_dismissed.name), Style.BRIGHT)
     # if its a great knock, say this
     if player_dismissed.runs > 50:
         PrintInColor(Randomize(commentary.commentary_out_fifty) % GetSurname(player_dismissed.name), Style.BRIGHT)
@@ -554,7 +557,21 @@ def Ball(match, run):
             field = Randomize(resources.fields["ground_shot"])
             comment = Randomize(commentary.commentary_ground_shot)
             if run == 1:
-                print('%s,%s %s run' % (comment, field, str(run)))
+                # detect if its a dropped catch
+                catch_drop = Randomize([True, False])
+                # get fielders list
+                fielder = Randomize([player for player in bowling_team.team_array if player is not bowler])
+
+                # if dropped catch
+                if catch_drop is True:
+                    dropped_by_keeper_prob = [0.1, 0.9]
+                    dropped_by_keeper = choice([True, False], 1, p=dropped_by_keeper_prob, replace=False)[0]
+                    if dropped_by_keeper is True:
+                        comment = Randomize(commentary.commentary_dropped_keeper) % bowling_team.keeper.name
+                    else:
+                        comment = Randomize(commentary.commentary_dropped) % fielder.name
+
+                print('%s,%s run' % (comment, str(run)))
             else:
                 print('%s,%s %s runs' % (comment, field, str(run)))
             # update 1s and 2s

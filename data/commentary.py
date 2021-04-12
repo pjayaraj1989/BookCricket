@@ -68,8 +68,10 @@ class commentary():
                       'that\'s huge, its out of here!', ]
     commentary_four = ['what a shot!.. that will find the fence!',
                        'short and wide and punished hard!',
+                       'that\'s the shot of the day for me!',
                        'oh will this be taken in the deep, oh he has dropped it.. and its 4!',
                        'the crowd is loving this!',
+                       'fielder in pursuit... wont get there..',
                        'beautiful drive and the fielder has given up the chase!',
                        'into the gap for four!',
                        'pierced the gap for four!'
@@ -379,6 +381,22 @@ class commentary():
                                  'they have used all their review chances!',
                                  'No more reviews left!']
 
+    commentary_dropped = ['that\'s hit straight up in the air, %s says mine.. oh and put down!',
+                          'edged and dropped at first slip by %s! disappointment for the bowler.. oh dear!.. batsman is lucky !',
+                          'in the air and oh.. ! put down by %s.. sigh of relief for the batsman!',
+                          'good delivery, thats in the air but drops safe.. just bounces in front of %s',
+                          'well bowled. he hits in the air and chance goes down! goodness me! catches win matches.. costly miss from %s',
+                          'well bowled, that\'s in the air and this should be out. oh dropped by %s! goodness me, how lucky are you!!',
+                          'very good ball. he has hit it straight up in the air, oh %s has dropped it!',
+                          'in the air ..taken..? i think the fielder %s says the ball has touched the ground',
+                          ]
+
+    commentary_dropped_keeper = ['that\'s hit straight up in the air, keeper %s says mine.. oh and put down!',
+                                 'that\'s in the air but put down by the keeper! oh what a miss from %s!!',
+                                 'edged and taken.. no he has dropped it! oh %s... this could prove costly',
+                                 'there is an edge, bowler appeals.. but looks like %s knows he has dropped it',
+                                 ]
+
     # dot ball
     commentary_dot_ball_pacer = ['wild swing from %s and a miss from %s.. no run!',
                                  'its a short one from %s and hit %s on the shoulder!',
@@ -389,14 +407,13 @@ class commentary():
                                  'fast and swinging from %s, %s mistimes it.. no run!',
                                  'that looks close, but not out says the umpire! %s is unlucky and %s, you\'re a lucky man!',
                                  'beautiful slow ball from %s.. fooled %s!',
-                                 'right in the block hole of %s! well negotiated by %s',
+                                 'right in the block hole by %s! well negotiated by %s',
                                  'swings and misses.. a stare from %s! %s living dangerously!',
                                  'good ball from %s, %s hits well but straight to the man at short extra cover!..well fielded!',
                                  'well bowled %s, outside off and %s misses that!',
                                  'its fast and swinging dangerously from %s.. missed %s\'s off stump by inches!',
                                  'dangerous delivery from %s! batsman %s had no clue about it',
                                  'oh that was a quick one from %s, too good for %s!',
-                                 'what a ball %s, that\'s hit straight up in the air by %s, keeper says mine.. oh and put down!',
                                  'oh %s! that was perilously close to the off stump!, %s looking nervous here!',
                                  'that bounced too much from %s.. %s had no clue.. and well taken by the keeper too!',
                                  'dangerous short ball from %s.. %s didn\'t have a clue !', ]
@@ -407,10 +424,7 @@ class commentary():
                            'accurate from %s and that\'s a textbook defence from %s!',
                            'big big appeal from %s... but umpire shakes his head!.. %s looks relaxed',
                            'oh %s, He\'s Bowling a Good Line and Length.. %s looks unsettled',
-                           'edged and dropped at first slip! disappointment for %s.. oh dear!.. %s is lucky !',
                            'swings and misses.. a stare from %s %s living dangerously!',
-                           'in the air and oh.. ! put down.. %s is down on his feet.. sign of relief for %s!',
-                           'good delivery from %s , in the air but drops safe.. sign of relief for %s!',
                            'deceived the batsman.. and %s gives %s a stare!',
                            'big appeal from %s.. but umpire says not out! %s looks nervous',
                            'that looks close, but not out says the umpire! %s is unlucky and %s, you\'re a lucky man!',
@@ -420,14 +434,8 @@ class commentary():
                            'magnificent delivery from %s.. just above %s \'s bails to the keeper!',
                            'oh what a ball from %s ! tantalizingly close to the stumps... a near miss for %s!',
                            '%s thinks there is an edge..? keeper is appealing.. %s looks unhappy! but the umpire shakes his head!',
-                           'that\'s in the air but put down by the keeper! oh what a miss for %s.. lucky %s!!',
                            'magnificent from %s, deceived %s and nearly missed the off stump',
-                           'well bowled by %s, %s mistimes it and hits in the air and chance goes down! goodness me! catches win matches',
-                           'well bowled %s, that\'s in the air and this should be out. oh dropped! goodness me, how lucky are you %s!!',
-                           'very good ball %s, and %s has hit it straight up in the air, oh he has dropped it!',
-                           'well bowled %s, mistimed by %s. should be taken.. and dropped!.. dear o dear!',
                            'beautiful slow ball from %s.. fooled %s!',
-                           'what a ball %s, that\'s hit straight up in the air by %s, keeper says mine.. oh and put down!',
                            'bad ball from %s but that\'s hit in the air by %s, but falls in no man\'s land',
                            'full from %s, driven nicely by %s but the fielder was lightning quick! saved a certain boundary!',
                            'a little short from %s, played well by %s but straight to the fielder!',
@@ -453,6 +461,14 @@ class commentary():
                            'oh gone in the nineties.. %s will be kicking himself!',
                            'unlucky! gone in the nineties.. %s!',
                            'oh missed a well deserving ton.. well played %s!']
+
+    commentary_forties = ['Oh %s.. has lost a fifty!',
+                          'oh %s! what a shame! missed a deserving half century!',
+                          'gone in the forties! %s will be so disappointed here!',
+                          'needless shot! lost a brilliant half century from %s!',
+                          'unlucky! lost a fifty.. %s!',
+                          'oh missed a well deserving half century.. well played %s!']
+
     commentary_out_duck = ['The batsman will be so disappointed.. he is gone for nothing!',
                            'gone for a duck! His nightmare continues!',
                            'that\'s his second duck in a row in this season!',
