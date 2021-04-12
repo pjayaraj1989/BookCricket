@@ -67,6 +67,7 @@ class commentary():
                       'boy what a hit!',
                       'that\'s huge, its out of here!', ]
     commentary_four = ['what a shot!.. that will find the fence!',
+                       'short and wide and punished hard!',
                        'oh will this be taken in the deep, oh he has dropped it.. and its 4!',
                        'the crowd is loving this!',
                        'beautiful drive and the fielder has given up the chase!',
@@ -142,7 +143,7 @@ class commentary():
                                  'he starts with a bang! no pressure at all!',
                                  'explosive start! bowler is stunned!',
                                  'bowler feels the pressure now! first ball has been smoked!',
-                                 'well what a start! the first ball has been goes for a boundary',
+                                 'well what a start! the first ball has been hit for a boundary',
                                  'that\'s how you start an innings! pressure straightway on the bowler now!']
     commentary_firstball_six = ['six of the first ball!',
                                 'would you believe it! six of the first ball!',
@@ -195,7 +196,8 @@ class commentary():
     commentary_hit_wkt = ['gone! he has hit the stumps!']
     commentary_bowled = ['full and straight what a ball',
                          'what a yorker! he is on fire!',
-                         'bowled himm!',
+                         'bowled him!',
+                         'poor footwork!.. bowled him',
                          'got him! and the bowler lets out a roar!',
                          'perfect length, that has hit the top of off-stump!',
                          'Middle stump out of here',
@@ -247,6 +249,7 @@ class commentary():
                        'that was the one which didn\'t turn!,, batsman is fooled!',
                        'that ball turned so sharp!!',
                        'that was the wrong-un!',
+                       'a ripsnorter!',
                        'beautiful top spinner!',
                        'what a delivery!.. terrific spin!',
                        'oh what a turn! and the batsman is fooled completely!',
@@ -301,11 +304,13 @@ class commentary():
                          'hit hard to the fielder and %s takes it!',
                          'hit straight down %s\'s throat!',
                          'in the air and oh! has he taken that? He has! %s! what a catch!']
-    commentary_keeper_catch = ['edged.. and taken by %s!',
+    commentary_keeper_catch = ['edged.. and taken by the keeper %s!',
+                               'got him, yes.. caught behind!.. good take by %s',
                                'there is an edge and what a catch by the keeper %s!',
                                'thin edge, big appeal by %s! given!',
                                'is there an edge? %s looks confident! Yes it is!',
                                'edged and brilliant dive by %s!',
+                               'big deflection and yes! safely taken by %s',
                                'ooh there is an edge? %s appeals, bowler appeals...given!',
                                'outside edge and brilliantly taken by the %s!',
                                'oh is there a nick!? %s thinks so, Batsman is walking...!',
@@ -316,6 +321,7 @@ class commentary():
                                'that\'s out, caught n bowled by %s!',
                                'caught and bowled by %s! what a reflex!',
                                'what kind of reflexes by %s! That\'s taken!',
+                               'full toss, and hit it straight back at the bowler! what a take %s',
                                'hit it hard but taken by the bowler himself!.. you beauty %s']
 
     # modify this as per DRS
@@ -329,14 +335,18 @@ class commentary():
                              'big appeal.. and the umpire %s says out! oh that looks like a harsh decision!', ]
     commentary_lbw_drs_taken = ['%s looks confused.. long chat with his partner %s.. and finally takes it upstairs!',
                                 '%s is desperate here, long discussion with %s.. and finally decides to go for the DRS',
-                                'Oh they had a quick chat, %s and %s, and they are going with the DRS.. looks like a review wasted?',
+                                'Oh they had a quick chat, %s and %s, and they are going with the DRS.. looks like a '
+                                'review wasted?',
                                 '%s is quickly having a chat with %s.. and decides to opt for the DRS',
-                                'This is a tough call.. Will they waste a DRS chance here? %s looks confident, but %s doesnt!',
+                                'This is a tough call.. Will they waste a DRS chance here? %s looks confident, '
+                                'but %s doesn\'t!',
                                 'well, %s hasn\'t even discussed with %s, has gone upstairs instantly!',
                                 'well %s has gone for the review instantly.. didn\'t even look at %s!']
     commentary_lbw_drs_not_taken = ['he is having a long chat with the non striker.. and finally he is walking off..',
-                                    'it looked close to me, he discusses with the non striker, will not be wasting a DRS chance here',
-                                    'Will he go upstairs, dont think so.. a nod at his partner, and he is walking off the field',
+                                    'it looked close to me, he discusses with the non striker, will not be wasting a '
+                                    'DRS chance here',
+                                    'Will he go upstairs, dont think so.. a nod at his partner, and he is walking off '
+                                    'the field',
                                     'are they going for the DRS here? I don\'t think so they are interested..']
     commentary_lbw_decision_stays = [
         'Well it shows that the ball will be hitting the top of off!. Decision stays.. good on field call %s!',
@@ -372,15 +382,18 @@ class commentary():
                                  'oh terrific from %s .. that has hit the batsman on the helmet.. hope %s is fine!',
                                  'oh that\'s a quick delivery from %s.. %s looks unsettled!',
                                  'fast and swinging from %s, %s mistimes it.. no run!',
-                                 'that looks close, but not out says the umpire! %s is unlucky and %s, youre a lucky man!',
+                                 'that looks close, but not out says the umpire! %s is unlucky and %s, youre a lucky '
+                                 'man!',
                                  'beautiful slow ball from %s.. fooled %s!',
                                  'swings and misses.. a stare from %s! %s living dangerously!',
-                                 'good ball from %s, %s hits well but straight to the man at short extra cover!.. well fielded!',
+                                 'good ball from %s, %s hits well but straight to the man at short extra cover!.. '
+                                 'well fielded!',
                                  'well bowled %s, outside off and %s misses that!',
                                  'its fast and swinging dangerously from %s.. missed %s\'s off stump by inches!',
                                  'dangerous delivery from %s! batsman %s had no clue about it',
                                  'oh that was a quick one from %s, too good for %s!',
-                                 'what a ball %s, that\'s hit straight up in the air by %s, keeper says mine.. oh and put down!',
+                                 'what a ball %s, that\'s hit straight up in the air by %s, keeper says mine.. oh and '
+                                 'put down!',
                                  'oh %s! that was perilously close to the off stump!, %s looking nervous here!',
                                  'that bounced too much from %s.. %s had no clue.. and well taken by the keeper too!',
                                  'dangerous short ball from %s.. %s didn\'t have a clue !', ]
@@ -400,20 +413,26 @@ class commentary():
                            'that looks close, but not out says the umpire! %s is unlucky and %s, you\'re a lucky man!',
                            'missed it, there is a stare from %s at %s',
                            'oh swing and a miss!.. well bowled %s! %s is looking nervous!',
-                           'good ball from %s, %s hits well but straight to the man at short extra cover!.. well fielded!',
+                           'good ball from %s, %s hits well but straight to the man at short extra cover!.. well '
+                           'fielded!',
                            'magnificent delivery from %s.. just above %s \'s bails to the keeper!',
                            'oh what a ball from %s ! tantalizingly close to the stumps... a near miss for %s!',
-                           '%s thinks there is an edge..? keeper is appealing.. %s looks unhappy! but the umpire shakes his head!',
+                           '%s thinks there is an edge..? keeper is appealing.. %s looks unhappy! but the umpire '
+                           'shakes his head!',
                            'that\'s in the air but put down by the keeper! oh what a miss for %s.. lucky %s!!',
                            'magnificent from %s, deceived %s and nearly missed the off stump',
-                           'well bowled by %s, %s mistimes it and hits in the air and chance goes down! goodness me! catches win matches',
-                           'well bowled %s, thats in the air and this should be out. oh dropped! goodness me, how lucky are you %s!!',
+                           'well bowled by %s, %s mistimes it and hits in the air and chance goes down! goodness me! '
+                           'catches win matches',
+                           'well bowled %s, that\'s in the air and this should be out. oh dropped! goodness me, '
+                           'how lucky are you %s!!',
                            'very good ball %s, and %s has hit it straight up in the air, oh he has dropped it!',
                            'well bowled %s, mistimed by %s. should be taken.. and dropped!.. dear o dear!',
                            'beautiful slow ball from %s.. fooled %s!',
-                           'what a ball %s, that\'s hit straight up in the air by %s, keeper says mine.. oh and put down!',
-                           'bad ball from %s but that\'s hit in the air by %s, but falls in no mans land',
-                           'full from %s, driven nicely by %s but the fielder was lightning quick! saved a certain boundary!',
+                           'what a ball %s, that\'s hit straight up in the air by %s, keeper says mine.. oh and put '
+                           'down!',
+                           'bad ball from %s but that\'s hit in the air by %s, but falls in no man\'s land',
+                           'full from %s, driven nicely by %s but the fielder was lightning quick! saved a certain '
+                           'boundary!',
                            'a little short from %s, played well by %s but straight to the fielder!',
                            'slower ball from %s and %s misses it!']
 
@@ -605,7 +624,8 @@ class commentary():
                               'weather doesnt look good.. can see the rain clouds developing....']
     commentary_rain_drizzling = ['this is not looking good, a slight drizzle.. we can see raincoats among the crowd',
                                  'it started drizzling a little now..  tougher for the players',
-                                 'slight drizzle, and fielding is getting tougher!.. we could see the spectators getting their coats']
+                                 'slight drizzle, and fielding is getting tougher!.. we could see the spectators '
+                                 'getting their coats']
     commentary_rain_heavy = ['this is bad.. it started pouring!.. Umpires looking concerned',
                              'oops it has started pouring!.. Umpires are having a chat with the players',
                              'Its raining.. !!']

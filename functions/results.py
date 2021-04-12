@@ -117,12 +117,27 @@ def FindPlayerOfTheMatch(match):
     else:
         best_bowler = best_bowlers[0]
 
-    # check if win margin is >50% , if so, give credit to bowlers, else batsmen
-    if float(match.winner.total_score / match.loser.total_score) >= 1.2:
-        best_player = best_bowler
-    else:
-        best_player = best_batsman
+    # check if mom is best batsman or bowler
+    mom_is_batsman = 1
+    mom_is_bowler = 1
 
+    # check if win margin is >50% or if bowler took 5 wkts, if so, give credit to bowlers, else batsmen
+    margin = float(match.winner.total_score / match.loser.total_score)
+    if margin >= 1.2:
+        mom_is_bowler += 1
+
+    # if losing team is bowled out
+    if match.loser.wickets_fell >= 8:
+        # if there is a 5 or 3 wkt haul;
+        if best_bowler.wkts >= 3:
+            mom_is_bowler += 1
+
+    best_player = best_batsman
+    # check points
+    if mom_is_bowler > mom_is_batsman:
+        best_player = best_bowler
+
+    # override
     # if a player is found in both top batsmen and bowler list he is my MOM
     common_players = list(set(best_bowlers).intersection(best_batsmen))
     if len(common_players) != 0:
