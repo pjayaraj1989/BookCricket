@@ -801,7 +801,15 @@ def PlayOver(match, over):
     ismaiden = True
     total_runs_in_over = 0
     ball = 1
+    over_arr = []
+
+    # loop for an over
     while ball <= 6:
+        # check if dramatic over!
+        if over_arr.count(6) > 2 or over_arr.count(4) > 2 \
+                and -1 in over_arr:
+            PrintInColor(Randomize(commentary.commentary_dramatic_over), Style.BRIGHT)
+
         if over == overs - 1 and ball == 6:
             if batting_team.batting_second:
                 PrintInColor(Randomize(commentary.commentary_last_ball_match), Style.BRIGHT)
@@ -809,6 +817,8 @@ def PlayOver(match, over):
                 PrintInColor(Randomize(commentary.commentary_last_ball_innings), Style.BRIGHT)
 
         DetectDeathOvers(match, over)
+
+        # if match ended
         if not match.status:
             break
 
@@ -822,6 +832,14 @@ def PlayOver(match, over):
 
         # generate run, updates runs and maiden status
         run = GenerateRun(match, over, player_on_strike)
+        over_arr.append(run)
+
+        # detect too many wkts or boundaries
+        if over_arr.count(-1) > 2:
+            print("%s wickets already in this over!" % str(over_arr.count(-1)))
+        if (over_arr.count(4) + over_arr.count(6)) > 2:
+            print("%s boundaries already in this over!" % str(over_arr.count(4) + over_arr.count(6)))
+
         # check if maiden or not
         if run not in [-1, 0]:
             ismaiden = False
@@ -829,6 +847,9 @@ def PlayOver(match, over):
         # check if extra
         if run == 5:
             UpdateExtras(match)
+            # comment on too many extras
+            if over_arr.count(5) > 2:
+                print("%s extras in this over!" % str(over_arr.count(5)))
             total_runs_in_over += 1
 
         # if not wide
