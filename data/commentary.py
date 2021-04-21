@@ -37,7 +37,7 @@ class commentary():
                                            'singles and doubles wont take %s home!',
                                            '%s need to boost up the run rate!',
                                            'required rate is going higher for %s.. pressure building!',
-                                           'bowlers are not giving % room to cope up with the required rate!',
+                                           'bowlers are not giving %s room to cope up with the required rate!',
                                            '%s will have to struggle to get home with this scoring rate!',
                                            'chase looks pretty sluggish for %s!',
                                            '%s need some hard hitters to stay alive in this chase!',
