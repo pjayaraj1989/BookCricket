@@ -47,6 +47,7 @@ class Match:
         attrs = {'status': False, 'overs': 0, 'match_type': None, 'bowler_max_overs': 0,
                  'logger': None, 'result': None, 'team1': None, 'team2': None, 'winner': None, 'loser': None,
                  'venue': None, 'umpire': None, 'commentators': None,
+                 'drs': False,
                  'batting_first': None, 'batting_second': None, 'won': False, 'autoplay': False, 'batting_team': None,
                  'bowling_team': None}
         self = FillAttributes(self, attrs, kwargs)

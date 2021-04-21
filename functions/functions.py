@@ -473,7 +473,15 @@ def Ball(match, run):
         dismissal = GenerateDismissal(match)
         if 'lbw' in dismissal:
             PrintInColor(Randomize(commentary.commentary_lbw_umpire) % match.umpire, Fore.LIGHTRED_EX)
+
+            # if match has no DRS, do not go into this
+            if match.drs is False:
+                UpdateDismissal(match, dismissal)
+                return
+
+            # if DRS opted, check
             result = CheckDRS(match)
+
             # overturn
             if result:
                 run = 0
@@ -898,20 +906,20 @@ def PlayOver(match, over):
                 match_status = False
                 PrintInColor(Randomize(commentary.commentary_lost_chasing) % (batting_team.name, bowling_team.name),
                              Style.BRIGHT)
-                #input('press enter to continue...')
+                input('press enter to continue...')
                 break
             # check if target achieved chasing
             if batting_team.batting_second is True and (batting_team.total_score >= batting_team.target):
                 PrintInColor(Randomize(commentary.commentary_match_won), Fore.LIGHTGREEN_EX)
                 match_status = False
                 UpdateLastPartnership(match)
-                #input('press enter to continue...')
+                input('press enter to continue...')
                 break
             # if all out
             if batting_team.wickets_fell == 10:
                 PrintInColor(Randomize(commentary.commentary_all_out), Fore.LIGHTRED_EX)
                 match_status = False
-                #input('press enter to continue...')
+                input('press enter to continue...')
                 break
 
     # check if over is a maiden

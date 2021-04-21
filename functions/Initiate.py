@@ -201,6 +201,13 @@ def Toss(match):
     match.batting_first = batting_first
     match.batting_second = batting_second
 
+    # do you need DRS?
+    drs_opted = ChooseFromOptions(['y','n'], "Do you need DRS for this match? ", 5)
+    if drs_opted == 'y':
+        print("DRS opted")
+        match.drs = True
+        input("press enter to continue")
+
     return match
 
 
