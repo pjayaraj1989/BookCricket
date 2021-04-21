@@ -465,7 +465,6 @@ def Ball(match, run):
 
     # get who is on strike
     on_strike = next((x for x in pair if x.onstrike), None)
-    off_strike = next((x for x in pair if not x.onstrike), None)
 
     # if out
     used_drs = False
@@ -881,7 +880,8 @@ def PlayOver(match, over):
         else:
             Ball(match, run)
             ball += 1
-            total_runs_in_over += run
+            if run != -1:
+                total_runs_in_over += run
             if match.status is False:
                 break
             # check if 1st innings over
