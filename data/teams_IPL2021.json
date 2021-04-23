@@ -61,7 +61,6 @@
         {"name": "Johny Bairstow","batting": 8},
         {"name": "Manish Pandey","batting": 8},
         {"name": "Vijay Shankar","batting": 7,"bowling":7,"pacer":1},
-        {"name": "Priyam Garg","batting": 7},
         {"name": "Abdul Samad","batting": 6,"bowling": 6, "spinner":1},
         {"name": "Mohammad Nabi","batting": 7,"bowling": 8, "spinner":1},
         {"name": "Rashid Khan","batting": 5,"bowling": 10, "spinner":1},

@@ -72,7 +72,8 @@ def DisplayScore(match, team):
     # this should be a nested list of 3 elements
     data_to_print = []
     for p in team.team_array:
-        name = GetShortName(p.name)
+        #name = GetShortName(p.name)
+        name = p.name
         name = name.upper()
         if p.attr.iscaptain:
             name += '(c)'
@@ -267,7 +268,7 @@ def DisplayBowlingStats(match):
             eco = float(bowler.runs_given / overs)
             eco = round(eco, 2)
             bowler.eco = eco
-            data_to_print.append([GetShortName(bowler.name).upper(),
+            data_to_print.append([bowler.name.upper(),
                                   str(overs),
                                   str(bowler.maidens),
                                   str(bowler.runs_given),
