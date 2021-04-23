@@ -436,6 +436,23 @@ def PrintCommentaryDismissal(match, dismissal):
     return
 
 
+# assign batsman
+def AssignBatsman(match, pair):
+    batting_team = match.batting_team
+    remaining_batsmen = [plr for plr in batting_team.team_array if (plr.status and plr not in pair)]
+
+    next_batsman = input('Choose next batsman: {0} [Press Enter to auto-select]'.format(
+        ' / '.join([str(x.no) + '.' + GetShortName(x.name) for x in remaining_batsmen])))
+    batsman = next((x for x in remaining_batsmen if (str(next_batsman) == str(x.no)
+                                                     or next_batsman.lower() in GetShortName(x.name).lower())),
+                   None)
+
+    if batsman is None:
+        Error_Exit("No batsman assigned!")
+
+    return batsman
+
+
 # get next batsman
 def GetNextBatsman(match):
     batting_team = match.batting_team
@@ -443,7 +460,10 @@ def GetNextBatsman(match):
     player_dismissed = next((x for x in pair if not x.status), None)
     if batting_team.wickets_fell < 10:
         ind = pair.index(player_dismissed)
-        pair[ind] = batting_team.team_array[batting_team.wickets_fell + 1]
+
+        # choose next one from the team
+        pair[ind] = AssignBatsman(match, pair)
+
         pair[ind].onstrike = True
         PrintInColor("New Batsman: %s" % pair[ind].name, batting_team.color)
         # check if he is captain
@@ -789,7 +809,7 @@ def DetectDeathOvers(match, over):
                 PrintInColor('To win: %s from %s' % (str(towin),
                                                      str(overs * 6 - batting_team.total_balls)),
                              Style.BRIGHT)
-        #input('press enter to continue..')
+        # input('press enter to continue..')
     return
 
 
