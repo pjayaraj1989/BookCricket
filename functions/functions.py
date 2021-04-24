@@ -1020,7 +1020,12 @@ def Play(match):
     pair = batting_team.opening_pair
 
     comment = ''
+    over_interrupt = 0
     if batting_team.batting_second is True:
+        # in case of rainy, interrupt match intermittently
+        if match.venue.weather == 'rainy':
+            over_interrupt = random.choice(list(range(15, 50)))
+
         msg = 'Target for %s: %s from %s overs' % (batting_team.name,
                                                    str(batting_team.target),
                                                    str(overs))
@@ -1036,12 +1041,6 @@ def Play(match):
         elif reqd_rr < 5.0:
             comment = Randomize(commentary.commentary_less_req_rate) % batting_team.name
         PrintInColor(comment, Style.BRIGHT)
-
-    # depending on weather, if rainy, decide after which over
-    over_interrupt = 0
-    if batting_team.batting_second is True:
-        if match.venue.weather == 'rainy':
-            over_interrupt = random.choice(list(range(15, 50)))
 
     # now run for each over
     for over in range(0, overs):
