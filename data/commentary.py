@@ -1,7 +1,7 @@
 # all the commentary phrases are defined here
 
 # commentary phrases
-class commentary():
+class commentary:
     intro_game = '*' * 50 + '\n' + '*' * 14 + 'Book Cricket Simulator' + '*' * 14 + '\n' + '*' * 50
 
     intro_dialogues = ['Welcome everybody, here we are at ',

@@ -1,7 +1,6 @@
 # routines to display scores, etc
 # display temporary stats
-from functions.utilities import PrintInColor, BallsToOvers, GetShortName, PrintListFormatted, Randomize
-from data.commentary import *
+from functions.utilities import PrintInColor, BallsToOvers, GetShortName, PrintListFormatted
 from colorama import Style
 
 
@@ -26,36 +25,6 @@ def GetRequiredRate(team):
     return nrr
 
 
-def ShowHighlights(match):
-    batting_team = match.batting_team
-    logger = match.logger
-    crr = GetCurrentRate(batting_team)
-    # update rate
-    batting_team.nrr = crr
-
-    # default msg
-    msg = '%s %s / %s (%s Overs)' % (batting_team.name,
-                                     str(batting_team.total_score),
-                                     str(batting_team.wickets_fell),
-                                     str(BallsToOvers(batting_team.total_balls)))
-    # if overs done, don't print Run rate
-    if batting_team.total_balls <= batting_team.total_overs * 6:
-        msg += ', Current RR: %s' % (str(crr))
-
-    if batting_team.batting_second:
-        if batting_team.total_balls <= batting_team.total_overs * 6 or batting_team.total_score <= batting_team.target:
-            reqd_rate = GetRequiredRate(batting_team)
-            msg += ", Reqd. Rate: %s" % (str(reqd_rate))
-            if reqd_rate >= crr:
-                PrintInColor(Randomize(commentary.commentary_situation_reqd_rate_high) % batting_team.name,
-                             Style.BRIGHT)
-            else:
-                PrintInColor(Randomize(commentary.commentary_situation_reqd_rate_low) % batting_team.name, Style.BRIGHT)
-
-    PrintInColor(msg, Style.BRIGHT)
-    logger.info(msg)
-
-
 # batting summary - scoreboard
 def DisplayScore(match, team):
     logger = match.logger
@@ -72,7 +41,6 @@ def DisplayScore(match, team):
     # this should be a nested list of 3 elements
     data_to_print = []
     for p in team.team_array:
-        #name = GetShortName(p.name)
         name = p.name
         name = name.upper()
         if p.attr.iscaptain:
@@ -140,6 +108,92 @@ def DisplayScore(match, team):
 
     print(ch * 45)
     logger.info(ch * 45)
+
+
+# comment about the current match status
+def CurrentMatchStatus(match):
+    logger = match.logger
+    batting_team, bowling_team = match.batting_team, match.bowling_team
+    crr = GetCurrentRate(batting_team)
+    rr = GetRequiredRate(batting_team)
+
+    # if match ended, do nothing, just return
+    if not match.status:
+        return
+
+    # default msg
+    msg = '\n%s %s / %s (%s Overs)' % (batting_team.name,
+                                       str(batting_team.total_score),
+                                       str(batting_team.wickets_fell),
+                                       str(BallsToOvers(batting_team.total_balls)))
+    msg += ' Current RR: %s' % str(crr)
+    if batting_team.batting_second:
+        msg += ' Required RR: %s\n' % str(rr)
+    PrintInColor(msg, Style.BRIGHT)
+    logger.info(msg)
+
+    # who are not out and going good
+    top_batsmen = sorted([batsman for batsman in batting_team.team_array],
+                         key=lambda t: t.runs, reverse=True)
+    top_batsmen_notout = sorted([batsman for batsman in batting_team.team_array if batsman.status],
+                                key=lambda t: t.runs, reverse=True)
+    # who all bowled so far
+    bowlers = [bowler for bowler in bowling_team.bowlers if bowler.balls_bowled > 0]
+    # top wkt takers
+    bowlers_most_wkts = sorted(bowlers, key=lambda t: t.wkts, reverse=True)[0]
+
+    # check if first batting
+    if not batting_team.batting_second:
+        wkts_fell = batting_team.wickets_fell
+        if crr <= 4.0:
+            print("low run rate")
+        elif crr >= 6.0:
+            print("good run rate")
+            print("It was that man %s majorly contributed to this!" % top_batsmen[0].name)
+
+        elif crr >= 8.0:
+            print("Terrific run rate")
+            print("It was that man %s majorly contributed to this!" % top_batsmen[0].name)
+
+        if wkts_fell == 0:
+            print("No wkts fell so far!")
+
+        elif 1 < wkts_fell < 5:
+            print("Lost %s wkts so far!" % wkts_fell)
+            print("It was %s who did the damage!" % bowlers_most_wkts.name)
+
+        elif wkts_fell > 5:
+            print("Trouble, %s wkts down" % wkts_fell)
+            print("It was %s who did the damage!" % bowlers_most_wkts.name)
+
+    # if chasing
+    else:
+        # gettable
+        if crr > rr:
+            print("RR looks fine")
+            if 0 <= batting_team.wickets_fell <= 2:
+                print("They look steady and relaxed")
+            if batting_team.wickets_fell <= 5:
+                print("only if they dont lose any more wkts")
+            elif 5 <= batting_team.wickets_fell < 7:
+                print("but they are looking unstable")
+            elif batting_team.wickets_fell > 7:
+                print("But this is the tail!!")
+
+        # gone case!
+        if rr - crr >= 1.0:
+            print("Asking rate is too much !")
+            if 0 <= batting_team.wickets_fell <= 2:
+                print("Theyve got wickets in hand though")
+            if batting_team.wickets_fell >= 7:
+                print("this is gone case!.. tail exposed")
+                # say who can save the match
+                # savior = sorted(top_batsmen_notout)[0]
+                # if anyone is having a good score!
+                # print("A lot rests on %s 's shoulder!" % savior.name)
+
+    input("Press enter to continue..")
+    return
 
 
 # match summary
