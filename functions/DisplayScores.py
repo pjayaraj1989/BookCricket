@@ -110,6 +110,30 @@ def DisplayScore(match, team):
     logger.info(ch * 45)
 
 
+# Showhighights
+def ShowHighlights(match):
+    logger = match.logger
+    batting_team, bowling_team = match.batting_team, match.bowling_team
+    crr = GetCurrentRate(batting_team)
+    rr = GetRequiredRate(batting_team)
+
+    # if match ended, do nothing, just return
+    if not match.status:
+        return
+
+    # default msg
+    msg = '\n%s %s / %s (%s Overs)' % (batting_team.name,
+                                       str(batting_team.total_score),
+                                       str(batting_team.wickets_fell),
+                                       str(BallsToOvers(batting_team.total_balls)))
+    msg += ' Current RR: %s' % str(crr)
+    if batting_team.batting_second:
+        msg += ' Required RR: %s\n' % str(rr)
+    PrintInColor(msg, Style.BRIGHT)
+    logger.info(msg)
+    return
+
+
 # comment about the current match status
 def CurrentMatchStatus(match):
     logger = match.logger

@@ -4,7 +4,7 @@ from BookCricket import ScriptPath, venue_data, data_path
 from data.resources import *
 from data.commentary import *
 from functions.DisplayScores import DisplayScore, DisplayBowlingStats, MatchSummary, GetCurrentRate, \
-    GetRequiredRate, CurrentMatchStatus
+    GetRequiredRate, CurrentMatchStatus, ShowHighlights
 from functions.Initiate import ValidateMatchTeams, Toss, GetVenue, ReadTeams
 from functions.helper import *
 from functions.results import CalculateResult, FindPlayerOfTheMatch
@@ -227,9 +227,9 @@ def BatsmanOut(pair, dismissal):
 def GenerateDismissal(match):
     bowling_team = match.bowling_team
     bowler = bowling_team.current_bowler
+    keeper = bowling_team.keeper
 
     dismissal_str = None
-    keeper = next((x for x in bowling_team.team_array if x.attr.iskeeper), None)
     # now get a list of fielders
     fielder = Randomize(bowling_team.team_array)
     # list of mode of dismissals
@@ -799,11 +799,11 @@ def DetectDeathOvers(match, over):
     if batting_team.batting_second:
         if towin <= 0:
             # show batting team highlights
-            CurrentMatchStatus(match)
+            ShowHighlights(match)
             PrintInColor("Match won!!", Fore.LIGHTGREEN_EX)
             match.status = False
         elif towin <= 20 or over == overs - 1:
-            CurrentMatchStatus(match)
+            ShowHighlights(match)
             if towin == 1:
                 PrintInColor("Match tied!", Fore.LIGHTGREEN_EX)
             else:
@@ -906,14 +906,6 @@ def PlayOver(match, over):
             if match.status is False:
                 break
 
-        # check if 1st innings over
-        # if all out first innings
-        if not batting_team.batting_second:
-            if batting_team.wickets_fell == 10:
-                PrintInColor(Randomize(commentary.commentary_all_out), Fore.LIGHTRED_EX)
-                input('press enter to continue...')
-                break
-
         if batting_team.total_balls == (match.overs * 6):
             PrintInColor("End of innings", Fore.LIGHTCYAN_EX)
             # update last partnership
@@ -925,6 +917,14 @@ def PlayOver(match, over):
                                                        runs=last_partnership_runs)
                 batting_team.partnerships.append(last_partnership)
                 input('press enter to continue')
+                break
+
+        # check if 1st innings over
+        # if all out first innings
+        if not batting_team.batting_second:
+            if batting_team.wickets_fell == 10:
+                PrintInColor(Randomize(commentary.commentary_all_out), Fore.LIGHTRED_EX)
+                input('press enter to continue...')
                 break
 
         # batting second
@@ -1087,7 +1087,7 @@ def Play(match):
                 PrintInColor(Randomize(commentary.commentary_last_over_innings), Style.BRIGHT)
 
         # check hows it going in regular intervals
-        if over > 1:
+        if over > 1 and over % 5 == 0:
             CurrentMatchStatus(match)
 
         # play an over
@@ -1106,7 +1106,7 @@ def Play(match):
             PrintInColor(msg, Style.BRIGHT)
             logger.info(msg)
 
-        CurrentMatchStatus(match)
+        ShowHighlights(match)
         DisplayBowlingStats(match)
         # rotate strike after an over
         RotateStrike(pair)
