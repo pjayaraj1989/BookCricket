@@ -905,49 +905,50 @@ def PlayOver(match, over):
                 total_runs_in_over += run
             if match.status is False:
                 break
-            # check if 1st innings over
-            # if all out first innings
-            if not batting_team.batting_second:
-                if batting_team.wickets_fell == 10:
-                    PrintInColor(Randomize(commentary.commentary_all_out), Fore.LIGHTRED_EX)
-                    input('press enter to continue...')
-                    break
 
-                if batting_team.total_balls == (match.overs * 6):
-                    PrintInColor("End of innings", Fore.LIGHTCYAN_EX)
-                    # update last partnership
-                    if batting_team.wickets_fell > 0:
-                        last_fow = batting_team.fow[-1].runs
-                        last_partnership_runs = batting_team.total_score - last_fow
-                        last_partnership = Partnership(batsman_dismissed=pair[0],
+        # check if 1st innings over
+        # if all out first innings
+        if not batting_team.batting_second:
+            if batting_team.wickets_fell == 10:
+                PrintInColor(Randomize(commentary.commentary_all_out), Fore.LIGHTRED_EX)
+                input('press enter to continue...')
+                break
+
+        if batting_team.total_balls == (match.overs * 6):
+            PrintInColor("End of innings", Fore.LIGHTCYAN_EX)
+            # update last partnership
+            if batting_team.wickets_fell > 0:
+                last_fow = batting_team.fow[-1].runs
+                last_partnership_runs = batting_team.total_score - last_fow
+                last_partnership = Partnership(batsman_dismissed=pair[0],
                                                        batsman_onstrike=pair[1],
                                                        runs=last_partnership_runs)
-                        batting_team.partnerships.append(last_partnership)
-                    input('press enter to continue')
-                    break
+                batting_team.partnerships.append(last_partnership)
+                input('press enter to continue')
+                break
 
-            # batting second
-            elif batting_team.batting_second:
-                if batting_team.total_balls >= (match.overs * 6):
-                    # update last partnership
-                    UpdateLastPartnership(match)
-                    match.status = False
-                    PrintInColor(Randomize(commentary.commentary_lost_chasing) % (batting_team.name, bowling_team.name),
+        # batting second
+        elif batting_team.batting_second:
+            if batting_team.total_balls >= (match.overs * 6):
+                # update last partnership
+                UpdateLastPartnership(match)
+                match.status = False
+                PrintInColor(Randomize(commentary.commentary_lost_chasing) % (batting_team.name, bowling_team.name),
                                  Style.BRIGHT)
-                    input('press enter to continue...')
-                    break
-                # check if target achieved chasing
-                if batting_team.total_score >= batting_team.target:
-                    PrintInColor(Randomize(commentary.commentary_match_won), Fore.LIGHTGREEN_EX)
-                    match.status = False
-                    UpdateLastPartnership(match)
-                    input('press enter to continue...')
-                    break
-                # if all out first innings
-                if batting_team.wickets_fell == 10:
-                    PrintInColor(Randomize(commentary.commentary_all_out), Fore.LIGHTRED_EX)
-                    input('press enter to continue...')
-                    break
+                input('press enter to continue...')
+                break
+            # check if target achieved chasing
+            if batting_team.total_score >= batting_team.target:
+                PrintInColor(Randomize(commentary.commentary_match_won), Fore.LIGHTGREEN_EX)
+                match.status = False
+                UpdateLastPartnership(match)
+                input('press enter to continue...')
+                break
+            # if all out first innings
+            if batting_team.wickets_fell == 10:
+                PrintInColor(Randomize(commentary.commentary_all_out), Fore.LIGHTRED_EX)
+                input('press enter to continue...')
+                break
 
     # check if over is a maiden
     if ismaiden:
