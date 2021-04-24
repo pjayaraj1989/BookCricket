@@ -130,6 +130,7 @@ def MatchAbandon(match):
     # change result string
     match.result = result
     MatchSummary(match)
+    return
 
 
 def CheckDRS(match):
@@ -1044,11 +1045,6 @@ def Play(match):
 
     # now run for each over
     for over in range(0, overs):
-        #in regular intervals,
-        # check match stats and comment
-        if match.status is False:
-            break
-
         # check if match interrupted
         if batting_team.batting_second and match.venue.weather == "rainy":
             if over == over_interrupt - 5:
@@ -1062,6 +1058,10 @@ def Play(match):
                 match.result.result_str = "No result"
                 Error_Exit("Match abandoned due to rain!!")
             input("Press enter to continue")
+
+        # check match stats and comment
+        if match.status is False:
+            break
 
         # check if last over
         if over == overs - 1:

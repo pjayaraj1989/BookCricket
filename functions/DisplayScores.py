@@ -130,8 +130,8 @@ def DisplayScore(match, team):
     PrintInColor(msg, Style.BRIGHT)
     logger.info(msg)
     for p in team.partnerships:
-        msg = '%s - %s :\t%s' % (GetShortName(p.batsman_onstrike.name),
-                                 GetShortName(p.batsman_dismissed.name),
+        msg = '%s - %s :\t%s' % (p.batsman_onstrike.name,
+                                 p.batsman_dismissed.name,
                                  str(p.runs))
         if p.batsman_dismissed.status and p.batsman_onstrike.status:
             msg += '*'
