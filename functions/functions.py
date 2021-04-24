@@ -967,18 +967,25 @@ def CheckMilestone(match):
     batting_team = match.batting_team
     pair = batting_team.current_pair
 
+    #call_by_first_name = Randomize([True, False])
+
     for p in pair:
+        name = GetFirstName(p.name)
+        if not Randomize([True, False]):
+            name = GetSurname(p.name)
         # first fifty
         if p.runs >= 50 and p.fifty == 0:
             p.fifty += 1
-            msg = "50 for %s!" % p.name
+            msg = "50 for %s!" % name
             PrintInColor(msg, batting_team.color)
             logger.info(msg)
             PrintInColor("%s fours and %s sixes" % (str(p.fours), str(p.sixes)), Style.BRIGHT)
             # check if captain
             if p.attr.iscaptain:
                 PrintInColor(Randomize(commentary.commentary_captain_leading), batting_team.color)
-            PrintInColor(Randomize(commentary.commentary_milestone) % GetSurname(p.name), batting_team.color)
+
+            # call by first name or last name
+            PrintInColor(Randomize(commentary.commentary_milestone) % name, batting_team.color)
 
             #  check if he had a good day with the ball as well
             if p.wkts >= 2:
@@ -988,7 +995,7 @@ def CheckMilestone(match):
             # after first fifty is done
             p.hundred += 1
             p.fifty += 1
-            msg = "100 for %s!" % p.name
+            msg = "100 for %s!" % name
             PrintInColor(msg, batting_team.color)
             logger.info(msg)
             PrintInColor("%s fours and %s sixes" % (str(p.fours), str(p.sixes)), Style.BRIGHT)
@@ -1000,14 +1007,14 @@ def CheckMilestone(match):
         elif p.runs >= 200 and (p.hundred == 1):
             # after first fifty is done
             p.hundred += 1
-            msg = "200 for %s! What a superman!" % p.name
+            msg = "200 for %s! What a superman!" % name
             PrintInColor(msg, batting_team.color)
             logger.info(msg)
             PrintInColor("%s fours and %s sixes" % (str(p.fours), str(p.sixes)), Style.BRIGHT)
             # check if captain
             if p.attr.iscaptain:
                 PrintInColor(Randomize(commentary.commentary_captain_leading), batting_team.color)
-            PrintInColor(Randomize(commentary.commentary_milestone) % p.name, batting_team.color)
+            PrintInColor(Randomize(commentary.commentary_milestone) % name, batting_team.color)
 
     input('press enter to continue..')
     return

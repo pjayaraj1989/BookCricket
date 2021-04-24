@@ -43,7 +43,7 @@
         {"name": "Ambati Rayudu", "batting": 8},
         {"name": "Moeen Ali", "batting": 7, "bowling":8, "spinner":1},
         {"name": "M.S. Dhoni", "batting": 8, "keeper": 1, "captain":1},
-        {"name": "Ravindra  Jadeja", "batting": 7, "bowling":8,"spinner":1},
+        {"name": "Ravindra Jadeja", "batting": 7, "bowling":8,"spinner":1},
         {"name": "Suresh Raina", "batting": 7, "bowling": 6},
         {"name": "Sam Curran", "batting": 7, "bowling": 8, "pacer":1},
         {"name": "Shardul Thakur", "batting": 4, "bowling": 8, "pacer":1},

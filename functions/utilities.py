@@ -89,6 +89,11 @@ def GetSurname(name):
     return name.split(' ')[-1]
 
 
+# get first name
+def GetFirstName(name):
+    return name.split(' ')[0]
+
+
 # print nested array in formatted way
 def PrintListFormatted(data_to_print, seconds, logger):
     # now print it

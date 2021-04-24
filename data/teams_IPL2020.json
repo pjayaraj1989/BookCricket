@@ -44,7 +44,7 @@
         {"name": "M.S. Dhoni","batting": 8,"keeper": 1, "captain":1},
         {"name": "Narayan Jagadeeshan","batting": 7},
         {"name": "Sam Curran","batting": 7,"bowling": 7, "pacer":1},
-        {"name": "Ravindra  Jadeja","batting": 7, "bowling":8,"spinner":1},
+        {"name": "Ravindra Jadeja","batting": 7, "bowling":8,"spinner":1},
         {"name": "Mitchell Santner","batting": 5, "bowling":8,"spinner":1},
         {"name": "Deepak Chahar","batting": 5,"bowling": 8, "openingbowler":1, "pacer":1},
         {"name": "Piyush Chawla","batting": 5,"bowling": 7, "spinner":1},
