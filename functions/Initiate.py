@@ -208,6 +208,8 @@ def Toss(match):
         match.drs = True
         input("press enter to continue")
 
+    match.status = True
+
     return match
 
 

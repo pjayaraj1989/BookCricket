@@ -923,7 +923,7 @@ def PlayOver(match, over):
             if batting_team.batting_second is True and batting_team.total_balls >= (match.overs * 6):
                 # update last partnership
                 UpdateLastPartnership(match)
-                match_status = False
+                match.status = False
                 PrintInColor(Randomize(commentary.commentary_lost_chasing) % (batting_team.name, bowling_team.name),
                              Style.BRIGHT)
                 input('press enter to continue...')
@@ -931,14 +931,14 @@ def PlayOver(match, over):
             # check if target achieved chasing
             if batting_team.batting_second is True and (batting_team.total_score >= batting_team.target):
                 PrintInColor(Randomize(commentary.commentary_match_won), Fore.LIGHTGREEN_EX)
-                match_status = False
+                match.status = False
                 UpdateLastPartnership(match)
                 input('press enter to continue...')
                 break
             # if all out
             if batting_team.wickets_fell == 10:
                 PrintInColor(Randomize(commentary.commentary_all_out), Fore.LIGHTRED_EX)
-                match_status = False
+                match.status = False
                 input('press enter to continue...')
                 break
 
@@ -957,7 +957,7 @@ def PlayOver(match, over):
         PrintInColor(Randomize(commentary.commentary_economical_over) % bowler.name + '\n' +
                      'only %s run(s) off this over!' % (str(total_runs_in_over)),
                      Style.BRIGHT)
-    return match_status
+    return
 
 
 # check for milestones
@@ -1045,6 +1045,11 @@ def Play(match):
 
     # now run for each over
     for over in range(0, overs):
+        #in regular intervals,
+        # check match stats and comment
+        if match.status is False:
+            break
+
         # check if match interrupted
         if batting_team.batting_second and match.venue.weather == "rainy":
             if over == over_interrupt - 5:
@@ -1068,8 +1073,8 @@ def Play(match):
 
         # play an over
         match.batting_team.current_pair = pair
-        status = PlayOver(match, over)
-        if status is False:
+        PlayOver(match, over)
+        if match.status is False:
             break
 
         # show batting stats
