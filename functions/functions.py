@@ -933,7 +933,6 @@ def PlayOver(match, over):
                 # update last partnership
                 UpdateLastPartnership(match)
                 match.status = False
-
                 # if won in the last ball
                 if batting_team.total_score >= batting_team.target:
                     PrintInColor(Randomize(commentary.commentary_won_last_ball) % (batting_team.name, bowling_team.name),
@@ -946,6 +945,7 @@ def PlayOver(match, over):
             # check if target achieved chasing
             if batting_team.total_score >= batting_team.target:
                 PrintInColor(Randomize(commentary.commentary_match_won), Fore.LIGHTGREEN_EX)
+                PrintInColor(Randomize(commentary.commentary_match_won_chasing), Fore.LIGHTGREEN_EX)
                 match.status = False
                 UpdateLastPartnership(match)
                 input('press enter to continue...')
@@ -957,7 +957,7 @@ def PlayOver(match, over):
                 break
 
     # check if over is a maiden
-    if ismaiden:
+    if ismaiden and ball == 6:
         bowler.maidens += 1
     # check total runs taken in over
     if total_runs_in_over > 14:

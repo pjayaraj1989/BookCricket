@@ -541,6 +541,8 @@ class commentary:
                             'that\'s it, they have won the match!',
                             'that\'s the end of the match!']
 
+    commentary_match_won_chasing = ['theyve chased down the target!',]
+
     commentary_won_last_ball = ['a last ball victory for %s!',
                                 '%s win an absolute thriller!',
                                 'theyve kept their nerves! what a finish %s!',
