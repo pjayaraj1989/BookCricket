@@ -913,8 +913,8 @@ def PlayOver(match, over):
                 last_fow = batting_team.fow[-1].runs
                 last_partnership_runs = batting_team.total_score - last_fow
                 last_partnership = Partnership(batsman_dismissed=pair[0],
-                                                       batsman_onstrike=pair[1],
-                                                       runs=last_partnership_runs)
+                                               batsman_onstrike=pair[1],
+                                               runs=last_partnership_runs)
                 batting_team.partnerships.append(last_partnership)
                 input('press enter to continue')
                 break
@@ -933,7 +933,13 @@ def PlayOver(match, over):
                 # update last partnership
                 UpdateLastPartnership(match)
                 match.status = False
-                PrintInColor(Randomize(commentary.commentary_lost_chasing) % (batting_team.name, bowling_team.name),
+
+                # if won in the last ball
+                if batting_team.total_score >= batting_team.target:
+                    PrintInColor(Randomize(commentary.commentary_won_last_ball) % (batting_team.name, bowling_team.name),
+                                 Style.BRIGHT)
+                else:
+                    PrintInColor(Randomize(commentary.commentary_lost_chasing) % (batting_team.name, bowling_team.name),
                                  Style.BRIGHT)
                 input('press enter to continue...')
                 break

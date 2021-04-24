@@ -540,6 +540,14 @@ class commentary:
     commentary_match_won = ['that\'s it, that\'s the end of the match!',
                             'that\'s it, they have won the match!',
                             'that\'s the end of the match!']
+
+    commentary_won_last_ball = ['a last ball victory for %s!',
+                                '%s win an absolute thriller!',
+                                'theyve kept their nerves! what a finish %s!',
+                                'victory off the last ball for %s!',
+                                'nail biting finish, and in the end its %s who are the winners!',
+                                'last ball thrilling victory for %s!',]
+
     commentary_all_out = ['that\'s it! they have been bowled out!',
                           'terrific bowling performance, they have been bowled out!',
                           'its all over for them!',
