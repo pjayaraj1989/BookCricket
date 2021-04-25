@@ -1,7 +1,8 @@
 # routines to display scores, etc
 # display temporary stats
-from functions.utilities import PrintInColor, BallsToOvers, GetShortName, PrintListFormatted
-from colorama import Style
+from data.commentary import *
+from functions.utilities import PrintInColor, BallsToOvers, GetShortName, PrintListFormatted, Randomize
+from colorama import Style, Fore
 
 
 # get current rate
@@ -156,11 +157,17 @@ def CurrentMatchStatus(match):
     PrintInColor(msg, Style.BRIGHT)
     logger.info(msg)
 
+    # wickets fell
+    wkts_fell = batting_team.wickets_fell
+
     # who are not out and going good
     top_batsmen = sorted([batsman for batsman in batting_team.team_array],
                          key=lambda t: t.runs, reverse=True)
     top_batsmen_notout = sorted([batsman for batsman in batting_team.team_array if batsman.status],
                                 key=lambda t: t.runs, reverse=True)
+    # who can win the match for them
+    savior = top_batsmen_notout[0]
+
     # who all bowled so far
     bowlers = [bowler for bowler in bowling_team.bowlers if bowler.balls_bowled > 0]
     # top wkt takers
@@ -168,53 +175,54 @@ def CurrentMatchStatus(match):
 
     # check if first batting
     if not batting_team.batting_second:
-        wkts_fell = batting_team.wickets_fell
         if crr <= 4.0:
-            print("low run rate")
-        elif crr >= 6.0:
-            print("good run rate")
-            print("It was that man %s majorly contributed to this!" % top_batsmen[0].name)
+            PrintInColor(Randomize(commentary.commentary_situation_low_rr) % batting_team.name, Fore.GREEN)
 
         elif crr >= 8.0:
-            print("Terrific run rate")
-            print("It was that man %s majorly contributed to this!" % top_batsmen[0].name)
+            PrintInColor(Randomize(commentary.commentary_situation_good_rr) % batting_team.name, Fore.GREEN)
+            PrintInColor(Randomize(commentary.commentary_situation_major_contr_batting) % top_batsmen[0].name,
+                         Style.BRIGHT)
 
         if wkts_fell == 0:
-            print("No wkts fell so far!")
+            PrintInColor(Randomize(commentary.commentary_situation_no_wkts_fell) % batting_team.name, Fore.GREEN)
 
-        elif 1 < wkts_fell < 5:
+        elif 1 < wkts_fell <= 6:
+            PrintInColor(Randomize(commentary.commentary_situation_unstable) % batting_team.name, Style.BRIGHT)
             print("Lost %s wkts so far!" % wkts_fell)
-            print("It was %s who did the damage!" % bowlers_most_wkts.name)
+            PrintInColor(Randomize(commentary.commentary_situation_major_contr_bowling) % bowlers_most_wkts.name,
+                         Style.BRIGHT)
 
-        elif wkts_fell > 5:
-            print("Trouble, %s wkts down" % wkts_fell)
-            print("It was %s who did the damage!" % bowlers_most_wkts.name)
+        elif 6 < wkts_fell < 10:
+            PrintInColor(Randomize(commentary.commentary_situation_trouble) % batting_team.name, Style.BRIGHT)
+            PrintInColor(Randomize(commentary.commentary_situation_major_contr_bowling) % bowlers_most_wkts.name,
+                         Style.BRIGHT)
 
     # if chasing
     else:
         # gettable
-        if crr > rr:
-            print("RR looks fine")
+        if crr >= rr:
+            PrintInColor(Randomize(commentary.commentary_situation_reqd_rate_low) % batting_team.name, Fore.GREEN)
             if 0 <= batting_team.wickets_fell <= 2:
-                print("They look steady and relaxed")
+                PrintInColor(Randomize(commentary.commentary_situation_reqd_rate_low) % batting_team.name, Fore.GREEN)
             if batting_team.wickets_fell <= 5:
-                print("only if they dont lose any more wkts")
+                PrintInColor(Randomize(commentary.commentary_situation_shouldnt_lose_wks) % batting_team.name,
+                             Style.BRIGHT)
             elif 5 <= batting_team.wickets_fell < 7:
-                print("but they are looking unstable")
-            elif batting_team.wickets_fell > 7:
-                print("But this is the tail!!")
+                PrintInColor(Randomize(commentary.commentary_situation_unstable) % batting_team.name, Style.BRIGHT)
+            elif 7 < batting_team.wickets_fell < 10:
+                # say who can save the match
+                PrintInColor(Randomize(commentary.commentary_situation_savior) % savior.name, Fore.RED)
 
         # gone case!
         if rr - crr >= 1.0:
-            print("Asking rate is too much !")
+            PrintInColor(Randomize(commentary.commentary_situation_reqd_rate_high) % batting_team.name, Style.BRIGHT)
             if 0 <= batting_team.wickets_fell <= 2:
-                print("Theyve got wickets in hand though")
-            if batting_team.wickets_fell >= 7:
-                print("this is gone case!.. tail exposed")
+                PrintInColor(Randomize(commentary.commentary_situation_got_wkts_in_hand) % batting_team.name,
+                             Style.BRIGHT)
+            if 7 <= batting_team.wickets_fell < 10:
+                PrintInColor(Randomize(commentary.commentary_situation_gone_case) % batting_team.name, Fore.RED)
                 # say who can save the match
-                # savior = sorted(top_batsmen_notout)[0]
-                # if anyone is having a good score!
-                # print("A lot rests on %s 's shoulder!" % savior.name)
+                PrintInColor(Randomize(commentary.commentary_situation_savior) % savior.name, Fore.RED)
 
     input("Press enter to continue..")
     return

@@ -31,7 +31,20 @@ class commentary:
                                           '%s are punishing the bowlers here! required rate is less than required',
                                           '%s can get home without any hurdles with this scoring rate!',
                                           '%s are chasing well here!', ]
-    commentary_situation_reqd_rate_high = ['required rate is high!.. well %s, they need to gear up!',
+
+    commentary_situation_good_rr = ['%s going at a terrific run rate so far!',
+                                    'terrific run rate so far for %s',
+                                    'great run rate so far for %s',
+                                    '%s cruising at a terrific pace!',
+                                    ]
+
+    commentary_situation_low_rr = ['run rate looking just fine for %s', ]
+
+    commentary_situation_no_wkts_fell = ['no wickets fell so far for %s',
+                                         'no damages as of now for %s',
+                                         'no wickets fell so far, going fine %s', ]
+
+    commentary_situation_reqd_rate_high = ['required rate is high for %s!',
                                            '%s need to push themselves hard to stay on course!',
                                            '%s need some big hits to boost up the run rate!',
                                            'singles and doubles wont take %s home!',
@@ -42,6 +55,32 @@ class commentary:
                                            'chase looks pretty sluggish for %s!',
                                            '%s need some hard hitters to stay alive in this chase!',
                                            '%s really need to boost up the run rate here!']
+
+    commentary_situation_unstable = ['%s are looking unstable here!', ]
+
+    commentary_situation_trouble = ['%s in real trouble here', ]
+
+    commentary_situation_got_wkts_in_hand = ['%s have got enough wickets in hand though!', ]
+
+    commentary_situation_shouldnt_lose_wks = ['%s should not lose more wickets..',
+                                              '%s can get home if they don\'t lose more wickets..', ]
+
+    commentary_situation_gone_case = ['this looks literally impossible for %s now!',
+                                      '%s need some miracle now to win this from here!', ]
+
+    commentary_situation_savior = ['its all over i feel, but if anyone could save them from here, it will be %s',
+                                   'tough game for them, but if they make it, it has to be %s',
+                                   'a lot rests on the shoulders of %s',
+                                   ]
+
+    commentary_situation_major_contr_batting = ['it was that man %s who majorly contributed so far!',
+                                                'it was %s show today here!',
+                                                'major batting contributor was %s today!',
+                                                ]
+
+    commentary_situation_major_contr_bowling = ['it was %s who did most of the damage today!',
+                                                'it was %s who was the star with ball today!',
+                                                'major damage done by %s in the bowling dept.', ]
 
     # comments for diff shots
     commentary_six = ['that\'s in the stands! ',
@@ -541,14 +580,14 @@ class commentary:
                             'that\'s it, they have won the match!',
                             'that\'s the end of the match!']
 
-    commentary_match_won_chasing = ['theyve chased down the target!',]
+    commentary_match_won_chasing = ['theyve chased down the target!', ]
 
     commentary_won_last_ball = ['a last ball victory for %s!',
                                 '%s win an absolute thriller!',
                                 'theyve kept their nerves! what a finish %s!',
                                 'victory off the last ball for %s!',
                                 'nail biting finish, and in the end its %s who are the winners!',
-                                'last ball thrilling victory for %s!',]
+                                'last ball thrilling victory for %s!', ]
 
     commentary_all_out = ['that\'s it! they have been bowled out!',
                           'terrific bowling performance, they have been bowled out!',
