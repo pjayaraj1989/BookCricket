@@ -101,7 +101,7 @@ def FindPlayerOfTheMatch(match):
             best_batsman = sorted(best_batsmen, key=attrgetter('strikerate'), reverse=True)[0]
         # if there is one not out among them
         else:
-            best_batsmen = [plr for plr in best_batsmen if plr.status][0]
+            best_batsmen = [plr for plr in best_batsmen if plr.status]
             # if both are not out, select randomly
             if len(best_batsmen) == 2:
                 best_batsman = sorted(best_batsmen, key=attrgetter('strikerate'), reverse=True)[0]
