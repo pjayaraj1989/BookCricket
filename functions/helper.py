@@ -77,6 +77,7 @@ class Team:
         attrs = {'total_overs': 0, 'drs_chances': 2, 'total_score': 0, 'target': 0, 'wickets_fell': 0, 'total_balls': 0,
                  'extras': 0, 'top_scorer': None, 'most_wkts': None,
                  'fours': 0, 'sixes': 0,
+                 'fifty_up': False, 'hundred_up': False, 'two_hundred_up': False, 'three_hundred_up': False,
                  'innings_over': False, 'batting_second': False, 'name': ' ', 'key': ' ',
                  'last_bowler': None, 'captain': None, 'keeper': None, 'color': None,
                  'team_array': [], 'opening_pair': [], 'bowlers': [], 'fow': [], 'partnerships': [],

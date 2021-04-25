@@ -133,7 +133,7 @@
         {"name": "Andy Flower", "batting": 8, "bowling":5},
 		{"name": "Grant Flower","batting": 8, "spinner":1,"bowling":6},
         {"name": "Tatenda Taibu",  "batting": 8, "keeper":1},
-        {"name": "Dion Ebrahim","batting": 7,"captain": 1, "bowling":6,"spinner":1},
+        {"name": "Dion Ebrahim","batting": 7, "bowling":6,"spinner":1},
         {"name": "Andy Blignaut","batting": 6,"bowling": 7, "pacer":1},
         {"name": "Heath Streak","batting": 6,"captain":1, "bowling":8,"openingbowler":1, "pacer":1},
 		{"name": "Douglas Marillier","batting": 7, "bowling":6},

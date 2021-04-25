@@ -192,7 +192,7 @@ class commentary:
                                 'bowler looks shell shocked! first ball has been smashed!',
                                 'first ball and its dispatched! Beware bowlers!',
                                 'bang! he has smashed the first ball out of here!',
-                                'that\'s how you start an innings! pressure straightway on the bowler now!'
+                                'that\'s how you start an innings! pressure straightway on the bowler now!',
                                 'that\'s hit off the first ball!.. ']
 
     # captain next:
@@ -334,7 +334,7 @@ class commentary:
                          'brilliant catch! %s is a supreme athlete!',
                          'oh man! what a catch by %s! one of the best catches ever!',
                          'that\'s in the air, %s is underneath it, has he dropped it, no he hasn\'t! what a catch!',
-                         'that\'s hit straight down the %s''s throat!',
+                         'that\'s hit straight down %s''s throat!',
                          'hit in the air and what a catch!...unbelievable catch by %s!',
                          'straight up in the air.. %s says mine.. takes it in the end!',
                          'hit very hard but straight to %s.. batsman cant believe what he has done!',
@@ -392,7 +392,7 @@ class commentary:
     commentary_lbw_drs_not_taken = ['he is having a long chat with the non striker.. and finally he is walking off..',
                                     'it looked close to me, he discusses with the non striker, will not be wasting a '
                                     'DRS chance here',
-                                    'Will he go upstairs,don\'t think so.. a nod at his partner, and he is walking off the field',
+                                    'Will he go upstairs ? don\'t think so.. a nod at his partner, and he is walking off the field',
                                     'are they going for the DRS here? I don\'t think so they are interested..']
     commentary_lbw_decision_stays = [
         'Well it shows that the ball will be hitting the top of off!. Decision stays.. good on field call %s!',
@@ -479,6 +479,12 @@ class commentary:
                            'full from %s, driven nicely by %s but the fielder was lightning quick! saved a certain boundary!',
                            'a little short from %s, played well by %s but straight to the fielder!',
                            'slower ball from %s and %s misses it!']
+
+    # score reach 50/100/200/300
+    commentary_score_fifty = ['50 up for %s..', ]
+    commentary_score_hundred = ['hundred up for %s !', ]
+    commentary_score_two_hundred = ['200 up for %s..', ]
+    commentary_score_three_hundred = ['300 up for %s..', ]
 
     # MILESTONES
     commentary_partnership_milestone = ['this has been a terrific partnership between %s and %s!',
@@ -572,27 +578,27 @@ class commentary:
                            'Hat-trick for the bowler!',
                            '3 in 3! This man is on absolute fire!',
                            'hat-trick for the bowler! what a performance from him!', ]
-    commentary_on_a_hattrick = ['he is on a hattrick now!',
-                                'two in two and he is on a hattrick here!',
-                                'hattrick ball coming up.. crowd on their feet!', ]
+    commentary_on_a_hattrick = ['he is on a hat-trick now!',
+                                'two in two and he is on a hat-trick here!',
+                                'hat-trick ball coming up.. crowd on their feet!', ]
 
     commentary_match_won = ['that\'s it, that\'s the end of the match!',
                             'that\'s it, they have won the match!',
                             'that\'s the end of the match!']
 
-    commentary_match_won_chasing = ['theyve chased down the target!', ]
+    commentary_match_won_chasing = ['they\'ve chased down the target!', ]
 
     commentary_won_last_ball = ['a last ball victory for %s!',
                                 '%s win an absolute thriller!',
-                                'theyve kept their nerves! what a finish %s!',
+                                'they\'ve kept their nerves! what a finish %s!',
                                 'victory off the last ball for %s!',
                                 'nail biting finish, and in the end its %s who are the winners!',
                                 'last ball thrilling victory for %s!', ]
 
     commentary_all_out = ['that\'s it! they have been bowled out!',
                           'terrific bowling performance, they have been bowled out!',
-                          'its all over for them!',
-                          'done ! all out!']
+                          'its all over for them!.. they have been bowled out!',
+                          'that\'s all over!! all out!']
 
     # LAST OVER/MATCH/INNS
     commentary_last_ball_match = ['this is it.. the last ball of the match!',

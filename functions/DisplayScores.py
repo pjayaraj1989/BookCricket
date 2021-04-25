@@ -142,18 +142,35 @@ def CurrentMatchStatus(match):
     crr = GetCurrentRate(batting_team)
     rr = GetRequiredRate(batting_team)
 
-    # if match ended, do nothing, just return
+    # if match ended, nothing, just return
     if not match.status:
         return
+
+    # how much is the score
+    if batting_team.total_score >= 50 and not batting_team.fifty_up:
+        PrintInColor(Randomize(commentary.commentary_score_fifty) % batting_team.name, Style.BRIGHT)
+        batting_team.fifty_up = True
+
+    if batting_team.total_score >= 100 and not batting_team.hundred_up:
+        PrintInColor(Randomize(commentary.commentary_score_hundred) % batting_team.name, Style.BRIGHT)
+        batting_team.hundred_up = True
+
+    if batting_team.total_score >= 200 and not batting_team.two_hundred_up:
+        PrintInColor(Randomize(commentary.commentary_score_two_hundred) % batting_team.name, Style.BRIGHT)
+        batting_team.two_hundred_up = True
+
+    if batting_team.total_score >= 300 and not batting_team.three_hundred_up:
+        PrintInColor(Randomize(commentary.commentary_score_three_hundred) % batting_team.name, Style.BRIGHT)
+        batting_team.three_hundred_up = True
 
     # default msg
     msg = '\n%s %s / %s (%s Overs)' % (batting_team.name,
                                        str(batting_team.total_score),
                                        str(batting_team.wickets_fell),
                                        str(BallsToOvers(batting_team.total_balls)))
-    msg += ' Current RR: %s' % str(crr)
+    msg += ' Current Rate: %s' % str(crr)
     if batting_team.batting_second:
-        msg += ' Required RR: %s\n' % str(rr)
+        msg += ' Required Rate: %s\n' % str(rr)
     PrintInColor(msg, Style.BRIGHT)
     logger.info(msg)
 
