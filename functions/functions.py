@@ -6,6 +6,7 @@ from data.commentary import *
 from functions.DisplayScores import DisplayScore, DisplayBowlingStats, MatchSummary, GetCurrentRate, \
     GetRequiredRate, CurrentMatchStatus, ShowHighlights
 from functions.Initiate import ValidateMatchTeams, Toss, GetVenue, ReadTeams
+from functions.SimulateDelivery import GenerateRunNew
 from functions.helper import *
 from functions.results import CalculateResult, FindPlayerOfTheMatch
 from functions.utilities import *
@@ -307,11 +308,11 @@ def UpdateDismissal(match, dismissal):
 
     # detect a hat-trick!
     arr = [x for x in bowler.ball_history if x != 'WD' or x != 'NB']
-    isOnAHattrick = CheckForConsecutiveElements(arr, 'Wkt', 2)
+    #isOnAHattrick = CheckForConsecutiveElements(arr, 'Wkt', 2)
     isHattrick = CheckForConsecutiveElements(arr, 'Wkt', 3)
 
-    if isOnAHattrick:
-        PrintInColor(Randomize(commentary.commentary_on_a_hattrick), bowling_team.color)
+    #if isOnAHattrick:
+    #    PrintInColor(Randomize(commentary.commentary_on_a_hattrick), bowling_team.color)
 
     if isHattrick:
         bowler.hattricks += 1
@@ -322,7 +323,7 @@ def UpdateDismissal(match, dismissal):
         input('press enter to continue..')
     # check if bowler got 5 wkts
     if bowler.wkts == 5:
-        PrintInColor('Thats 5 Wickets for %s !' % bowler.name, bowling_team.color)
+        PrintInColor('That\'s 5 Wickets for %s !' % bowler.name, bowling_team.color)
         PrintInColor(Randomize(commentary.commentary_fifer), bowling_team.color)
         input('press enter to continue..')
     # update fall of wicket
@@ -875,6 +876,8 @@ def PlayOver(match, over):
 
         # generate run, updates runs and maiden status
         run = GenerateRun(match, over, player_on_strike)
+        #run = GenerateRunNew(match, over, player_on_strike)
+
         over_arr.append(run)
 
         # detect too many wkts or boundaries

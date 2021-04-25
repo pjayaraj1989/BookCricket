@@ -85,3 +85,15 @@ class Team:
                  'current_bowler': None,
                  'ball_history': [], }
         self = FillAttributes(self, attrs, kwargs)
+
+
+class Delivery:
+    def __init__(self, **kwargs):
+        attrs = {'type': None, 'speed': None, 'line': None, 'length': None, }
+        self = FillAttributes(self, attrs, kwargs)
+
+
+class Shot:
+    def __init__(self, **kwargs):
+        attrs = {'type': None, 'direction': None, 'foot': None, }
+        self = FillAttributes(self, attrs, kwargs)
