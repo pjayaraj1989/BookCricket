@@ -35,7 +35,7 @@ class Player:
                  'name': ' ', 'dismissal': ' ',
                  'no': None, 'runs': 0, 'balls': 0, 'wkts': 0, 'fifty': 0, 'hundred': 0, 'hattricks': 0, 'doubles': 0,
                  'threes': 0, 'balls_bowled': 0, 'runs_given': 0, 'maidens': 0, 'max_overs': 0, 'fours': 0, 'sixes': 0,
-                 'singles': 0, 'eco': 0.0, 'strikerate': 0.0, 'catches': 0, 'stumpings': 0, 'runouts': 0,
+                 'singles': 0, 'dots': 0, 'eco': 0.0, 'strikerate': 0.0, 'catches': 0, 'stumpings': 0, 'runouts': 0,
                  'ball_history': [],
                  'status': True, 'onfield': False, 'onstrike': False, 'iscaptain': False, 'isopeningbowler': False,
                  'isspinner': False, 'ispacer': False}

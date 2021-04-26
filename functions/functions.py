@@ -313,10 +313,10 @@ def UpdateDismissal(match, dismissal):
 
     # detect a hat-trick!
     arr = [x for x in bowler.ball_history if x != 'WD' or x != 'NB']
-    #isOnAHattrick = CheckForConsecutiveElements(arr, 'Wkt', 2)
+    # isOnAHattrick = CheckForConsecutiveElements(arr, 'Wkt', 2)
     isHattrick = CheckForConsecutiveElements(arr, 'Wkt', 3)
 
-    #if isOnAHattrick:
+    # if isOnAHattrick:
     #    PrintInColor(Randomize(commentary.commentary_on_a_hattrick), bowling_team.color)
 
     if isHattrick:
@@ -484,7 +484,6 @@ def GetNextBatsman(match):
             if pair[ind].wkts == 0 and pair[ind].eco >= 7.0:
                 PrintInColor(Randomize(commentary.commentary_bad_bowler_to_bat), batting_team.color)
 
-
         # now new batter on field
         pair[ind].onfield = True
 
@@ -504,7 +503,8 @@ def Ball(match, run):
 
     # first runs
     if batting_team.total_score == 0 and (run not in [-1, 0]) and not batting_team.off_the_mark:
-        PrintInColor(Randomize(commentary.commentary_first_runs) % (batting_team.name, on_strike.name), batting_team.color)
+        PrintInColor(Randomize(commentary.commentary_first_runs) % (batting_team.name, on_strike.name),
+                     batting_team.color)
         batting_team.off_the_mark = True
 
     # if out
@@ -535,112 +535,109 @@ def Ball(match, run):
             UpdateDismissal(match, dismissal)
             return
 
-    # other than dismissal
-    if run != -1:
-        # appropriate commentary for 4s and 6s
-        if run == 4:
-            bowler.ball_history.append(4)
-            batting_team.ball_history.append(4)
+    # appropriate commentary for 4s and 6s
+    if run == 4:
+        bowler.ball_history.append(4)
+        batting_team.ball_history.append(4)
 
-            # check if first 4 of the innings
-            if batting_team.fours == 0:
-                PrintInColor(Randomize(commentary.commentary_first_four_team), Fore.LIGHTGREEN_EX)
-            batting_team.fours += 1
+        # check if first 4 of the innings
+        if batting_team.fours == 0:
+            PrintInColor(Randomize(commentary.commentary_first_four_team), Fore.LIGHTGREEN_EX)
+        batting_team.fours += 1
 
-            field = Randomize(resources.fields[4])
-            comment = Randomize(commentary.commentary_four)
-            PrintInColor(field + " FOUR! " + comment, Fore.LIGHTGREEN_EX)
-            logger.info("FOUR")
-            # check if first ball hit for a boundary
-            if on_strike.balls == 0:
-                PrintInColor(Randomize(commentary.commentary_firstball_four), Fore.LIGHTGREEN_EX)
-            # hattrick 4s
-            arr = [x for x in bowler.ball_history if x != 'WD']
-            if CheckForConsecutiveElements(arr, 4, 3):
-                PrintInColor(Randomize(commentary.commentary_in_a_row), Fore.LIGHTGREEN_EX)
-            # inc numbers of 4s
-            on_strike.fours += 1
-        elif run == 6:
-            bowler.ball_history.append(6)
-            batting_team.ball_history.append(6)
+        field = Randomize(resources.fields[4])
+        comment = Randomize(commentary.commentary_four)
+        PrintInColor(field + " FOUR! " + comment, Fore.LIGHTGREEN_EX)
+        logger.info("FOUR")
+        # check if first ball hit for a boundary
+        if on_strike.balls == 0:
+            PrintInColor(Randomize(commentary.commentary_firstball_four), Fore.LIGHTGREEN_EX)
+        # hattrick 4s
+        arr = [x for x in bowler.ball_history if x != 'WD']
+        if CheckForConsecutiveElements(arr, 4, 3):
+            PrintInColor(Randomize(commentary.commentary_in_a_row), Fore.LIGHTGREEN_EX)
+        # inc numbers of 4s
+        on_strike.fours += 1
 
-            # check if first six
-            if batting_team.sixes == 0:
-                PrintInColor(Randomize(commentary.commentary_first_six_team), Fore.LIGHTGREEN_EX)
-            batting_team.sixes += 1
+    # six
+    elif run == 6:
+        bowler.ball_history.append(6)
+        batting_team.ball_history.append(6)
 
-            # check uf first ball is hit
-            if on_strike.balls == 0:
-                PrintInColor(Randomize(commentary.commentary_firstball_six), Fore.LIGHTGREEN_EX)
-            # hattrick sixes
-            arr = [x for x in bowler.ball_history if x != 'WD']
-            if CheckForConsecutiveElements(arr, 6, 3):
-                PrintInColor(Randomize(commentary.commentary_in_a_row), Fore.LIGHTGREEN_EX)
-            field = Randomize(resources.fields[6])
-            comment = Randomize(commentary.commentary_six)
-            PrintInColor(field + " SIX! " + comment, Fore.LIGHTGREEN_EX)
-            logger.info("SIX")
-            # inc number of 6s
-            on_strike.sixes += 1
-        # dot ball
-        elif run == 0:
-            bowler.ball_history.append(0)
-            batting_team.ball_history.append(0)
-            if not used_drs:
-                if bowler.attr.ispacer:
-                    comment = Randomize(commentary.commentary_dot_ball_pacer) % (GetSurname(bowler.name),
-                                                                                 on_strike.name)
-                else:
-                    comment = Randomize(commentary.commentary_dot_ball) % (GetSurname(bowler.name),
-                                                                           GetSurname(on_strike.name))
+        # check if first six
+        if batting_team.sixes == 0:
+            PrintInColor(Randomize(commentary.commentary_first_six_team), Fore.LIGHTGREEN_EX)
+        batting_team.sixes += 1
+
+        # check uf first ball is hit
+        if on_strike.balls == 0:
+            PrintInColor(Randomize(commentary.commentary_firstball_six), Fore.LIGHTGREEN_EX)
+        # hattrick sixes
+        arr = [x for x in bowler.ball_history if x != 'WD']
+        if CheckForConsecutiveElements(arr, 6, 3):
+            PrintInColor(Randomize(commentary.commentary_in_a_row), Fore.LIGHTGREEN_EX)
+        field = Randomize(resources.fields[6])
+        comment = Randomize(commentary.commentary_six)
+        PrintInColor(field + " SIX! " + comment, Fore.LIGHTGREEN_EX)
+        logger.info("SIX")
+        # inc number of 6s
+        on_strike.sixes += 1
+
+    # dot ball
+    elif run == 0:
+        bowler.ball_history.append(0)
+        batting_team.ball_history.append(0)
+        on_strike.dots += 1
+        if not used_drs:
+            if bowler.attr.ispacer:
+                comment = Randomize(commentary.commentary_dot_ball_pacer) % (GetSurname(bowler.name),
+                                                                             on_strike.name)
             else:
-                comment = "Decision overturned!"
-            print('%s, No Run' % comment)
-            logger.info("DOT BALL")
-        # ones and twos and threes
+                comment = Randomize(commentary.commentary_dot_ball) % (GetSurname(bowler.name),
+                                                                       GetSurname(on_strike.name))
         else:
-            logger.info(str(run))
-            bowler.ball_history.append(run)
-            batting_team.ball_history.append(run)
-            field = Randomize(resources.fields["ground_shot"])
-            comment = Randomize(commentary.commentary_ground_shot)
-            if run == 1:
-                # detect if its a dropped catch
-                catch_drop = Randomize([True, False])
-                # get fielders list
-                fielder = Randomize([player for player in bowling_team.team_array if player is not bowler])
+            comment = "Decision overturned!"
+        print('%s, No Run' % comment)
 
-                # if dropped catch
-                if catch_drop is True:
-                    dropped_by_keeper_prob = [0.1, 0.9]
-                    dropped_by_keeper = choice([True, False], 1, p=dropped_by_keeper_prob, replace=False)[0]
-                    if dropped_by_keeper is True:
-                        comment = Randomize(commentary.commentary_dropped_keeper) % bowling_team.keeper.name
-                    else:
-                        comment = Randomize(commentary.commentary_dropped) % fielder.name
+    # ones and twos and threes
+    else:
+        bowler.ball_history.append(run)
+        batting_team.ball_history.append(run)
+        field = Randomize(resources.fields["ground_shot"])
+        comment = Randomize(commentary.commentary_ground_shot)
+        if run == 1:
+            on_strike.singles += 1
+            # detect if its a dropped catch
+            catch_drop = Randomize([True, False])
+            # get fielders list
+            fielder = Randomize([player for player in bowling_team.team_array if player is not bowler])
 
-                print('%s,%s run' % (comment, str(run)))
-            else:
-                print('%s,%s %s runs' % (comment, field, str(run)))
-            # update 1s and 2s
-            if run == 1:
-                on_strike.singles += 1
-            elif run == 2:
+            # if dropped catch
+            if catch_drop is True:
+                dropped_by_keeper_prob = [0.1, 0.9]
+                dropped_by_keeper = choice([True, False], 1, p=dropped_by_keeper_prob, replace=False)[0]
+                if dropped_by_keeper is True:
+                    comment = Randomize(commentary.commentary_dropped_keeper) % bowling_team.keeper.name
+                else:
+                    comment = Randomize(commentary.commentary_dropped) % fielder.name
+
+            print('%s,%s run' % (comment, str(run)))
+        else:
+            if run == 2:
                 on_strike.doubles += 1
             elif run == 3:
                 on_strike.threes += 1
+            print('%s,%s %s runs' % (comment, field, str(run)))
 
-        # update balls runs
-        bowler.balls_bowled += 1
-        bowler.runs_given += run
-        PairFaceBall(pair, run)
-        batting_team.total_balls += 1
-        batting_team.total_score += run
+    # update balls runs
+    bowler.balls_bowled += 1
+    bowler.runs_given += run
+    PairFaceBall(pair, run)
+    batting_team.total_balls += 1
+    batting_team.total_score += run
 
-        # check for milestones
-        CheckMilestone(match)
-
-        # check for ball history
+    # check for milestones
+    CheckMilestone(match)
 
     return
 
@@ -895,7 +892,7 @@ def PlayOver(match, over):
 
         # generate run, updates runs and maiden status
         run = GenerateRun(match, over, player_on_strike)
-        #run = GenerateRunNew(match, over, player_on_strike)
+        # run = GenerateRunNew(match, over, player_on_strike)
 
         over_arr.append(run)
 
@@ -961,8 +958,9 @@ def PlayOver(match, over):
                 match.status = False
                 # if won in the last ball
                 if batting_team.total_score >= batting_team.target:
-                    PrintInColor(Randomize(commentary.commentary_won_last_ball) % (batting_team.name, bowling_team.name),
-                                 Style.BRIGHT)
+                    PrintInColor(
+                        Randomize(commentary.commentary_won_last_ball) % (batting_team.name, bowling_team.name),
+                        Style.BRIGHT)
                 else:
                     PrintInColor(Randomize(commentary.commentary_lost_chasing) % (batting_team.name, bowling_team.name),
                                  Style.BRIGHT)
