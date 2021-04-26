@@ -607,10 +607,9 @@ class commentary:
                           'its all over for them!.. they have been bowled out!',
                           'that\'s all over!! all out!']
 
-    commentary_all_out_good_score = ['theyve managed to build a good total though!',]
+    commentary_all_out_good_score = ['theyve managed to build a good total though!', ]
 
-    commentary_all_out_bad_score = ['theyve failed to build a competitive total!',]
-
+    commentary_all_out_bad_score = ['theyve failed to build a competitive total!', ]
 
     # LAST OVER/MATCH/INNS
     commentary_last_ball_match = ['this is it.. the last ball of the match!',
@@ -673,8 +672,8 @@ class commentary:
                                    'he didn\'t have a good day with the ball', ]
 
     # good/bad bowler to bat
-    commentary_bad_bowler_to_bat = ['he had really good day with the ball.. can he bat too?',
-                                    'he had a terrific time with the ball earlier, lets see if he can bat too', ]
+    commentary_good_bowler_to_bat = ['he had really good day with the ball.. can he bat too?',
+                                     'he had a terrific time with the ball earlier, lets see if he can bat too', ]
 
     commentary_bad_bowler_to_bat = ['he didn\'t have a good day with the ball.. can he bat now?',
                                     'he had a horrible time with the ball earlier, lets see if he can bat', ]
