@@ -660,6 +660,13 @@ class commentary:
                                    'he was not in good touch today!',
                                    'he didn\'t have a good day with the ball', ]
 
+    # good/bad bowler to bat
+    commentary_bad_bowler_to_bat = ['he had really good day with the ball.. can he bat too?',
+                                    'he had a terrific time with the ball earlier, lets see if he can bat too', ]
+
+    commentary_bad_bowler_to_bat = ['he didn\'t have a good day with the ball.. can he bat now?',
+                                    'he had a horrible time with the ball earlier, lets see if he can bat', ]
+
     # check if bowler is spinner
     commentary_spinner_into_attack = ['the spinner, to start the over!',
                                       'spinner into the attack!.. lets see if he gets the ball to turn!',

@@ -471,6 +471,15 @@ def GetNextBatsman(match):
         # check if he is captain
         if pair[ind].attr.iscaptain:
             PrintInColor(Randomize(commentary.commentary_captain_to_bat_next), batting_team.color)
+
+        # check if he had a good day with the ball earlier
+        if pair[ind].balls_bowled > 0:
+            if pair[ind].wkts >= 2:
+                PrintInColor(Randomize(commentary.commentary_good_bowler_to_bat), batting_team.color)
+            if pair[ind].wkts == 0 and pair[ind].eco >= 7.0:
+                PrintInColor(Randomize(commentary.commentary_bad_bowler_to_bat), batting_team.color)
+
+
         # now new batter on field
         pair[ind].onfield = True
 
