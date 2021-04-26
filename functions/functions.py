@@ -243,19 +243,24 @@ def GenerateDismissal(match):
 
     # generate dismissal
     dismissal = choice(dismissal_types, 1, p=dismissal_prob, replace=False)[0]
+
     # generate dismissal string
     if dismissal == 'lbw' or dismissal == 'b':
         dismissal_str = '%s %s' % (dismissal, GetShortName(bowler.name))
     elif dismissal == 'st':
         # stumped
         dismissal_str = 'st %s b %s' % (GetShortName(keeper.name), GetShortName(bowler.name))
+        keeper.stumpings += 1
+
     elif dismissal == 'c':
+        fielder.catches += 1
         # check if catcher is the bowler
         if fielder == bowler:
             dismissal_str = 'c&b %s' % (GetShortName(bowler.name))
         else:
             dismissal_str = '%s %s b %s' % (dismissal, GetShortName(fielder.name), GetShortName(bowler.name))
     elif dismissal == 'runout':
+        fielder.runouts += 1
         dismissal_str = 'runout %s' % (GetShortName(fielder.name))
 
     return dismissal_str
@@ -498,7 +503,7 @@ def Ball(match, run):
     on_strike = next((x for x in pair if x.onstrike), None)
 
     # first runs
-    if batting_team.total_score == 0 and (run != -1 or 0) and not batting_team.off_the_mark:
+    if batting_team.total_score == 0 and (run not in [-1, 0]) and not batting_team.off_the_mark:
         PrintInColor(Randomize(commentary.commentary_first_runs) % (batting_team.name, on_strike.name), batting_team.color)
         batting_team.off_the_mark = True
 
