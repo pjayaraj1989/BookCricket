@@ -128,7 +128,7 @@ def ShowHighlights(match):
                                        str(batting_team.wickets_fell),
                                        str(BallsToOvers(batting_team.total_balls)))
     msg += ' Current RR: %s' % str(crr)
-    if batting_team.batting_second:
+    if batting_team.batting_second and match.status:
         msg += ' Required RR: %s\n' % str(rr)
     PrintInColor(msg, Style.BRIGHT)
     logger.info(msg)

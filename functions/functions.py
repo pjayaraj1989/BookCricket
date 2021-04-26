@@ -1060,13 +1060,6 @@ def Play(match):
         msg = "Reqd. run rate: %s" % (str(reqd_rr))
         print(msg)
         logger.info(msg)
-        '''
-        if reqd_rr > 8.0:
-            comment = Randomize(commentary.commentary_high_req_rate) % batting_team.name
-        elif reqd_rr < 5.0:
-            comment = Randomize(commentary.commentary_less_req_rate) % batting_team.name
-        PrintInColor(comment, Style.BRIGHT)
-        '''
 
     # now run for each over
     for over in range(0, overs):
