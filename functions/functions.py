@@ -497,6 +497,11 @@ def Ball(match, run):
     # get who is on strike
     on_strike = next((x for x in pair if x.onstrike), None)
 
+    # first runs
+    if batting_team.total_score == 0 and (run != -1 or 0) and not batting_team.off_the_mark:
+        PrintInColor(Randomize(commentary.commentary_first_runs) % (batting_team.name, on_strike.name), batting_team.color)
+        batting_team.off_the_mark = True
+
     # if out
     used_drs = False
     while run == -1:

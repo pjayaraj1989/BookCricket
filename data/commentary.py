@@ -162,6 +162,13 @@ class commentary:
                                     'he is a master all rounder!',
                                     'he is all over the ground today, earlier with the ball, now with the bat!']
 
+    # first runs of  the day for the team
+    commentary_first_runs = ['first runs of the day for %s and %s',
+                             'he\'s away! first runs on the board for %s and %s',
+                             '%s and %s are off the mark with that shot',
+                             '%s, and also %s are up and running',
+                             '%s and %s are away with that!', ]
+
     # first boundary of the innings
     commentary_first_four_team = ['first boundary of this innings!',
                                   'there is the first one to cross the fence!',

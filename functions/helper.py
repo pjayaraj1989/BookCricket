@@ -75,7 +75,7 @@ class Result:
 class Team:
     def __init__(self, **kwargs):
         attrs = {'total_overs': 0, 'drs_chances': 2, 'total_score': 0, 'target': 0, 'wickets_fell': 0, 'total_balls': 0,
-                 'extras': 0, 'top_scorer': None, 'most_wkts': None,
+                 'extras': 0, 'top_scorer': None, 'most_wkts': None, 'off_the_mark': False,
                  'fours': 0, 'sixes': 0,
                  'fifty_up': False, 'hundred_up': False, 'two_hundred_up': False, 'three_hundred_up': False,
                  'innings_over': False, 'batting_second': False, 'name': ' ', 'key': ' ',
