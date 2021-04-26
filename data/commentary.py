@@ -607,6 +607,11 @@ class commentary:
                           'its all over for them!.. they have been bowled out!',
                           'that\'s all over!! all out!']
 
+    commentary_all_out_good_score = ['theyve managed to build a good total though!',]
+
+    commentary_all_out_bad_score = ['theyve failed to build a competitive total!',]
+
+
     # LAST OVER/MATCH/INNS
     commentary_last_ball_match = ['this is it.. the last ball of the match!',
                                   'we are down to the last ball of the match',

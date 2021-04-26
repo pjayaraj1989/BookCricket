@@ -941,6 +941,10 @@ def PlayOver(match, over):
         if not batting_team.batting_second:
             if batting_team.wickets_fell == 10:
                 PrintInColor(Randomize(commentary.commentary_all_out), Fore.LIGHTRED_EX)
+                if (match.overs * 6) / batting_team.total_score <= 1.2:
+                    PrintInColor(Randomize(commentary.commentary_all_out_good_score), Fore.GREEN)
+                elif 0.0 <= GetCurrentRate(batting_team) >= 1.42:
+                    PrintInColor(Randomize(commentary.commentary_all_out_bad_score), Fore.GREEN)
                 input('press enter to continue...')
                 break
 
