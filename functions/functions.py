@@ -1010,6 +1010,10 @@ def CheckMilestone(match):
         name = GetFirstName(p.name)
         if not Randomize([True, False]):
             name = GetSurname(p.name)
+        # if nickname defined, call by it
+        if p.nickname != '' or None:
+            name = p.nickname
+
         # first fifty
         if p.runs >= 50 and p.fifty == 0:
             p.fifty += 1

@@ -38,6 +38,7 @@ class Player:
                  'singles': 0, 'dots': 0, 'eco': 0.0, 'strikerate': 0.0, 'catches': 0, 'stumpings': 0, 'runouts': 0,
                  'ball_history': [],
                  'status': True, 'onfield': False, 'onstrike': False, 'iscaptain': False, 'isopeningbowler': False,
+                 'nickname': '',
                  'isspinner': False, 'ispacer': False}
         self = FillAttributes(self, attrs, kwargs)
 
@@ -48,8 +49,15 @@ class Match:
                  'logger': None, 'result': None, 'team1': None, 'team2': None, 'winner': None, 'loser': None,
                  'venue': None, 'umpire': None, 'commentators': None,
                  'drs': False,
+                 'firstinnings': None, 'secondinnings': None,
                  'batting_first': None, 'batting_second': None, 'won': False, 'autoplay': False, 'batting_team': None,
                  'bowling_team': None}
+        self = FillAttributes(self, attrs, kwargs)
+
+
+class Innings:
+    def __init__(self, **kwargs):
+        attrs = {'status': False, 'overs': 0, 'result': None, 'batting_team': None, 'bowling_team': None}
         self = FillAttributes(self, attrs, kwargs)
 
 

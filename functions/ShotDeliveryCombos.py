@@ -1,6 +1,5 @@
-
 def GetCombinations(delivery, shot):
-    result == False
+    result = False
     if delivery.length in ['full']:
         # assign valid shots
         if shot.type == ['drive', 'sweep']:

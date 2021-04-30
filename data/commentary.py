@@ -259,6 +259,7 @@ class commentary:
                          'Bowled him!! comprehensively bowled!',
                          'knocked his stumps over!',
                          'off stump out of the ground!',
+                         'off stump is rattled!',
                          'bowled him! You beauty!',
                          'done him! peach of a delivery!',
                          'Knocked his middle stump out!... And there is a stare at the batsman!',

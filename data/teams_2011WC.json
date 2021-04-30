@@ -95,7 +95,7 @@
         {"name": "Hashim Amla","batting": 8, "opener1":  1},
         {"name": "Graeme Smith","batting": 8,"opener2": 1, "captain":1},
         {"name": "Jacques Kallis", "batting": 8, "bowling":7, "pacer":1},
-		{"name": "A.B deVilliers","batting": 8, "bowling":5},
+		{"name": "A.B deVilliers", "nickname": "Mr.360","batting": 8, "bowling":5},
         {"name": "J.P Duminy",  "batting": 8, "bowling":7, "spinner":1},
         {"name": "Faf duPlessis","batting": 7},
         {"name": "Morne VanWyk","batting": 6,"keeper":1},

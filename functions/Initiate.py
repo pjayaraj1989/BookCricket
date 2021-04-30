@@ -72,6 +72,10 @@ def ReadTeams(json_file):
                 if 'openingbowler' in plr and plr['openingbowler'] == 1:
                     p.attr.isopeningbowler = True
 
+                # read nicknames if any
+                if 'nickname' in plr and plr['nickname'] != '' or None:
+                    p.nickname = plr['nickname']
+
                 t.team_array.append(p)
 
             t.key = v["key"]
