@@ -1,7 +1,7 @@
 # bowl
 from functions.KeyPressDetect import GetKeyPressTime
 from functions.helper import Delivery, Shot
-from functions.utilities import Randomize, ChooseFromOptions
+from functions.utilities import Randomize
 
 deliveries_pacer = ['inswing', 'outswing', 'straight', 'reverse', 'offcutter', 'legcutter', 'knuckle', 'dipper', ]
 deliveries_spinner = ['offspin', 'legspin', 'googly', 'wrongun', 'arm', 'carrom', 'topspin', ]
