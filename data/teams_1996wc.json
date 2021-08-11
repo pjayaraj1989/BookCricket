@@ -1,0 +1,202 @@
+{
+  "Teams": {
+    "India": {
+      "players": [
+        {"name": "Navjot Sidhu", "batting": 8,"opener1": 1},
+        {"name": "Sachin Tendulkar", "nickname": "the little master", "batting": 8, "bowling": 7,"spinner":1, "opener2": 1},
+        {"name": "Sanjay Manjrekar", "batting": 8},
+        {"name": "Mohammad Azharuddin", "batting": 8, "captain":  1},
+        {"name": "Ajay Jadeja", "batting": 7, "bowling":6},
+        {"name": "Vinod Kambli", "batting": 8,"bowling": 6},
+        {"name": "Nayan Mongia", "batting": 7,"keeper":  1},
+        {"name": "Aashish Kapoor", "batting": 6,"bowling": 7,"spinner": 1},
+        {"name": "Javagal Srinath", "batting": 6,"bowling": 9, "pacer":1, "openingbowler": 1},
+        {"name": "Anil Kumble", "nickname": "Jumbo", "batting": 5, "bowling": 9,"spinner":1},
+        {"name": "Venkatesh Prasad", "batting": 5,"bowling": 9, "pacer":1}
+      ],
+      "key": "IND",
+      "color": "lcyan"
+    },
+
+    "Australia": {
+      "players": [
+        {"name": "Mark Taylor","batting": 8,"opener1":  1, "captain":1},
+        {"name": "Mark Waugh","batting": 8,"opener2": 1},
+        {"name": "Ricky Ponting", "batting": 8},
+        {"name": "Steve Waugh","batting": 7,"bowling": 6},
+        {"name": "Michael Bevan", "batting": 7, "bowling": 4},
+        {"name": "Stuart Law","batting": 7,"bowling": 6, "spinner":  1},
+        {"name": "Ian Healy","batting": 8,"keeper": 1},
+        {"name": "Shane Warne","batting": 6,"bowling": 8,  "spinner": 1 },
+        {"name": "Paul Reiffel", "batting": 6,"bowling": 9, "pacer":1},
+        {"name": "Damien Fleming", "batting": 5,"bowling": 9, "pacer":1},
+        {"name": "Glenn McGrath","batting": 5,"bowling": 9,"openingbowler": 1, "pacer":1}
+      ],
+      "key": "AUS",
+      "color": "lyellow"
+    },
+
+	"SriLanka": {
+      "players": [
+        {"name": "Romesh Kaluwitharana","batting": 8,"opener1":  1, "keeper":  1},
+        {"name": "Sanath Jayasuriya","batting": 8,"opener2": 1, "bowling":6,"spinner":1},
+        {"name": "Asanka Gurusinha",  "batting": 8},
+        {"name": "Roshan Mahanama","batting": 7},
+        {"name": "Hashan Tillakaratne", "batting": 8},
+		{"name": "Aravinda deSilva","batting": 8,"bowling": 7,"spinner":1},
+        {"name": "Arjuna Ranatunga","batting": 7,"bowling": 7,"spinner": 1, "captain" :  1},
+        {"name": "Chaminda Vaas","batting": 6,"bowling": 9, "openingbowler":1, "pacer":1},
+        {"name": "Kumar Dharmasena","batting": 6,"bowling": 8},
+        {"name": "Pramodya Wickramasinghe","batting": 5,"bowling": 8, "pacer":1},
+        {"name": "Muttiah Muralitharan", "nickname": "Murali" ,"batting": 5,"bowling": 7, "spinner":1}
+      ],
+      "key": "SRI",
+      "color": "lmagenta"
+    },
+
+	"NewZealand": {
+      "players": [
+        {"name": "Craig Spearman","batting": 8, "opener1":  1},
+        {"name": "Nathan Astle", "batting": 8, "bowling":6, "opener2": 1},
+        {"name": "Lee Germon","batting": 8,"bowling":6,"captain":1},
+        {"name": "Stephen Fleming","batting": 8},
+		{"name": "Roger Twose","batting": 8,"bowling": 7},
+        {"name": "Chris Cairns",  "batting": 8,"bowling":7, "pacer":1},
+        {"name": "Adam Parore","batting": 7,"keeper": 1},
+        {"name": "Chris Harris","batting": 7,"bowling": 7},
+        {"name": "Dion Nash","batting": 6,"bowling": 9, "openingbowler":1, "pacer":1},
+        {"name": "Shane Thomson","batting": 5,"bowling": 8, "spinner":1},
+        {"name": "Dipak Patel","batting": 5,"bowling": 8, "spinner":1}
+      ],
+      "key": "NZ",
+      "color": "lblue"
+    },
+
+	"Pakistan": {
+      "players": [
+        {"name": "Saeed Anwar","batting": 8, "opener1":  1},
+        {"name": "Aamer Sohail", "batting": 8, "opener2": 1, "bowling":7, "spinner":1},
+		{"name": "Ijaz Ahmed","batting": 8, "bowling": 5},
+        {"name": "Inzamam Ul-Haq",  "batting": 8},
+        {"name": "Javed Miandad","batting": 8},
+        {"name": "Saleem Malik","batting": 8},
+        {"name": "Rashid Latif","batting": 7,"keeper": 1},
+        {"name": "Wasim Akram","batting": 6,"bowling": 9, "openingbowler":1, "pacer":1, "captain":  1},
+        {"name": "Waqar Younis","batting": 7, "bowling":9, "pacer":1},
+        {"name": "Mushtaq Ahmed","batting": 5,"bowling": 8, "spinner":1},
+        {"name": "Aaqib Javed","batting": 5,"bowling": 9, "pacer":1}
+      ],
+      "key": "PAK",
+      "color": "lgreen"
+    },
+
+	"South-Africa": {
+      "players": [
+        {"name": "Gary Kirsten","batting": 8,"opener2": 1},
+        {"name": "Andrew Hudson","batting": 8, "opener1":  1},
+        {"name": "Brian McMillan", "batting": 8, "bowling":7},
+		{"name": "Daryll Cullinan","batting": 8},
+        {"name": "Hansie Cronje","batting": 8,"captain": 1, "bowling": 6},
+        {"name": "Jonty Rhodes",  "batting": 8},
+        {"name": "Steve Palframan","batting": 7,"keeper": 1},
+        {"name": "Pat Symcox", "batting": 6,"bowling": 7, "spinner":1},
+        {"name": "Shaun Pollock","batting": 6,"bowling": 9, "openingbowler":1, "pacer":1},
+		{"name": "Paul Adams","batting": 5, "bowling":7, "spinner":1},
+        {"name": "Allan Donald", "batting": 5,"bowling": 9, "pacer":1}
+      ],
+      "key": "SA",
+      "color": "green"
+    },
+
+	"West-Indies": {
+      "players": [
+        {"name": "Shivnarine Chanderpaul","batting": 8, "opener1":  1},
+        {"name": "Courtney Browne","batting": 6, "keeper":1},
+        {"name": "Brian Lara","batting": 8},
+        {"name": "Richie Richardson","batting": 6, "captain":1, "bowling":6},
+        {"name": "Roger Harper",  "batting": 8, "bowling":7, "spinner":1},
+        {"name": "Ottis Gibson", "batting": 8, "bowling":7},
+        {"name": "Jimmy Adams", "batting": 8},
+        {"name": "Keith Arthurton", "batting": 8, "bowling":7},
+        {"name": "Curtley Ambrose","batting": 7, "bowling":9, "pacer":1},
+		{"name": "Ian Bishop","batting": 7, "bowling":8, "pacer":1},
+        {"name": "Courtney Walsh","batting": 5,"bowling": 9, "pacer":1, "openingbowler":1}
+      ],
+      "key": "WI",
+      "color": "lmagenta"
+    },
+
+	"Zimbabwe": {
+      "players": [
+        {"name": "Alastair Campbell", "batting": 8, "opener1": 1},
+        {"name": "Andy Waller",       "batting": 8, "opener2": 1, "bowling":5},
+        {"name": "Andy Flower",       "batting": 8, "keeper":  1, "captain":1},
+		{"name": "Grant Flower",      "batting": 8, "spinner": 1, "bowling":6},
+        {"name": "Paul Strang",       "batting": 7, "bowling": 7, "spinner":  1},
+        {"name": "Craig Evans",       "batting": 7, "bowling": 6},
+        {"name": "Guy Whittall",      "batting": 6, "bowling": 7, "pacer":1},
+        {"name": "Heath Streak",      "batting": 6, "bowling": 8, "openingbowler":1, "pacer":1},
+		{"name": "Bryan Strang",      "batting": 7, "bowling": 6},
+        {"name": "Charlie Lock",      "batting": 5, "bowling": 8, "pacer":1},
+        {"name": "Stephen Peal",      "batting": 5, "bowling": 8, "pacer":1}
+      ],
+      "key": "ZIM",
+      "color": "lred"
+    },
+
+	"Kenya": {
+      "players": [
+        {"name": "Kennedy Otieno","batting": 8, "opener1":  1, "keeper":1},
+        {"name": "Dipak Chudasama","batting": 8,"opener2": 1, "bowling":5},
+        {"name": "Steve Tikolo", "batting": 8, "bowling":7, "spinner":1},
+		{"name": "Maurice Odumbe","batting": 8, "spinner":1,"bowling":6, "captain":1},
+        {"name": "David Tikolo",  "batting": 8,"bowling":7, "pacer":1},
+        {"name": "Hitesh Modi","batting": 7,"bowling":5,"spinner":1},
+        {"name": "Rajab Ali","batting": 6,"bowling": 7, "spinner":1},
+        {"name": "Asif Karim","batting": 5,"bowling": 8,"spinner":1},
+        {"name": "Tito Odumbe","batting": 6,"bowling":6, "pacer":1},
+		{"name": "Martin Suji","batting": 7, "bowling":7, "openingbowler":1, "pacer":1},
+        {"name": "Lameck Onyango","batting": 5,"bowling": 7, "spinner":1}
+      ],
+      "key": "KEN",
+      "color": "magenta"
+    },
+
+	"Bangladesh": {
+      "players": [
+        {"name": "Shahriar Hossain","batting": 8, "opener1":  1},
+        {"name": "Mehrab Hossain","batting": 8,"opener2": 1, "bowling":5},
+        {"name": "Akram Khan", "batting": 8, "bowling":6,"spinner":1},
+		{"name": "Aminul Islam","batting": 8, "spinner":1,"bowling":6, "captain":  1},
+        {"name": "Minhajul Abedin",  "batting": 8,"bowling":7},
+        {"name": "Naimur Rahman","batting": 7,"bowling":5,"spinner":1},
+        {"name": "Khaled Mashud","batting": 6,"bowling": 7, "keeper":1},
+        {"name": "Khaled Mahmud","batting": 6,"bowling":7},
+		{"name": "Enamul Haq","batting": 7, "bowling":7, "pacer":1},
+        {"name": "Hasibul Hossain","batting": 5,"bowling": 7, "pacer":1},
+        {"name": "Manjural Islam","batting": 5,"bowling": 8,"openingbowler":1, "pacer":1}
+      ],
+      "key": "BAN",
+      "color": "grey"
+    },
+
+    "England": {
+      "players": [
+        {"name": "Robin Smith",  "batting": 8, "opener1":  1},
+        {"name": "Mike Atherton","batting": 7, "opener2":  1, "captain":  1},
+        {"name": "Graeme Hick","batting": 8,"spinner": 1, "bowling": 5},
+        {"name": "Graham Thorpe","batting": 8},
+        {"name": "Neil Fairbrother", "batting": 8,"bowling": 6,"spinner": 1},
+        {"name": "Jack Russel","batting": 8, "keeper": 1},
+        {"name": "Dermot Reeve","batting": 6,"bowling": 7},
+        {"name": "Dominc Cork","batting": 7,"bowling": 9,"pacer": 1 },
+        {"name": "Peter Martin","batting": 6,"bowling": 9, "pacer":1},
+        {"name": "Darren Gough","batting": 5,"bowling": 9,"openingbowler": 1, "pacer":1},
+        {"name": "Richard Illingworth","batting": 5,"bowling": 7, "spinner":1}
+      ],
+      "key": "ENG",
+      "color": "lblue"
+    }
+  }
+}
+
