@@ -2,6 +2,18 @@
   "run_prob_t20":[0.05, 0.23, 0.33, 0.20, 0.01, 0.11, 0.03, 0.04],
 
   "Venues": {
+	  "UAE": {
+      "places": [
+		  {"name": "Dubai International Cricket Stadium","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		  {"name": "Sharjah Cricket Association Stadium","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		  {"name": "Zayed Cricket Stadium, Abu Dhabi","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		  {"name": "Ajman Oval, Ajman","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		  {"name": "ICC Cricket Academy Ground No.1, Dubai","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		  {"name": "ICC Cricket Academy Ground No.2, Dubai","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
+		  {"name": "Tolerance Oval, Abu Dhabi","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]}
+      ],
+      "key": "UAE"
+    },
     "England": {
       "places": [
 		  {"name": "Lords, London","run_prob": [0.03, 0.38, 0.35, 0.11, 0.02, 0.06, 0.02, 0.03]},
