@@ -179,26 +179,53 @@ def Toss(match):
                                                                     match.team2.name))
 
     print('%s is gonna flip the coin' % match.team2.captain.name)
-    opts = ['1', '2']
+    #FIXME: use the ChooseFromOptions function here
+    opts = [1, 2]
     call = input('%s, your call, Heads or tails? 1.Heads 2.Tails\n' % match.team1.captain.name)
-    if call == '' or call not in opts:
-        call = Randomize(opts)
-        print("Invalid choice!..auto-selected")
-    call = int(call)
-    coin = Randomize([1, 2])
-    coin = int(coin)
+    # if invalid, auto-select
+    if call == '' or None:
+        call = int(Randomize(opts))
+        print("Invalid choice, auto-selected")
+    coin = int(Randomize(opts))
+
+    # check if call == coin selected
     if coin == call:
-        msg = '%s won the toss, elected to bat first' % match.team1.captain.name
-        PrintInColor(msg, match.team1.color)
-        logger.info(msg)
-        match.team1.batting_second = False
-        match.team2.batting_second = True
+        call = input('%s, you have won the toss, do you wanna 1.Bat 2.Bowl first?\n' % match.team1.captain.name)
+        # if invalid, auto-select
+        if call == '' or None:
+            call = int(Randomize(opts))
+            print("Invalid choice, auto-selected")
+        if int(call) == 1:
+            msg = '%s has elected to bat first' % match.team1.captain.name
+            PrintInColor(msg, match.team1.color)
+            match.team1.batting_second = False
+            match.team2.batting_second = True
+            logger.info(msg)
+        else:
+            msg = '%s has elected to bowl first' % match.team1.captain.name
+            PrintInColor(msg, match.team1.color)
+            match.team2.batting_second = False
+            match.team1.batting_second = True
+            logger.info(msg)
     else:
-        msg = '%s won the toss, elected to bat first' % match.team2.captain.name
-        PrintInColor(msg, match.team2.color)
-        logger.info(msg)
-        match.team2.batting_second = False
-        match.team1.batting_second = True
+        call = input('%s, you have won the toss, do you wanna 1.Bat 2.Bowl first?\n' % match.team2.captain.name)
+        # if invalid, auto-select
+        if call == '' or None:
+            call = int(Randomize(opts))
+            print("Invalid choice, auto-selected")
+        if int(call) == 1:
+            msg = '%s has elected to bat first' % match.team2.captain.name
+            PrintInColor(msg, match.team2.color)
+            match.team2.batting_second = False
+            match.team1.batting_second = True
+            logger.info(msg)
+        else:
+            msg = '%s has elected to bowl first' % match.team2.captain.name
+            PrintInColor(msg, match.team2.color)
+            match.team1.batting_second = False
+            match.team2.batting_second = True
+            logger.info(msg)
+
     # now find out who is batting first
     batting_first = next((x for x in [match.team1, match.team2] if not x.batting_second), None)
     batting_second = next((x for x in [match.team1, match.team2] if x.batting_second), None)
