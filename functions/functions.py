@@ -932,17 +932,18 @@ def PlayOver(match, over):
                 input('press enter to continue...')
                 break
 
-    # check if over is a maiden
-    if ismaiden and ball == 6:
-        bowler.maidens += 1
     # check total runs taken in over
+    # if expensive over
     if total_runs_in_over > 14:
         PrintInColor(Randomize(commentary.commentary_expensive_over) % bowler.name + '\n' +
                      '%s runs in this over!' % (str(total_runs_in_over)),
                      Style.BRIGHT)
+    # check if maiden over
     elif total_runs_in_over == 0:
         PrintInColor(Randomize(commentary.commentary_maiden_over) % bowler.name,
                      Style.BRIGHT)
+        bowler.maidens += 1
+    # check for an economical over
     elif total_runs_in_over < 6:
         PrintInColor(Randomize(commentary.commentary_economical_over) % bowler.name + '\n' +
                      'only %s run(s) off this over!' % (str(total_runs_in_over)),

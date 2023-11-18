@@ -1,7 +1,8 @@
 # routines to display scores, etc
 # display temporary stats
 from data.commentary import *
-from functions.utilities import PrintInColor, BallsToOvers, GetShortName, PrintListFormatted, Randomize
+from functions.utilities import PrintInColor, BallsToOvers, GetShortName, PrintListFormatted, Randomize, \
+    ChooseFromOptions
 from colorama import Style, Fore
 
 
