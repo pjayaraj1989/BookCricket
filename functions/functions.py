@@ -215,6 +215,12 @@ def GenerateDismissal(match):
         fielder.runouts += 1
         dismissal_str = 'runout %s' % (GetShortName(fielder.name))
 
+    # check if fielder is on fire!
+    if fielder.runouts >= 2 or fielder.catches >= 2:
+        PrintInColor(Randomize(commentary.commentary_fielder_on_fire) % fielder.name, bowling_team.color)
+    if keeper.stumpings >= 2:
+        PrintInColor(Randomize(commentary.commentary_fielder_on_fire) % keeper.name, bowling_team.color)
+
     return dismissal_str
 
 
