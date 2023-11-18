@@ -489,6 +489,10 @@ def Ball(match, run):
 
     # appropriate commentary for 4s and 6s
     if run == 4:
+        # check if this is after a wicket?
+        if batting_team.ball_history != []:
+            if 'Wkt' in str(batting_team.ball_history[-1]) or 'RO' in str(batting_team.ball_history[-1]):
+                PrintInColor(Randomize(commentary.commentary_boundary_after_wkt), Fore.LIGHTGREEN_EX)
         bowler.ball_history.append(4)
         batting_team.ball_history.append(4)
 
@@ -513,6 +517,10 @@ def Ball(match, run):
 
     # six
     elif run == 6:
+        # check if this is after a wicket?
+        if batting_team.ball_history != []:
+            if 'Wkt' in str(batting_team.ball_history[-1]) or 'RO' in str(batting_team.ball_history[-1]):
+                PrintInColor(Randomize(commentary.commentary_boundary_after_wkt), Fore.LIGHTGREEN_EX)
         bowler.ball_history.append(6)
         batting_team.ball_history.append(6)
 

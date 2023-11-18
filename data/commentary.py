@@ -269,6 +269,10 @@ class commentary:
     commentary_in_a_row = ['that\'s 3 in a row!',
                            'three in a row now!, bowler is clueless here',
                            'three in a row!']
+    commentary_boundary_after_wkt = ['what a response after a wicket!',
+                                     'well.. thats the response after a wicket!',
+                                     'thats how you should reply after a wicket!.. no pressure at all!',
+                                     'hows that reponse after a wicket!',]
     commentary_reverse = ['Oh that\'s reversed!',
                           'the ball has reversed!',
                           'he gets it to reverse!',
