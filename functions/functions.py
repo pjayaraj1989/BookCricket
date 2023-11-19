@@ -1103,6 +1103,7 @@ def Play(match):
 
         ShowHighlights(match)
         DisplayBowlingStats(match)
+        DisplayScore(match, match.batting_team)
         # rotate strike after an over
         RotateStrike(pair)
 
