@@ -370,7 +370,7 @@ class commentary:
                                'edged and brilliant dive by %s!',
                                'big deflection and yes! safely taken by %s',
                                'ooh there is an edge? %s appeals, bowler appeals...given!',
-                               'outside edge and brilliantly taken by the %s!',
+                               'outside edge and brilliantly taken by %s!',
                                'oh is there a nick!? %s thinks so, Batsman is walking...!',
                                'straight up in the air, %s says mine and takes it!', ]
     commentary_return_catch = ['beautiful return catch by %s!',

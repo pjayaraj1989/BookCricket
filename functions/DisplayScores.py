@@ -427,3 +427,81 @@ def DisplayPlayingXI(match):
         data_to_print.append([name1, name2])
     # now print it
     PrintListFormatted(data_to_print, 0.1, None)
+
+def SummarizeBatting(match, team):
+    # find what happened in the top order
+    # check if it was a good score
+    total_runs = team.total_score
+    total_overs = team.total_overs
+    wkts = team.wickets_fell
+    # say if this was a good total
+    msg = 'Thats the end of the innings, %s has scored %s off %s overs..' % (team.name, str(total_runs), str(total_overs))
+    nrr = GetCurrentRate(team)
+    if nrr > 7.0 and wkts < 10:
+        msg += 'They have scored at a terrific rate of %s ' %(str(nrr))
+    if wkts == 10:
+        msg += 'They have been bowled out!'
+
+    print (msg)
+    # now say about the top order
+    top_order_collapse = middle_order_collapse = False
+    tail_good_performance = False
+
+    top_order = [x for x in team.team_array[:4] if x.balls > 0]
+    top_order_good = [x for x in top_order if x.runs >= 30]
+    top_order_great = [x for x in top_order if x.runs >= 50]
+    top_order_poor = [x for x in top_order if x.runs <= 10]
+    if len(top_order_poor) >= 3:
+        top_order_collapse = True
+
+    middle_order = [x for x in team.team_array[4:7] if x.balls > 0]
+    middle_order_good = [x for x in middle_order if x.runs >= 30]
+    middle_order_great = [x for x in middle_order if x.runs >= 50]
+    middle_order_poor = [x for x in middle_order if x.runs <= 10]
+    if len(middle_order_poor) >= 3:
+        middle_order_collapse = True
+
+    tail = team.team_array[7:10]
+    tail_good = [x for x in tail if x.runs >= 30]
+    tail_great = [x for x in tail if x.runs >= 50]
+    if len(tail_great) > 1:
+        tail_good_performance = True
+
+    if len(top_order) != 0:
+        if len(top_order_good) != 0:
+            print ("In the top order, there were some stable performers")
+            for x in top_order_good:    print ("%s" % x.name)
+        if len(top_order_great) != 0:
+            print ("And terrific performance from")
+            for x in top_order_great:    print("%s" % x.name)
+        if len(top_order_poor) != 0:
+            print ("Disappointment for ")
+            for x in top_order_poor:    print ("%s" % x.name)
+
+    # same for middle order and tail
+    if len(middle_order) != 0:
+        if len(middle_order_good) != 0:
+            print ("some stable performance in the middle order")
+            for x in middle_order_good:    print ("%s" % x.name)
+        if len(middle_order_great) != 0:
+            print ("terrific batting from")
+            for x in middle_order_great:    print("%s" % x.name)
+        if len(middle_order_poor) != 0:
+            print ("Disappointment for ")
+            for x in middle_order_poor:    print ("%s" % x.name)
+
+    if len(tail) != 0 and len(tail_good) != 0:
+        print ("terrific batting from the lower order!")
+        for x in tail_great:    print("%s" % x.name)
+
+    # randomize this commentary
+    if top_order_collapse and not middle_order_collapse:
+        print ("We have seen some top order collapse!.. but good come back in the middle order")
+    if not top_order_collapse and middle_order_collapse:
+        print ("The top order gave a good start.. but middle order collapsed!")
+    if tail_good_performance:
+        print ("Some terrific fightback from the tail!")
+    # FIXME say about chasing, facing bowlers, etc
+
+    input ()
+    return

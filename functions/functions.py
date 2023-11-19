@@ -4,7 +4,7 @@ from BookCricket import ScriptPath, venue_data, data_path
 from data.resources import *
 from data.commentary import *
 from functions.DisplayScores import DisplayScore, DisplayBowlingStats, MatchSummary, GetCurrentRate, \
-    GetRequiredRate, CurrentMatchStatus, ShowHighlights
+    GetRequiredRate, CurrentMatchStatus, ShowHighlights, SummarizeBatting
 from functions.Initiate import ValidateMatchTeams, Toss, GetVenue, ReadTeams
 from functions.Pair import BatsmanOut, PairFaceBall, RotateStrike
 from functions.SimulateDelivery import GenerateRunNew
@@ -65,12 +65,15 @@ def PlayMatch(match):
     match.status = True
     match.batting_team, match.bowling_team = match.team1, match.team2
 
-    # play
+    # play 1st innings
     Play(match)
 
     # display batting and bowling scorecard
     DisplayScore(match, match.team1)
     DisplayBowlingStats(match)
+
+    # say something about the first innings
+    SummarizeBatting(match, match.batting_team)
 
     # play second inns with target
     match.team2.target = match.team1.total_score + 1
@@ -78,7 +81,7 @@ def PlayMatch(match):
     # swap teams now
     match.batting_team, match.bowling_team = match.team2, match.team1
 
-    # play
+    # play second innings
     Play(match)
 
     # show batting and bowling scores
@@ -327,7 +330,7 @@ def UpdateDismissal(match, dismissal):
     # get next batsman
     GetNextBatsman(match)
     input('press enter to continue')
-
+    DisplayScore(match, match.batting_team)
     return
 
 
