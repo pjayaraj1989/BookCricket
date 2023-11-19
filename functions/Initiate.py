@@ -143,7 +143,7 @@ def GetMatchInfo(list_of_teams, venue):
                   umpire=umpire[0],
                   result=None)
 
-    match_descriptions = ['exciting', 'most awaited', 'much awaited', ]
+    match_descriptions = ['exciting', 'most awaited', 'much anticipated', ]
     msg = '%s, %s, for the %s %s match between %s and %s' % (intro,
                                                              venue.name,
                                                              Randomize(match_descriptions),

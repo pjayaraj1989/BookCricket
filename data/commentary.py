@@ -165,7 +165,7 @@ class commentary:
     commentary_fielder_on_fire = ['oh this man %s is having a good day on the field!',
                                   'its that man % again!',
                                   'oh %s, he is a live wire on the ground!',
-                                  'he is super fast on the field!',]
+                                  '%s!  he is super fast on the field!',]
 
     # first runs of  the day for the team
     commentary_first_runs = ['first runs of the day for %s and %s',

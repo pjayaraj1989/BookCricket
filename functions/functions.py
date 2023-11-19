@@ -132,6 +132,7 @@ def MatchAbandon(match):
     # change result string
     match.result = result
     MatchSummary(match)
+    FindPlayerOfTheMatch(match)
     return
 
 
