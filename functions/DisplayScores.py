@@ -435,7 +435,7 @@ def SummarizeBatting(match, team):
     total_overs = team.total_overs
     wkts = team.wickets_fell
     # say if this was a good total
-    msg = 'Thats the end of the innings, %s has scored %s off %s overs..' % (team.name, str(total_runs), str(total_overs))
+    msg = 'Thats the end of the innings, and %s has scored %s off %s overs..' % (team.name, str(total_runs), str(total_overs))
     nrr = GetCurrentRate(team)
     if nrr > 7.0 and wkts < 10:
         msg += 'They have scored at a terrific rate of %s ' %(str(nrr))
@@ -461,7 +461,7 @@ def SummarizeBatting(match, team):
     if len(middle_order_poor) >= 3:
         middle_order_collapse = True
 
-    tail = team.team_array[7:10]
+    tail = team.team_array[8:10]
     tail_good = [x for x in tail if x.runs >= 30]
     tail_great = [x for x in tail if x.runs >= 50]
     if len(tail_great) > 1:
@@ -470,29 +470,37 @@ def SummarizeBatting(match, team):
     if len(top_order) != 0:
         if len(top_order_good) != 0:
             print ("In the top order, there were some stable performers")
-            for x in top_order_good:    print ("%s" % x.name)
+            msg = ','.join(x.name for x in top_order_good)
+            print ("%s" % msg)
         if len(top_order_great) != 0:
-            print ("And terrific performance from")
-            for x in top_order_great:    print("%s" % x.name)
+            print ("terrific batting from")
+            msg = ','.join(x.name for x in top_order_great)
+            print("%s" % msg)
         if len(top_order_poor) != 0:
             print ("Disappointment for ")
-            for x in top_order_poor:    print ("%s" % x.name)
+            msg = ','.join(x.name for x in top_order_poor)
+            print("%s" % msg)
 
     # same for middle order and tail
     if len(middle_order) != 0:
         if len(middle_order_good) != 0:
             print ("some stable performance in the middle order")
-            for x in middle_order_good:    print ("%s" % x.name)
+            msg = ','.join(x.name for x in middle_order_good)
+            print("%s" % msg)
         if len(middle_order_great) != 0:
             print ("terrific batting from")
-            for x in middle_order_great:    print("%s" % x.name)
+            msg = ','.join(x.name for x in middle_order_great)
+            print("%s" % msg)
         if len(middle_order_poor) != 0:
             print ("Disappointment for ")
-            for x in middle_order_poor:    print ("%s" % x.name)
+            msg = ','.join(x.name for x in middle_order_poor)
+            print ("%s" % msg)
 
+    # see if tail did great
     if len(tail) != 0 and len(tail_good) != 0:
-        print ("terrific batting from the lower order!")
-        for x in tail_great:    print("%s" % x.name)
+        print ("terrific effort from the lower order!")
+        msg = ','.join(x.name for x in tail_great)
+        print("%s" % msg)
 
     # randomize this commentary
     if top_order_collapse and not middle_order_collapse:

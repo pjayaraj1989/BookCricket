@@ -392,7 +392,7 @@ class commentary:
     # modify this as per DRS
     commentary_lbw_umpire = ['big appeal.. and %s\'s finger goes up!',
                              'that looks in line and %s says out!',
-                             'looks plumb, and the %s\'s finger raises!',
+                             'looks plumb, and the umpire %s\'s finger raises!',
                              'hit on the pads! and given out by %s!',
                              'looks dead straight to me... and %s says out!',
                              'that\'s a big appeal.. and finally given lbw by %s!!',
