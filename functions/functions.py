@@ -95,6 +95,12 @@ def PlayMatch(match):
 
     # show results
     CalculateResult(match)
+
+    # say something about the first innings
+    SummarizeBatting(match, match.batting_team)
+    # summarize about bowling performance
+    SummarizeBowling(match, match.bowling_team)
+
     MatchSummary(match)
     FindPlayerOfTheMatch(match)
 
