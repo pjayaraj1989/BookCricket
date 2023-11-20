@@ -245,8 +245,9 @@ def CurrentMatchStatus(match):
     show_proj_score = ChooseFromOptions(['y', 'n'], "Do you need to view the projected score?", 500)
     if show_proj_score == 'y':
         DisplayProjectedScore(match)
-    
+
     return
+
 
 def DisplayProjectedScore(match):
     import numpy as np
@@ -254,7 +255,7 @@ def DisplayProjectedScore(match):
     current_score = match.batting_team.total_score
     crr = GetCurrentRate(match.batting_team)
     proj_score = lambda x: np.ceil(current_score + (x * overs_left))
-    print ("Projected Score")
+    print("Projected Score")
     print('Current Rate(%s): %s' % (str(crr), proj_score(crr)), end=' ')
     lim = crr + 3.0
     crr += 0.5
@@ -262,6 +263,7 @@ def DisplayProjectedScore(match):
         print('%s: %s' % (str(crr), proj_score(crr)), end=' ')
         crr += 1.0
     print('\n')
+
 
 # match summary
 def MatchSummary(match):
@@ -428,6 +430,22 @@ def DisplayPlayingXI(match):
     # now print it
     PrintListFormatted(data_to_print, 0.1, None)
 
+
+def SummarizeBowling(match, team):
+    # get best bowlers
+    # FIXME say if good performance
+    best_economical_bowlers = [x for x in team.team_array if x.eco < 6.0 and x.balls_bowled > 0]
+    best_wickets_bowlers = [x for x in team.team_array if x.wkts >= 3 and x.balls_bowled > 0]
+    if len(best_economical_bowlers) > 0:
+        msg = ','.join(x.name for x in best_economical_bowlers)
+        print("Very economical stuff from %s" % msg)
+    if len(best_wickets_bowlers) > 0:
+        msg = ','.join(x.name for x in best_wickets_bowlers)
+        print("Most wickets taken by %s" % msg)
+    input()
+    return
+
+
 def SummarizeBatting(match, team):
     # find what happened in the top order
     # check if it was a good score
@@ -435,14 +453,15 @@ def SummarizeBatting(match, team):
     total_overs = team.total_overs
     wkts = team.wickets_fell
     # say if this was a good total
-    msg = 'Thats the end of the innings, and %s has scored %s off %s overs..' % (team.name, str(total_runs), str(total_overs))
+    msg = 'Thats the end of the innings, and %s has scored %s off %s overs..' % (
+        team.name, str(total_runs), str(total_overs))
     nrr = GetCurrentRate(team)
     if nrr > 7.0 and wkts < 10:
-        msg += 'They have scored at a terrific rate of %s ' %(str(nrr))
+        msg += 'They have scored at a terrific rate of %s ' % (str(nrr))
     if wkts == 10:
         msg += 'They have been bowled out!'
 
-    print (msg)
+    print(msg)
     # now say about the top order
     top_order_collapse = middle_order_collapse = False
     tail_good_performance = False
@@ -469,47 +488,40 @@ def SummarizeBatting(match, team):
 
     if len(top_order) != 0:
         if len(top_order_good) != 0:
-            print ("In the top order, there were some stable performers")
             msg = ','.join(x.name for x in top_order_good)
-            print ("%s" % msg)
+            print("In the top order, there were some stable performers %s played really well" % msg)
         if len(top_order_great) != 0:
-            print ("terrific batting from")
             msg = ','.join(x.name for x in top_order_great)
-            print("%s" % msg)
+            print("terrific from %s high quality batting" % msg)
         if len(top_order_poor) != 0:
-            print ("Disappointment for ")
             msg = ','.join(x.name for x in top_order_poor)
-            print("%s" % msg)
+            print("Disappointment for %s" % msg)
 
     # same for middle order and tail
     if len(middle_order) != 0:
         if len(middle_order_good) != 0:
-            print ("some stable performance in the middle order")
             msg = ','.join(x.name for x in middle_order_good)
-            print("%s" % msg)
+            print("some stable performance in the middle order %s" % msg)
         if len(middle_order_great) != 0:
-            print ("terrific batting from")
             msg = ','.join(x.name for x in middle_order_great)
-            print("%s" % msg)
+            print("terrific batting from %s" % msg)
         if len(middle_order_poor) != 0:
-            print ("Disappointment for ")
             msg = ','.join(x.name for x in middle_order_poor)
-            print ("%s" % msg)
+            print("Disappointment for %s" % msg)
 
     # see if tail did great
     if len(tail) != 0 and len(tail_good) != 0:
-        print ("terrific effort from the lower order!")
         msg = ','.join(x.name for x in tail_great)
-        print("%s" % msg)
+        print("terrific effort from the lower order! %s" % msg)
 
     # randomize this commentary
     if top_order_collapse and not middle_order_collapse:
-        print ("We have seen some top order collapse!.. but good come back in the middle order")
+        print("We have seen some top order collapse!.. but good come back in the middle order")
     if not top_order_collapse and middle_order_collapse:
-        print ("The top order gave a good start.. but middle order collapsed!")
+        print("The top order gave a good start.. but middle order collapsed!")
     if tail_good_performance:
-        print ("Some terrific fightback from the tail!")
+        print("Some terrific fightback from the tail!")
     # FIXME say about chasing, facing bowlers, etc
 
-    input ()
+    input()
     return

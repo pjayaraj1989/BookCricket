@@ -4,7 +4,7 @@ from BookCricket import ScriptPath, venue_data, data_path
 from data.resources import *
 from data.commentary import *
 from functions.DisplayScores import DisplayScore, DisplayBowlingStats, MatchSummary, GetCurrentRate, \
-    GetRequiredRate, CurrentMatchStatus, ShowHighlights, SummarizeBatting
+    GetRequiredRate, CurrentMatchStatus, ShowHighlights, SummarizeBatting, SummarizeBowling
 from functions.Initiate import ValidateMatchTeams, Toss, GetVenue, ReadTeams
 from functions.Pair import BatsmanOut, PairFaceBall, RotateStrike
 from functions.SimulateDelivery import GenerateRunNew
@@ -74,6 +74,8 @@ def PlayMatch(match):
 
     # say something about the first innings
     SummarizeBatting(match, match.batting_team)
+    # summarize about bowling performance
+    SummarizeBowling(match, match.bowling_team)
 
     # play second inns with target
     match.team2.target = match.team1.total_score + 1
