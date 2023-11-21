@@ -242,14 +242,16 @@ def CurrentMatchStatus(match):
                 # say who can save the match
                 PrintInColor(Randomize(commentary.commentary_situation_savior) % savior.name, Fore.RED)
 
-    #show_proj_score = ChooseFromOptions(['y', 'n'], "Do you need to view the projected score?", 500)
-    #if show_proj_score == 'y':
-    #DisplayProjectedScore(match)
+    # show_proj_score = ChooseFromOptions(['y', 'n'], "Do you need to view the projected score?", 500)
+    # if show_proj_score == 'y':
+    # DisplayProjectedScore(match)
 
     return
 
 
 def DisplayProjectedScore(match):
+    if not match.status:   return
+    if BallsToOvers(match.batting_team.total_balls) == match.overs: return
     import numpy as np
     overs_left = BallsToOvers(match.overs * 6 - match.batting_team.total_balls)
     current_score = match.batting_team.total_score
