@@ -4,7 +4,8 @@ from BookCricket import ScriptPath, venue_data, data_path
 from data.resources import *
 from data.commentary import *
 from functions.DisplayScores import DisplayScore, DisplayBowlingStats, MatchSummary, GetCurrentRate, \
-    GetRequiredRate, CurrentMatchStatus, ShowHighlights, SummarizeBatting, SummarizeBowling, SummarizeBowlerSpell
+    GetRequiredRate, CurrentMatchStatus, ShowHighlights, SummarizeBatting, SummarizeBowling, SummarizeBowlerSpell, \
+    DisplayProjectedScore
 from functions.Initiate import ValidateMatchTeams, Toss, GetVenue, ReadTeams
 from functions.Pair import BatsmanOut, PairFaceBall, RotateStrike
 from functions.SimulateDelivery import GenerateRunNew
@@ -342,6 +343,7 @@ def UpdateDismissal(match, dismissal):
     GetNextBatsman(match)
     input('press enter to continue')
     DisplayScore(match, match.batting_team)
+    DisplayProjectedScore(match)
     return
 
 
@@ -1130,6 +1132,7 @@ def Play(match):
         ShowHighlights(match)
         DisplayBowlingStats(match)
         DisplayScore(match, match.batting_team)
+        DisplayProjectedScore(match)
         # rotate strike after an over
         RotateStrike(pair)
 

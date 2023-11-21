@@ -242,9 +242,9 @@ def CurrentMatchStatus(match):
                 # say who can save the match
                 PrintInColor(Randomize(commentary.commentary_situation_savior) % savior.name, Fore.RED)
 
-    show_proj_score = ChooseFromOptions(['y', 'n'], "Do you need to view the projected score?", 500)
-    if show_proj_score == 'y':
-        DisplayProjectedScore(match)
+    #show_proj_score = ChooseFromOptions(['y', 'n'], "Do you need to view the projected score?", 500)
+    #if show_proj_score == 'y':
+    #DisplayProjectedScore(match)
 
     return
 
@@ -256,6 +256,7 @@ def DisplayProjectedScore(match):
     crr = GetCurrentRate(match.batting_team)
     proj_score = lambda x: np.ceil(current_score + (x * overs_left))
     print("Projected Score")
+    # FIXME this has some wierd notation at times. round them off to 1/2
     print('Current Rate(%s): %s' % (str(crr), proj_score(crr)), end=' ')
     lim = crr + 3.0
     crr += 0.5
