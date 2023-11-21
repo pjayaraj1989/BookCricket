@@ -3,7 +3,7 @@
     "India": {
       "players": [
         {"name": "Virender Sehwag", "nickname": "viru", "batting": 8,"bowling": 4,"opener1":  1, "spinner":1},
-        {"name": "Sachin Tendulkar", "nickname": "the master blaster", "batting": 8, "bowling": 6,"spinner":1, "opener2": 1},
+        {"name": "Sachin Tendulkar", "nickname": "the master blaster", "batting": 9, "bowling": 6,"spinner":1, "opener2": 1},
         {"name": "Sourav Ganguly", "nickname": "the prince of Kolkata!", "batting": 8,"bowling": 6,"captain": 1},
         {"name": "Rahul Dravid", "nickname": "the wall", "batting": 8,"keeper" : 1},
         {"name": "Yuvraj Singh", "nickname": "yuvi", "batting": 8, "bowling": 7,"spinner": 1},
@@ -22,14 +22,14 @@
       "players": [
         {"name": "Adam Gilchrist", "nickname": "Gilly", "batting": 8,"keeper": 1,"opener1":  1},
         {"name": "Matthew Hayden", "batting": 8,"opener2": 1},
-        {"name": "Ricky Ponting", "nickname": "Punter", "batting": 8,"bowling": 5,"spinner": 1,"captain": 1},
+        {"name": "Ricky Ponting", "nickname": "Punter", "batting": 9,"bowling": 5,"spinner": 1,"captain": 1},
         {"name": "Damien Martyn", "batting": 8, "bowling": 4,"spinner": 1 },
         {"name": "Andrew Symonds", "batting": 8,"bowling": 6},
-        {"name": "Michael Bevan", "batting": 7, "bowling": 4},
+        {"name": "Michael Bevan", "batting": 8, "bowling": 4},
         {"name": "Darren Lehmann", "batting": 7,"bowling": 6, "spinner":  1},
         {"name": "Brad Hogg", "batting": 6,"bowling": 8,  "spinner": 1 },
         {"name": "Andy Bichel", "batting": 6,"bowling": 9, "pacer":1},
-        {"name": "Brett Lee", "nickname": "binga", "batting": 5,"bowling": 9, "pacer":1},
+        {"name": "Brett Lee", "nickname": "binga", "batting": 6,"bowling": 9, "pacer":1},
         {"name": "Glenn McGrath", "batting": 5,"bowling": 9,"openingbowler": 1, "pacer":1}
       ],
       "key": "AUS",
@@ -128,17 +128,17 @@
 	
 	"Zimbabwe": {
       "players": [
-        {"name": "Alastair Campbell","batting": 8, "opener1":  1, "bowling":5, "spinner":1},
-        {"name": "Craig Wishart","batting": 8,"opener2": 1, "bowling":5},
+        {"name": "Alastair Campbell","batting": 7, "opener1":  1, "bowling":5, "spinner":1},
+        {"name": "Craig Wishart","batting": 7,"opener2": 1, "bowling":5},
         {"name": "Andy Flower", "batting": 8, "bowling":5},
-		{"name": "Grant Flower","batting": 8, "spinner":1,"bowling":6},
-        {"name": "Tatenda Taibu",  "batting": 8, "keeper":1},
+		{"name": "Grant Flower","batting": 7, "spinner":1,"bowling":6},
+        {"name": "Tatenda Taibu",  "batting": 6, "keeper":1},
         {"name": "Dion Ebrahim","batting": 7, "bowling":6,"spinner":1},
         {"name": "Andy Blignaut","batting": 6,"bowling": 7, "pacer":1},
         {"name": "Heath Streak","batting": 6,"captain":1, "bowling":8,"openingbowler":1, "pacer":1},
 		{"name": "Douglas Marillier","batting": 7, "bowling":6},
         {"name": "Henry Olonga","batting": 5,"bowling": 8, "pacer":1},
-        {"name": "Douglas Hondo","batting": 5,"bowling": 9, "pacer":1}
+        {"name": "Douglas Hondo","batting": 5,"bowling": 8, "pacer":1}
       ],
       "key": "ZIM",
       "color": "lred"
@@ -146,12 +146,12 @@
 	
 	"Kenya": {
       "players": [
-        {"name": "Kennedy Otieno","batting": 8, "opener1":  1, "keeper":1},
-        {"name": "Ravindu Shah","batting": 8,"opener2": 1, "bowling":5},
-        {"name": "Steve Tikolo", "batting": 8, "bowling":7, "captain":1, "spinner":1},
-		{"name": "Maurice Odumbe","batting": 8, "spinner":1,"bowling":6},
-        {"name": "Thomas Odoyo",  "batting": 8,"bowling":7, "pacer":1},
-        {"name": "Hitesh Modi","batting": 7,"bowling":5,"spinner":1},
+        {"name": "Kennedy Otieno","batting": 6, "opener1":  1, "keeper":1},
+        {"name": "Ravindu Shah","batting": 6,"opener2": 1, "bowling":5},
+        {"name": "Steve Tikolo", "batting": 6, "bowling":7, "captain":1, "spinner":1},
+		{"name": "Maurice Odumbe","batting": 6, "spinner":1,"bowling":6},
+        {"name": "Thomas Odoyo",  "batting": 6,"bowling":7, "pacer":1},
+        {"name": "Hitesh Modi","batting": 6,"bowling":5,"spinner":1},
         {"name": "Collins Obuya","batting": 6,"bowling": 7, "spinner":1},
         {"name": "Tony Suji","batting": 6,"bowling":6, "pacer":1},
 		{"name": "Martin Suji","batting": 7, "bowling":7, "openingbowler":1, "pacer":1},
@@ -164,11 +164,11 @@
 	
 	"Bangladesh": {
       "players": [
-        {"name": "Hannan Sarkar","batting": 8, "opener1":  1},
-        {"name": "Al Shahariar","batting": 8,"opener2": 1, "bowling":5},
-        {"name": "Mohammad Ashraful", "batting": 8, "bowling":6,"spinner":1},
-		{"name": "Ehsanul Haque","batting": 8, "spinner":1,"bowling":6},
-        {"name": "Sanwar Hossain",  "batting": 8,"bowling":7},
+        {"name": "Hannan Sarkar","batting": 7, "opener1":  1},
+        {"name": "Al Shahariar","batting": 7,"opener2": 1, "bowling":5},
+        {"name": "Mohammad Ashraful", "batting": 7, "bowling":6,"spinner":1},
+		{"name": "Ehsanul Haque","batting": 7, "spinner":1,"bowling":6},
+        {"name": "Sanwar Hossain",  "batting": 7,"bowling":7},
         {"name": "Alok Kapali","batting": 7,"bowling":5,"spinner":1},
         {"name": "Khaled Mashud","batting": 6,"bowling": 7, "keeper":1, "captain":1},
         {"name": "Mohammad Rafique","batting": 6,"bowling":7, "spinner":1},
