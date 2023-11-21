@@ -179,7 +179,7 @@ def Toss(match):
                                                                     match.team2.name))
 
     print('%s is gonna flip the coin' % match.team2.captain.name)
-    #FIXME: use the ChooseFromOptions function here
+    # FIXME: use the ChooseFromOptions function here
     opts = [1, 2]
     call = input('%s, your call, Heads or tails? 1.Heads 2.Tails\n' % match.team1.captain.name)
     # if invalid, auto-select
@@ -233,7 +233,7 @@ def Toss(match):
     match.batting_second = batting_second
 
     # do you need DRS?
-    drs_opted = ChooseFromOptions(['y','n'], "Do you need DRS for this match? ", 5)
+    drs_opted = ChooseFromOptions(['y', 'n'], "Do you need DRS for this match? ", 5)
     if drs_opted == 'y':
         print("DRS opted")
         match.drs = True
@@ -289,9 +289,10 @@ def ValidateMatchTeams(match):
         t.opening_pair[0].onfield, t.opening_pair[1].onfield = True, True
 
     # check if players have numbers, else assign randomly
+    # using np instead of random.choice so that there are no duplicates
+    import numpy as np
     for t in [match.team1, match.team2]:
         for player in t.team_array:
             if player.no is None:
-                player.no = random.choice(list(range(100)))
-
+                player.no = np.random.choice(list(range(100)), size=1, replace=False)[0]
     PrintInColor('Validated teams', Style.BRIGHT)
