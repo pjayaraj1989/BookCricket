@@ -262,6 +262,9 @@ def UpdateDismissal(match, dismissal):
     player_dismissed = next((x for x in pair if not x.status), None)
     player_onstrike = next((x for x in pair if x.status), None)
 
+    # add player dismissed to the list of wickets for the bowler
+    bowler.wickets_taken.append(player_dismissed)
+
     # check if player dismissed is captain
     if player_dismissed.attr.iscaptain:
         PrintInColor(Randomize(commentary.commentary_captain_out), bowling_team.color)

@@ -432,13 +432,24 @@ def DisplayPlayingXI(match):
 
 
 def SummarizeBowlerSpell(match, bowler):
-    # FIXME randomzie this commentary
+    # FIXME randomize these commentary
     # FIXME also based on match (in T20, this might be good
-    # FIXME, check whos wkt he took?
     if bowler.eco <= 5.0:   print("Very economical spell from %s" % bowler.name)
     if bowler.eco < 6.0 and bowler.wkts >= 3:   print("A terrific spell from him!")
     if bowler.eco > 6.0 and bowler.wkts >= 3:   print("Got %s wkts but slightly expensive today" % str(bowler.wkts))
     if bowler.eco > 7.0 and bowler.wkts == 0:   print("Very disappointing performance from him!")
+
+    # check if he has got any key wickets!
+    key_wkts = []
+    msg = ''
+    if bowler.wkts > 0:
+        for wicket in bowler.wickets_taken:
+            if wicket.runs > 50:    key_wkts.append(wicket)
+        if len(key_wkts) == 1:
+            msg = "he has got the key wicket of %s" % (key_wkts[0].name)
+        elif len(key_wkts) > 1:
+            msg = "he has got the key wicket of %s" % (','.join([x.name for x in key_wkts]))
+        print(msg)
     return
 
 
