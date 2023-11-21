@@ -659,6 +659,9 @@ class commentary:
                                   'superb over %s!.. very disciplined!',
                                   'very economical bowling from %s!',
                                   'an economical over by %s!']
+    commentary_bowler_finished_spell = ['thats the end of %s s spell',
+                                        'end of the spell for %s',
+                                        '%s has finished his spell!']
     commentary_maiden_over = ['what a bowler %s is.. that\'s a maiden over!',
                               'maiden over from %s!!!.. brilliant!',
                               'that\'s it.. its a maiden over for %s.. brilliant!']

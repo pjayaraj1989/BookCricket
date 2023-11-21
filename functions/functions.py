@@ -4,7 +4,7 @@ from BookCricket import ScriptPath, venue_data, data_path
 from data.resources import *
 from data.commentary import *
 from functions.DisplayScores import DisplayScore, DisplayBowlingStats, MatchSummary, GetCurrentRate, \
-    GetRequiredRate, CurrentMatchStatus, ShowHighlights, SummarizeBatting, SummarizeBowling
+    GetRequiredRate, CurrentMatchStatus, ShowHighlights, SummarizeBatting, SummarizeBowling, SummarizeBowlerSpell
 from functions.Initiate import ValidateMatchTeams, Toss, GetVenue, ReadTeams
 from functions.Pair import BatsmanOut, PairFaceBall, RotateStrike
 from functions.SimulateDelivery import GenerateRunNew
@@ -610,6 +610,11 @@ def Ball(match, run):
     # update balls runs
     bowler.balls_bowled += 1
     bowler.runs_given += run
+    # update bowler economy
+    if bowler.balls_bowled > 0:
+        eco = float(bowler.runs_given / BallsToOvers(bowler.balls_bowled))
+        eco = round(eco, 2)
+        bowler.eco = eco
     PairFaceBall(pair, run)
     batting_team.total_balls += 1
     batting_team.total_score += run
@@ -974,6 +979,13 @@ def PlayOver(match, over):
         PrintInColor(Randomize(commentary.commentary_economical_over) % bowler.name + '\n' +
                      'only %s run(s) off this over!' % (str(total_runs_in_over)),
                      Style.BRIGHT)
+
+    # if bowler finished his spell, update it
+    if BallsToOvers(bowler.balls_bowled) == bowler.max_overs:
+        bowler.spell_over = True
+        PrintInColor(Randomize(commentary.commentary_bowler_finished_spell) % bowler.name, Style.BRIGHT)
+        # now say about his performance
+        SummarizeBowlerSpell(match, bowler)
     return
 
 

@@ -431,6 +431,17 @@ def DisplayPlayingXI(match):
     PrintListFormatted(data_to_print, 0.1, None)
 
 
+def SummarizeBowlerSpell(match, bowler):
+    # FIXME randomzie this commentary
+    # FIXME also based on match (in T20, this might be good
+    # FIXME, check whos wkt he took?
+    if bowler.eco <= 5.0:   print("Very economical spell from %s" % bowler.name)
+    if bowler.eco < 6.0 and bowler.wkts >= 3:   print("A terrific spell from him!")
+    if bowler.eco > 6.0 and bowler.wkts >= 3:   print("Got %s wkts but slightly expensive today" % str(bowler.wkts))
+    if bowler.eco > 7.0 and bowler.wkts == 0:   print("Very disappointing performance from him!")
+    return
+
+
 def SummarizeBowling(match, team):
     # get best bowlers
     # FIXME say if good performance
@@ -438,6 +449,7 @@ def SummarizeBowling(match, team):
     best_wickets_bowlers = [x for x in team.team_array if x.wkts >= 3 and x.balls_bowled > 0]
     if len(best_economical_bowlers) > 0:
         msg = ','.join(x.name for x in best_economical_bowlers)
+        # FIXME randomize this commentary
         print("Very economical stuff from %s" % msg)
     if len(best_wickets_bowlers) > 0:
         msg = ','.join(x.name for x in best_wickets_bowlers)

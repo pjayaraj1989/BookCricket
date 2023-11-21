@@ -37,8 +37,10 @@ class Player:
                  'threes': 0, 'balls_bowled': 0, 'runs_given': 0, 'maidens': 0, 'max_overs': 0, 'fours': 0, 'sixes': 0,
                  'singles': 0, 'dots': 0, 'eco': 0.0, 'strikerate': 0.0, 'catches': 0, 'stumpings': 0, 'runouts': 0,
                  'ball_history': [],
-                 'status': True, 'onfield': False, 'onstrike': False, 'iscaptain': False, 'isopeningbowler': False,
+                 'status': True, 'spell_over': False, 'onfield': False, 'onstrike': False, 'iscaptain': False,
+                 'isopeningbowler': False,
                  'nickname': '',
+                 'wickets_taken': [],
                  'isspinner': False, 'ispacer': False}
         self = FillAttributes(self, attrs, kwargs)
 
