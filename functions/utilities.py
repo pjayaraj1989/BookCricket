@@ -1,10 +1,9 @@
-import random
 import colorama
-from colorama import Style, AnsiToWin32, init, Fore
+from colorama import AnsiToWin32, init, Style
 import time
 import sys
-import os
-
+from functions.Initiate import *
+import random
 
 # function used to fill class attributes based on input arguments
 def FillAttributes(obj, attrs, kwargs):
@@ -130,3 +129,5 @@ def BallsToOvers(balls):
     if balls >= 0:
         overs = float(str(int(balls / 6)) + '.' + str(balls % 6))
     return overs
+
+

@@ -2,6 +2,8 @@
 
 # read venue data
 import json
+
+from BookCricket import data_path, venue_data
 from data.resources import *
 from data.commentary import *
 from functions.helper import Venue, Team, Player, Match
@@ -9,7 +11,7 @@ from functions.utilities import ChooseFromOptions, PrintInColor, Randomize, Erro
 import random
 from numpy.random import choice
 from colorama import Fore, Style
-
+import os
 
 def GetVenue(venue_data):
     f = open(venue_data)
@@ -85,6 +87,21 @@ def ReadTeams(json_file):
 
     return Teams_List
 
+
+# read data from data files
+def ReadData():
+    # input teams to play    # now get the json files available
+    json_files = [f for f in os.listdir(data_path) if (f.startswith('teams_') and f.endswith('.json'))]
+    leagues = [json_file.lstrip('teams_').strip('.json') for json_file in json_files]
+    # welcome text
+    PrintInColor(commentary.intro_game, Style.BRIGHT)
+    league = ChooseFromOptions(leagues, "Choose league", 5)
+    data_file = [json_file for json_file in json_files if league in json_file][0]
+    team_data = os.path.join(data_path, data_file)
+    teams = ReadTeams(team_data)
+    # now read venue data
+    venue = GetVenue(venue_data)
+    return teams, venue
 
 # get match info
 def GetMatchInfo(list_of_teams, venue):

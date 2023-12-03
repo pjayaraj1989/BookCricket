@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
-from functions.Initiate import GetMatchInfo
-from functions.functions import *
+from functions.Initiate import *
 import os
 
 ScriptPath = os.path.dirname(os.path.abspath(__file__))
@@ -11,7 +10,7 @@ if __name__ == "__main__":
     while True:
         teams, venue = ReadData()
         match = GetMatchInfo(teams, venue)
-        PlayMatch(match)
+        match.PlayMatch(ScriptPath)
         while True:
             opt = input("Play again? y/n")
             if opt.lower() in ['y', 'n']:
