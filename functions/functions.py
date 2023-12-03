@@ -62,7 +62,7 @@ def PlayMatch(match):
     Play(match)
 
     # display batting and bowling scorecard
-    match.team1.DisplayScore(match)
+    match.DisplayScore()
     match.DisplayBowlingStats()
 
     # say something about the first innings
@@ -80,7 +80,7 @@ def PlayMatch(match):
     Play(match)
 
     # show batting and bowling scores
-    match.team2.DisplayScore(match)
+    match.DisplayScore()
     match.DisplayBowlingStats()
 
     # match ended
@@ -207,7 +207,7 @@ def UpdateDismissal(match, dismissal):
     # get next batsman
     match.GetNextBatsman()
     input('press enter to continue')
-    match.batting_team.DisplayScore(match)
+    match.DisplayScore()
     match.DisplayProjectedScore()
     return
 
@@ -625,7 +625,7 @@ def Play(match):
 
         match.ShowHighlights()
         match.DisplayBowlingStats()
-        match.batting_team.DisplayScore(match)
+        match.DisplayScore()
         match.DisplayProjectedScore()
         # rotate strike after an over
         RotateStrike(pair)

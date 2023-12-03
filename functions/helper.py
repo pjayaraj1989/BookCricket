@@ -7,6 +7,7 @@ import random
 from operator import attrgetter
 import time
 
+
 # mainly used classes
 # add the default attributes and values here
 # the FillAttributes function will populate it accordingly
@@ -114,6 +115,92 @@ class Match:
                  'bowling_team': None}
         self = FillAttributes(self, attrs, kwargs)
 
+    # batting summary - scoreboard
+    def DisplayScore(self):
+        batting_team = self.batting_team
+        logger = self.logger
+        ch = '-'
+        print(ch * 45)
+        logger.info(ch * 45)
+
+        msg = ch * 15 + 'Batting Summary' + ch * 15
+        PrintInColor(msg, batting_team.color)
+        logger.info(msg)
+        print(ch * 45)
+        logger.info(ch * 45)
+
+        # this should be a nested list of 3 elements
+        data_to_print = []
+        for p in batting_team.team_array:
+            name = p.name
+            name = name.upper()
+            if p.attr.iscaptain:
+                name += '(c)'
+            if p.attr.iskeeper:
+                name += '(wk)'
+            if p.status is True:  # * if not out
+                if not p.onfield:
+                    data_to_print.append([name, 'DNB', ''])
+                else:
+                    data_to_print.append([name, "not out", "%s* (%s)" % (str(p.runs), str(p.balls))])
+            else:
+                data_to_print.append([name, p.dismissal, "%s (%s)" % (str(p.runs), str(p.balls))])
+
+        PrintListFormatted(data_to_print, 0.01, logger)
+
+        msg = "Extras: %s" % str(batting_team.extras)
+        print(msg)
+        logger.info(msg)
+        print(' ')
+        logger.info(' ')
+
+        msg = '%s %s/%s from (%s overs)' % (batting_team.name.upper(),
+                                            str(batting_team.total_score),
+                                            str(batting_team.wickets_fell),
+                                            str(BallsToOvers(batting_team.total_balls)))
+        PrintInColor(msg, batting_team.color)
+        logger.info(msg)
+
+        # show RR
+        crr = batting_team.GetCurrentRate()
+        msg = "RunRate: %s" % (str(crr))
+        print(msg)
+        logger.info(msg)
+        print(' ')
+        logger.info(' ')
+
+        # show FOW
+        if batting_team.wickets_fell != 0:
+            PrintInColor('FOW:', Style.BRIGHT)
+            logger.info('FOW:')
+            # get fow_array
+            fow_array = []
+            for f in batting_team.fow:
+                fow_array.append('%s/%s %s(%s)' % (str(f.runs),
+                                                   str(f.wkt),
+                                                   GetShortName(f.player_dismissed.name),
+                                                   str(BallsToOvers(f.total_balls))))
+            fow_str = ', '.join(fow_array)
+            PrintInColor(fow_str, batting_team.color)
+            logger.info(fow_str)
+
+        # partnerships
+        msg = "Partnerships:"
+        PrintInColor(msg, Style.BRIGHT)
+        logger.info(msg)
+        for p in batting_team.partnerships:
+            msg = '%s - %s :\t%s' % (p.batsman_onstrike.name,
+                                     p.batsman_dismissed.name,
+                                     str(p.runs))
+            if p.batsman_dismissed.status and p.batsman_onstrike.status:
+                msg += '*'
+            print(msg)
+            logger.info(msg)
+
+        print(ch * 45)
+        logger.info(ch * 45)
+        return
+
     # generate run
     # FIXME: check current over, current player on strike, avoid this args
     def GenerateRun(self, over, player_on_strike):
@@ -212,7 +299,7 @@ class Match:
 
         self.status = False
         result.result_str = result_str
-        batting_team.DisplayScore()
+        self.DisplayScore()
         self.DisplayBowlingStats()
 
         # change result string
@@ -1226,91 +1313,6 @@ class Team:
                  'current_bowler': None,
                  'ball_history': [], }
         self = FillAttributes(self, attrs, kwargs)
-
-    # batting summary - scoreboard
-    def DisplayScore(self, match):
-        logger = match.logger
-        ch = '-'
-        print(ch * 45)
-        logger.info(ch * 45)
-
-        msg = ch * 15 + 'Batting Summary' + ch * 15
-        PrintInColor(msg, self.color)
-        logger.info(msg)
-        print(ch * 45)
-        logger.info(ch * 45)
-
-        # this should be a nested list of 3 elements
-        data_to_print = []
-        for p in self.team_array:
-            name = p.name
-            name = name.upper()
-            if p.attr.iscaptain:
-                name += '(c)'
-            if p.attr.iskeeper:
-                name += '(wk)'
-            if p.status is True:  # * if not out
-                if not p.onfield:
-                    data_to_print.append([name, 'DNB', ''])
-                else:
-                    data_to_print.append([name, "not out", "%s* (%s)" % (str(p.runs), str(p.balls))])
-            else:
-                data_to_print.append([name, p.dismissal, "%s (%s)" % (str(p.runs), str(p.balls))])
-
-        PrintListFormatted(data_to_print, 0.01, logger)
-
-        msg = "Extras: %s" % str(self.extras)
-        print(msg)
-        logger.info(msg)
-        print(' ')
-        logger.info(' ')
-
-        msg = '%s %s/%s from (%s overs)' % (self.name.upper(),
-                                            str(self.total_score),
-                                            str(self.wickets_fell),
-                                            str(BallsToOvers(self.total_balls)))
-        PrintInColor(msg, self.color)
-        logger.info(msg)
-
-        # show RR
-        crr = self.GetCurrentRate()
-        msg = "RunRate: %s" % (str(crr))
-        print(msg)
-        logger.info(msg)
-        print(' ')
-        logger.info(' ')
-
-        # show FOW
-        if self.wickets_fell != 0:
-            PrintInColor('FOW:', Style.BRIGHT)
-            logger.info('FOW:')
-            # get fow_array
-            fow_array = []
-            for f in self.fow:
-                fow_array.append('%s/%s %s(%s)' % (str(f.runs),
-                                                   str(f.wkt),
-                                                   GetShortName(f.player_dismissed.name),
-                                                   str(BallsToOvers(f.total_balls))))
-            fow_str = ', '.join(fow_array)
-            PrintInColor(fow_str, self.color)
-            logger.info(fow_str)
-
-        # partnerships
-        msg = "Partnerships:"
-        PrintInColor(msg, Style.BRIGHT)
-        logger.info(msg)
-        for p in self.partnerships:
-            msg = '%s - %s :\t%s' % (p.batsman_onstrike.name,
-                                     p.batsman_dismissed.name,
-                                     str(p.runs))
-            if p.batsman_dismissed.status and p.batsman_onstrike.status:
-                msg += '*'
-            print(msg)
-            logger.info(msg)
-
-        print(ch * 45)
-        logger.info(ch * 45)
-        return
 
     def SummarizeBatting(self):
         # find what happened in the top order
