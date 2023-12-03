@@ -1,30 +1,8 @@
 # routines to display scores, etc
 # display temporary stats
 from data.commentary import *
-from functions.utilities import PrintInColor, BallsToOvers, GetShortName, PrintListFormatted, Randomize, \
-    ChooseFromOptions
+from functions.utilities import PrintInColor, BallsToOvers, GetShortName, PrintListFormatted, Randomize
 from colorama import Style, Fore
-
-
-# get current rate
-def GetCurrentRate(team):
-    crr = 0.0
-    if team.total_balls > 0:
-        crr = team.total_score / BallsToOvers(team.total_balls)
-    crr = round(crr, 2)
-    return crr
-
-
-def GetRequiredRate(team):
-    nrr = 0.0
-    # if chasing, calc net nrr
-    balls_remaining = team.total_overs * 6 - team.total_balls
-    if balls_remaining > 0:
-        overs_remaining = BallsToOvers(balls_remaining)
-        towin = team.target - team.total_score
-        nrr = float(towin / overs_remaining)
-        nrr = round(nrr, 2)
-    return nrr
 
 
 # batting summary - scoreboard
@@ -73,7 +51,7 @@ def DisplayScore(match, team):
     logger.info(msg)
 
     # show RR
-    crr = GetCurrentRate(team)
+    crr = team.GetCurrentRate()
     msg = "RunRate: %s" % (str(crr))
     print(msg)
     logger.info(msg)
@@ -116,8 +94,8 @@ def DisplayScore(match, team):
 def ShowHighlights(match):
     logger = match.logger
     batting_team, bowling_team = match.batting_team, match.bowling_team
-    crr = GetCurrentRate(batting_team)
-    rr = GetRequiredRate(batting_team)
+    crr = batting_team.GetCurrentRate()
+    rr = batting_team.GetRequiredRate()
 
     # if match ended, do nothing, just return
     if not match.status:
@@ -140,8 +118,8 @@ def ShowHighlights(match):
 def CurrentMatchStatus(match):
     logger = match.logger
     batting_team, bowling_team = match.batting_team, match.bowling_team
-    crr = GetCurrentRate(batting_team)
-    rr = GetRequiredRate(batting_team)
+    crr = batting_team.GetCurrentRate()
+    rr = batting_team.GetRequiredRate()
 
     # if match ended, nothing, just return
     if not match.status:
@@ -242,10 +220,6 @@ def CurrentMatchStatus(match):
                 # say who can save the match
                 PrintInColor(Randomize(commentary.commentary_situation_savior) % savior.name, Fore.RED)
 
-    # show_proj_score = ChooseFromOptions(['y', 'n'], "Do you need to view the projected score?", 500)
-    # if show_proj_score == 'y':
-    # DisplayProjectedScore(match)
-
     return
 
 
@@ -255,7 +229,7 @@ def DisplayProjectedScore(match):
     import numpy as np
     overs_left = BallsToOvers(match.overs * 6 - match.batting_team.total_balls)
     current_score = match.batting_team.total_score
-    crr = GetCurrentRate(match.batting_team)
+    crr = match.batting_team.GetCurrentRate()
     proj_score = lambda x: np.ceil(current_score + (x * overs_left))
     print("Projected Score")
     # FIXME this has some wierd notation at times. round them off to 1/2
@@ -481,7 +455,7 @@ def SummarizeBatting(match, team):
     # say if this was a good total
     msg = 'Thats the end of the innings, and %s has scored %s off %s overs..' % (
         team.name, str(total_runs), str(total_overs))
-    nrr = GetCurrentRate(team)
+    nrr = team.GetCurrentRate()
     if nrr > 7.0 and wkts < 10:
         msg += 'They have scored at a terrific rate of %s ' % (str(nrr))
     if wkts == 10:

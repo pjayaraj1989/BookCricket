@@ -3,8 +3,8 @@ import logging
 from BookCricket import ScriptPath, venue_data, data_path
 from data.resources import *
 from data.commentary import *
-from functions.DisplayScores import DisplayScore, DisplayBowlingStats, MatchSummary, GetCurrentRate, \
-    GetRequiredRate, CurrentMatchStatus, ShowHighlights, SummarizeBatting, SummarizeBowling, SummarizeBowlerSpell, \
+from functions.DisplayScores import DisplayScore, DisplayBowlingStats, MatchSummary, \
+    CurrentMatchStatus, ShowHighlights, SummarizeBatting, SummarizeBowling, SummarizeBowlerSpell, \
     DisplayProjectedScore
 from functions.Initiate import ValidateMatchTeams, Toss, GetVenue, ReadTeams
 from functions.Pair import BatsmanOut, PairFaceBall, RotateStrike
@@ -120,8 +120,8 @@ def MatchAbandon(match):
     input("Press any key to continue")
 
     # check nrr and crr
-    nrr = GetRequiredRate(batting_team)
-    crr = GetCurrentRate(batting_team)
+    nrr = batting_team.GetRequiredRate()
+    crr = batting_team.GetCurrentRate()
     result = Result(team1=match.team1, team2=match.team2)
 
     remaining_overs = match.overs - BallsToOvers(batting_team.total_balls)
@@ -185,8 +185,6 @@ def CheckDRS(match):
                 PrintInColor(Randomize(commentary.commentary_lbw_decision_stays) % match.umpire, Fore.LIGHTRED_EX)
                 team.drs_chances -= 1
     return result
-
-
 
 
 # randomly select a mode of dismissals
@@ -771,21 +769,32 @@ def GenerateRun(match, over, player_on_strike):
     # run array
     run_array = [-1, 0, 1, 2, 3, 4, 5, 6]
 
-    # in the death overs, increase prob of boundaries and wickets
-    if batting_team.batting_second:
-        if over == overs - 1:
-            prob = [0.2, 0.2, 0, 0, 0, 0.2, 0.2, 0.2]
+    # death over situation
+    prob_death = [0.2, 0.2, 0, 0, 0, 0.2, 0.2, 0.2]
 
-        # if need 1 to win, don't take 2 or if 2 to win, don't take 3
+    # in the death overs, increase prob of boundaries and wickets
+    if over == overs - 1:
+        prob = prob_death
+
+    if batting_team.batting_second:
+        # if required rate is too much, try to go big!
+        if (batting_team.total_balls > 0 and
+                batting_team.GetRequiredRate() - batting_team.GetCurrentRate() >= 2.0 and
+                over <= overs - 2):
+            prob = prob_death
+
+        # if need 1 to win, don't take 2 or 3,
         if batting_team.target - batting_team.total_score == 1:
-            prob = [1 / 7, 1 / 7, 1 / 7, 0, 1 / 7, 1 / 7, 1 / 7, 1 / 7, ]
-        if batting_team.target - batting_team.total_score == 2:
+            prob = [1 / 7, 1 / 7, 1 / 7, 0, 0, 2 / 7, 1 / 7, 1 / 7, ]
+        # if 2 to win, don't take 3
+        if (batting_team.target - batting_team.total_score) == 2:
             prob = [1 / 7, 1 / 7, 1 / 7, 1 / 7, 0, 1 / 7, 1 / 7, 1 / 7, ]
 
+    # FIXME:
+    # if initial overs, play carefully based on RR
+    # if death overs, try to go big
     # but, if batsman is poor and bowler is skilled, more chances of getting out
-    # override all above probs
-    if bowler.attr.bowling > 7 and player_on_strike.attr.batting < 6:
-        #       -1     0     1      2   3   4   5    6
+    if bowler.attr.bowling - player_on_strike.attr.batting >= 4:
         prob = [0.25, 0.20, 0.20, 0.15, 0.05, 0.05, 0.05, 0.05]
 
     # select from final run_array with the given probability distribution
@@ -1077,7 +1086,7 @@ def Play(match):
         PrintInColor(msg, batting_team.color)
         logger.info(msg)
         # check if required rate
-        reqd_rr = GetRequiredRate(batting_team)
+        reqd_rr = batting_team.GetRequiredRate()
         msg = "Reqd. run rate: %s" % (str(reqd_rr))
         print(msg)
         logger.info(msg)

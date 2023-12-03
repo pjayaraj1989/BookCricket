@@ -1,4 +1,4 @@
-from functions.utilities import FillAttributes
+from functions.utilities import FillAttributes, BallsToOvers
 
 
 # mainly used classes
@@ -95,6 +95,24 @@ class Team:
                  'current_bowler': None,
                  'ball_history': [], }
         self = FillAttributes(self, attrs, kwargs)
+
+    def GetCurrentRate(self):
+        crr = 0.0
+        if self.total_balls > 0:
+            crr = self.total_score / BallsToOvers(self.total_balls)
+        crr = round(crr, 2)
+        return crr
+
+    def GetRequiredRate(self):
+        nrr = 0.0
+        # if chasing, calc net nrr
+        balls_remaining = self.total_overs * 6 - self.total_balls
+        if balls_remaining > 0:
+            overs_remaining = BallsToOvers(balls_remaining)
+            towin = self.target - self.total_score
+            nrr = float(towin / overs_remaining)
+            nrr = round(nrr, 2)
+        return nrr
 
 
 class Delivery:
