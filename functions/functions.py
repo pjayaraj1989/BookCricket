@@ -2,8 +2,6 @@
 import logging
 from BookCricket import ScriptPath, venue_data, data_path
 from data.resources import *
-from functions.DisplayScores import DisplayScore, \
-    SummarizeBatting, SummarizeBowling, SummarizeBowlerSpell
 from functions.Initiate import ValidateMatchTeams, Toss, GetVenue, ReadTeams
 from functions.Pair import BatsmanOut, PairFaceBall, RotateStrike
 from functions.SimulateDelivery import GenerateRunNew
@@ -68,13 +66,13 @@ def PlayMatch(match):
     Play(match)
 
     # display batting and bowling scorecard
-    DisplayScore(match, match.team1)
+    match.team1.DisplayScore(match)
     match.DisplayBowlingStats()
 
     # say something about the first innings
-    SummarizeBatting(match, match.batting_team)
+    match.batting_team.SummarizeBatting()
     # summarize about bowling performance
-    SummarizeBowling(match, match.bowling_team)
+    match.bowling_team.SummarizeBowling()
 
     # play second inns with target
     match.team2.target = match.team1.total_score + 1
@@ -86,7 +84,7 @@ def PlayMatch(match):
     Play(match)
 
     # show batting and bowling scores
-    DisplayScore(match, match.team2)
+    match.team2.DisplayScore(match)
     match.DisplayBowlingStats()
 
     # match ended
@@ -96,9 +94,9 @@ def PlayMatch(match):
     CalculateResult(match)
 
     # say something about the first innings
-    SummarizeBatting(match, match.batting_team)
+    match.batting_team.SummarizeBatting()
     # summarize about bowling performance
-    SummarizeBowling(match, match.bowling_team)
+    match.bowling_team.SummarizeBowling()
 
     match.MatchSummary()
     FindPlayerOfTheMatch(match)
@@ -136,7 +134,7 @@ def MatchAbandon(match):
 
     match.status = False
     result.result_str = result_str
-    DisplayScore(match, batting_team)
+    batting_team.DisplayScore(match)
     match.DisplayBowlingStats()
 
     # change result string
@@ -338,7 +336,7 @@ def UpdateDismissal(match, dismissal):
     # get next batsman
     GetNextBatsman(match)
     input('press enter to continue')
-    DisplayScore(match, match.batting_team)
+    match.batting_team.DisplayScore(match)
     match.DisplayProjectedScore()
     return
 
@@ -940,7 +938,7 @@ def PlayOver(match, over):
                 PrintInColor(Randomize(commentary.commentary_all_out), Fore.LIGHTRED_EX)
                 if (match.overs * 6) / batting_team.total_score <= 1.2:
                     PrintInColor(Randomize(commentary.commentary_all_out_good_score), Fore.GREEN)
-                elif 0.0 <= GetCurrentRate(batting_team) >= 1.42:
+                elif 0.0 <= batting_team.GetCurrentRate() >= 1.42:
                     PrintInColor(Randomize(commentary.commentary_all_out_bad_score), Fore.GREEN)
                 input('press enter to continue...')
                 break
@@ -997,7 +995,7 @@ def PlayOver(match, over):
         bowler.spell_over = True
         PrintInColor(Randomize(commentary.commentary_bowler_finished_spell) % bowler.name, Style.BRIGHT)
         # now say about his performance
-        SummarizeBowlerSpell(match, bowler)
+        bowler.SummarizeBowlerSpell()
     return
 
 
@@ -1138,7 +1136,7 @@ def Play(match):
 
         match.ShowHighlights()
         match.DisplayBowlingStats()
-        DisplayScore(match, match.batting_team)
+        match.batting_team.DisplayScore(match)
         match.DisplayProjectedScore()
         # rotate strike after an over
         RotateStrike(pair)
