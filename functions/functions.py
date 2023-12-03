@@ -6,7 +6,6 @@ from functions.Initiate import GetVenue, ReadTeams
 from functions.Pair import BatsmanOut, PairFaceBall, RotateStrike
 from functions.SimulateDelivery import GenerateRunNew
 from functions.helper import *
-from functions.results import CalculateResult, FindPlayerOfTheMatch
 from functions.utilities import *
 import time
 
@@ -89,7 +88,7 @@ def PlayMatch(match):
     match.status = False
 
     # show results
-    CalculateResult(match)
+    match.CalculateResult()
 
     # say something about the first innings
     match.batting_team.SummarizeBatting()
@@ -97,7 +96,7 @@ def PlayMatch(match):
     match.bowling_team.SummarizeBowling()
 
     match.MatchSummary()
-    FindPlayerOfTheMatch(match)
+    match.FindPlayerOfTheMatch()
 
     # close log handler
     handler.close()
