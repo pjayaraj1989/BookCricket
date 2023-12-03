@@ -5,7 +5,7 @@ from data.commentary import *
 from numpy.random import choice
 import random
 from operator import attrgetter
-
+import time
 
 # mainly used classes
 # add the default attributes and values here
@@ -113,6 +113,298 @@ class Match:
                  'batting_first': None, 'batting_second': None, 'won': False, 'autoplay': False, 'batting_team': None,
                  'bowling_team': None}
         self = FillAttributes(self, attrs, kwargs)
+
+    # generate run
+    # FIXME: check current over, current player on strike, avoid this args
+    def GenerateRun(self, over, player_on_strike):
+        batting_team = self.batting_team
+        bowler = self.bowling_team.current_bowler
+        overs = self.overs
+        venue = self.venue
+        prob = venue.run_prob_t20
+
+        # if ODI, override the prob
+        if overs == 50:
+            prob = venue.run_prob
+
+        # run array
+        run_array = [-1, 0, 1, 2, 3, 4, 5, 6]
+
+        # death over situation
+        prob_death = [0.2, 0.2, 0, 0, 0, 0.2, 0.2, 0.2]
+
+        # in the death overs, increase prob of boundaries and wickets
+        if over == overs - 1:
+            prob = prob_death
+
+        if batting_team.batting_second:
+            # if required rate is too much, try to go big!
+            if (batting_team.total_balls > 0 and
+                    batting_team.GetRequiredRate() - batting_team.GetCurrentRate() >= 2.0 and
+                    over <= overs - 2):
+                prob = prob_death
+
+            # if need 1 to win, don't take 2 or 3,
+            if batting_team.target - batting_team.total_score == 1:
+                prob = [1 / 7, 1 / 7, 1 / 7, 0, 0, 2 / 7, 1 / 7, 1 / 7, ]
+            # if 2 to win, don't take 3
+            if (batting_team.target - batting_team.total_score) == 2:
+                prob = [1 / 7, 1 / 7, 1 / 7, 1 / 7, 0, 1 / 7, 1 / 7, 1 / 7, ]
+
+        # FIXME:
+        # if initial overs, play carefully based on RR
+        # if death overs, try to go big
+        # but, if batsman is poor and bowler is skilled, more chances of getting out
+        if bowler.attr.bowling - player_on_strike.attr.batting >= 4:
+            prob = [0.25, 0.20, 0.20, 0.15, 0.05, 0.05, 0.05, 0.05]
+
+        # select from final run_array with the given probability distribution
+        run = choice(run_array, 1, p=prob, replace=False)[0]
+        return run
+
+    # death over
+    def DetectDeathOvers(self, over):
+        batting_team = self.batting_team
+        overs = self.overs
+        # towards the death overs, show a highlights
+        towin = abs(batting_team.target - batting_team.total_score)
+        # calculate if score is close
+        if batting_team.batting_second:
+            if towin <= 0:
+                # show batting team highlights
+                self.ShowHighlights()
+                PrintInColor("Match won!!", Fore.LIGHTGREEN_EX)
+                self.status = False
+            elif towin <= 20 or over == overs - 1:
+                self.ShowHighlights()
+                if towin == 1:
+                    PrintInColor("Match tied!", Fore.LIGHTGREEN_EX)
+                else:
+                    PrintInColor('To win: %s from %s' % (str(towin),
+                                                         str(overs * 6 - batting_team.total_balls)),
+                                 Style.BRIGHT)
+        return
+
+    # match abandon due to rain
+    def MatchAbandon(self):
+        batting_team, bowling_team = self.batting_team, self.bowling_team
+
+        # abandon due to rain
+        PrintInColor(Randomize(commentary.commentary_rain_interrupt), Style.BRIGHT)
+        input("Press any key to continue")
+
+        # check nrr and crr
+        nrr = batting_team.GetRequiredRate()
+        crr = batting_team.GetCurrentRate()
+        result = Result(team1=self.team1, team2=self.team2)
+
+        remaining_overs = self.overs - BallsToOvers(batting_team.total_balls)
+        simulated_score = int(round(remaining_overs * crr)) + batting_team.total_score
+
+        result_str = "%s wins by %s run(s) using D/L method!"
+
+        if crr >= nrr:
+            # calculate win margin
+            result_str = result_str % (batting_team.name, str(abs(simulated_score - batting_team.target)))
+        else:
+            result_str = result_str % (bowling_team.name, str(abs(batting_team.target - simulated_score)))
+        input("Press any key to continue")
+
+        self.status = False
+        result.result_str = result_str
+        batting_team.DisplayScore()
+        self.DisplayBowlingStats()
+
+        # change result string
+        self.result = result
+        self.MatchSummary()
+        self.FindPlayerOfTheMatch()
+        return
+
+    def CheckDRS(self):
+        result = False
+        team = self.batting_team
+        pair = team.current_pair
+
+        if team.drs_chances <= 0:
+            PrintInColor(Randomize(commentary.commentary_lbw_nomore_drs), Fore.LIGHTRED_EX)
+            return result
+        # check if all 4 decisions are taken
+        elif team.drs_chances > 0:
+            opt = ChooseFromOptions(['y', 'n'],
+                                    "DRS? %s chance(s) left" % (str(team.drs_chances)),
+                                    200000)
+            if opt == 'n':
+                PrintInColor(Randomize(commentary.commentary_lbw_drs_not_taken), Fore.LIGHTRED_EX)
+                return result
+            else:
+                PrintInColor(Randomize(commentary.commentary_lbw_drs_taken) %
+                             (GetSurname(pair[0].name), GetSurname(pair[1].name)), Fore.LIGHTGREEN_EX)
+                print("Decision pending...")
+                time.sleep(5)
+                result = random.choice([True, False])
+                impact_outside_bat_involved = random.choice([True, False])
+                # if not out
+                if result:
+                    # if edged or pitching outside
+                    if impact_outside_bat_involved:
+                        PrintInColor(Randomize(commentary.commentary_lbw_edged_outside), Fore.LIGHTGREEN_EX)
+                    else:
+                        team.drs_chances -= 1
+                    PrintInColor(Randomize(commentary.commentary_lbw_overturned), Fore.LIGHTGREEN_EX)
+
+                # if out!
+                else:
+                    PrintInColor(Randomize(commentary.commentary_lbw_decision_stays) % self.umpire, Fore.LIGHTRED_EX)
+                    team.drs_chances -= 1
+        return result
+
+    # print commentary for dismissal
+    def PrintCommentaryDismissal(self, dismissal):
+        # commentary
+        comment = ' '
+        pair = self.batting_team.current_pair
+        bowler = self.bowling_team.current_bowler
+
+        batting_team, bowling_team = self.batting_team, self.bowling_team
+        player_dismissed = next((x for x in pair if not x.status), None)
+        player_onstrike = next((x for x in pair if x.status), None)
+        keeper = bowling_team.keeper
+
+        if 'runout' in dismissal:
+            comment = Randomize(commentary.commentary_runout) % (GetSurname(player_dismissed.name),
+                                                                 GetSurname(player_onstrike.name))
+        elif 'st ' in dismissal:
+            comment = Randomize(commentary.commentary_stumped) % GetShortName(keeper.name)
+        # if bowler is the catcher
+        elif 'c&b' in dismissal:
+            comment = Randomize(commentary.commentary_return_catch) % GetSurname(bowler.name)
+        elif 'c ' in dismissal and ' b ' in dismissal:
+            # see if the catcher is the keeper
+            if GetShortName(keeper.name) in dismissal:
+                comment = Randomize(commentary.commentary_keeper_catch) % GetSurname(keeper.name)
+            else:
+                fielder = dismissal.split(' b ')[0].strip('c ')
+                comment = Randomize(commentary.commentary_caught) % fielder
+        elif 'b ' or 'lbw' in dismissal:
+            # reverse swing if > 30 overs
+            if 150 <= batting_team.total_balls <= 240 and bowler.attr.ispacer:
+                PrintInColor(Randomize(commentary.commentary_reverse), Style.BRIGHT)
+            # initial swing
+            if batting_team.total_balls < 24 and bowler.attr.ispacer:
+                PrintInColor(Randomize(commentary.commentary_swing), Style.BRIGHT)
+            # turn
+            if bowler.attr.isspinner:
+                PrintInColor(Randomize(commentary.commentary_turn), Style.BRIGHT)
+            # if lbw
+            if 'lbw' in dismissal:
+                comment = Randomize(commentary.commentary_lbw) % GetSurname(player_dismissed.name)
+            else:
+                comment = Randomize(commentary.commentary_bowled)
+
+        # comment dismissal
+        PrintInColor(comment, Style.BRIGHT)
+        # if he missed a fifty or century
+        if 90 <= player_dismissed.runs < 100:
+            PrintInColor(Randomize(commentary.commentary_nineties) % GetSurname(player_dismissed.name), Style.BRIGHT)
+        # if lost fifty
+        if 40 <= player_dismissed.runs < 50:
+            PrintInColor(Randomize(commentary.commentary_forties) % GetSurname(player_dismissed.name), Style.BRIGHT)
+        # if its a great knock, say this
+        if player_dismissed.runs > 50:
+            PrintInColor(Randomize(commentary.commentary_out_fifty) % GetSurname(player_dismissed.name), Style.BRIGHT)
+        # if duck
+        if player_dismissed.runs == 0:
+            PrintInColor(Randomize(commentary.commentary_out_duck), Style.BRIGHT)
+        # out first ball
+        if player_dismissed.balls == 1:
+            PrintInColor(Randomize(commentary.commentary_out_first_ball) % GetSurname(player_dismissed.name),
+                         Style.BRIGHT)
+
+        # calculate the situation
+        if batting_team.batting_second and (7 <= batting_team.wickets_fell < 10):
+            PrintInColor(Randomize(commentary.commentary_goingtolose) % batting_team.name, Style.BRIGHT)
+
+        # last man
+        if batting_team.wickets_fell == 9:
+            PrintInColor(Randomize(commentary.commentary_lastman), batting_team.color)
+        return
+
+    # assign bowler
+    def AssignBowler(self):
+        bowler = None
+        bowling_team = self.bowling_team
+        bowlers = bowling_team.bowlers
+        # if first over, opening bowler does it
+        if bowling_team.last_bowler is None:
+            bowler = next((x for x in bowlers if x.attr.isopeningbowler), None)
+        else:
+            if bowling_team.last_bowler in bowlers:
+                # bowling list except the bowler who did last over and bowlers who finished their allotted overs
+                temp = [x for x in bowlers if (x != bowling_team.last_bowler and x.balls_bowled < x.max_overs * 6)]
+                # sort this based on skill
+                temp = sorted(temp, key=lambda x: x.attr.bowling, reverse=True)
+                # if autoplay, let bowlers be chosen randomly
+                if self.autoplay:
+                    bowler = Randomize(temp)
+                # else pick bowler
+                else:
+                    next_bowler = input('Pick next bowler: {0} [Press Enter to auto-select]'.format(
+                        ' / '.join([str(x.no) + '.' + GetShortName(x.name) for x in temp])))
+                    bowler = next((x for x in temp if (str(next_bowler) == str(x.no)
+                                                       or next_bowler.lower() in GetShortName(x.name).lower())),
+                                  None)
+                    if bowler is None:
+                        bowler = Randomize(temp)
+
+        if bowler is None:
+            Error_Exit("No bowler assigned!")
+
+        return bowler
+
+    # get next batsman
+    def GetNextBatsman(self):
+        batting_team = self.batting_team
+        pair = batting_team.current_pair
+        player_dismissed = next((x for x in pair if not x.status), None)
+        if batting_team.wickets_fell < 10:
+            ind = pair.index(player_dismissed)
+
+            # choose next one from the team
+            pair[ind] = self.AssignBatsman(pair)
+
+            pair[ind].onstrike = True
+            PrintInColor("New Batsman: %s" % pair[ind].name, batting_team.color)
+            # check if he is captain
+            if pair[ind].attr.iscaptain:
+                PrintInColor(Randomize(commentary.commentary_captain_to_bat_next), batting_team.color)
+
+            # check if he had a good day with the ball earlier
+            if pair[ind].balls_bowled > 0:
+                if pair[ind].wkts >= 2:
+                    PrintInColor(Randomize(commentary.commentary_good_bowler_to_bat), batting_team.color)
+                if pair[ind].wkts == 0 and pair[ind].eco >= 7.0:
+                    PrintInColor(Randomize(commentary.commentary_bad_bowler_to_bat), batting_team.color)
+
+            # now new batter on field
+            pair[ind].onfield = True
+
+        batting_team.current_pair = pair
+        return pair
+
+    # assign batsman
+    def AssignBatsman(self, pair):
+        batting_team = self.batting_team
+        remaining_batsmen = [plr for plr in batting_team.team_array if (plr.status and plr not in pair)]
+
+        next_batsman = input('Choose next batsman: {0} [Press Enter to auto-select]'.format(
+            ' / '.join([str(x.no) + '.' + GetShortName(x.name) for x in remaining_batsmen])))
+        batsman = next((x for x in remaining_batsmen if (str(next_batsman) == str(x.no)
+                                                         or next_batsman.lower() in GetShortName(x.name).lower())),
+                       None)
+
+        if batsman is None: Error_Exit("No batsman assigned!")
+        return batsman
 
     # calculate match result
     def CalculateResult(self):
