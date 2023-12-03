@@ -3,8 +3,8 @@ import logging
 from BookCricket import ScriptPath, venue_data, data_path
 from data.resources import *
 from data.commentary import *
-from functions.DisplayScores import DisplayScore, DisplayBowlingStats, MatchSummary, \
-    CurrentMatchStatus, ShowHighlights, SummarizeBatting, SummarizeBowling, SummarizeBowlerSpell, \
+from functions.DisplayScores import DisplayScore, DisplayBowlingStats, \
+    CurrentMatchStatus, SummarizeBatting, SummarizeBowling, SummarizeBowlerSpell, \
     DisplayProjectedScore
 from functions.Initiate import ValidateMatchTeams, Toss, GetVenue, ReadTeams
 from functions.Pair import BatsmanOut, PairFaceBall, RotateStrike
@@ -102,7 +102,7 @@ def PlayMatch(match):
     # summarize about bowling performance
     SummarizeBowling(match, match.bowling_team)
 
-    MatchSummary(match)
+    match.MatchSummary()
     FindPlayerOfTheMatch(match)
 
     # close log handler
@@ -143,7 +143,7 @@ def MatchAbandon(match):
 
     # change result string
     match.result = result
-    MatchSummary(match)
+    match.MatchSummary()
     FindPlayerOfTheMatch(match)
     return
 
@@ -813,11 +813,11 @@ def DetectDeathOvers(match, over):
     if batting_team.batting_second:
         if towin <= 0:
             # show batting team highlights
-            ShowHighlights(match)
+            match.ShowHighlights()
             PrintInColor("Match won!!", Fore.LIGHTGREEN_EX)
             match.status = False
         elif towin <= 20 or over == overs - 1:
-            ShowHighlights(match)
+            match.ShowHighlights()
             if towin == 1:
                 PrintInColor("Match tied!", Fore.LIGHTGREEN_EX)
             else:
@@ -1138,7 +1138,7 @@ def Play(match):
             PrintInColor(msg, Style.BRIGHT)
             logger.info(msg)
 
-        ShowHighlights(match)
+        match.ShowHighlights()
         DisplayBowlingStats(match)
         DisplayScore(match, match.batting_team)
         DisplayProjectedScore(match)

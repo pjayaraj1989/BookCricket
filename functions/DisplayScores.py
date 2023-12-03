@@ -90,28 +90,7 @@ def DisplayScore(match, team):
     logger.info(ch * 45)
 
 
-# Showhighights
-def ShowHighlights(match):
-    logger = match.logger
-    batting_team, bowling_team = match.batting_team, match.bowling_team
-    crr = batting_team.GetCurrentRate()
-    rr = batting_team.GetRequiredRate()
 
-    # if match ended, do nothing, just return
-    if not match.status:
-        return
-
-    # default msg
-    msg = '\n%s %s / %s (%s Overs)' % (batting_team.name,
-                                       str(batting_team.total_score),
-                                       str(batting_team.wickets_fell),
-                                       str(BallsToOvers(batting_team.total_balls)))
-    msg += ' Current RR: %s' % str(crr)
-    if batting_team.batting_second and match.status:
-        msg += ' Required RR: %s\n' % str(rr)
-    PrintInColor(msg, Style.BRIGHT)
-    logger.info(msg)
-    return
 
 
 # comment about the current match status
@@ -240,105 +219,6 @@ def DisplayProjectedScore(match):
         print('%s: %s' % (str(crr), proj_score(crr)), end=' ')
         crr += 1.0
     print('\n')
-
-
-# match summary
-def MatchSummary(match):
-    logger = match.logger
-    ch = '-'
-    result = match.result
-
-    msg = '%s Match Summary %s' % (ch * 10, ch * 10)
-    PrintInColor(msg, Style.BRIGHT)
-    logger.info(msg)
-
-    msg = '%s vs %s, at %s' % (result.team1.name, result.team2.name, match.venue.name)
-    PrintInColor(msg, Style.BRIGHT)
-    logger.info(msg)
-
-    msg = ch * 45
-    print(ch * 45)
-    logger.info(msg)
-
-    msg = result.result_str
-    PrintInColor(msg, Style.BRIGHT)
-    logger.info(msg)
-
-    print(ch * 45)
-    logger.info(ch * 45)
-
-    msg = '%s %s/%s (%s)' % (result.team1.key,
-                             str(result.team1.total_score),
-                             str(result.team1.wickets_fell),
-                             str(BallsToOvers(result.team1.total_balls)))
-    PrintInColor(msg, Style.BRIGHT)
-    logger.info(msg)
-
-    # see who all bowled
-    bowlers1 = [plr for plr in result.team1.team_array if plr.balls_bowled > 0]
-    bowlers2 = [plr for plr in result.team2.team_array if plr.balls_bowled > 0]
-
-    # print first N top scorers
-    n = 3
-
-    most_runs = sorted(result.team1.team_array, key=lambda t: t.runs, reverse=True)
-
-    # there will be always two batsmen and two bowlers
-    if len(most_runs) > 2:
-        most_runs = most_runs[:n]
-
-    best_bowlers = sorted(bowlers2, key=lambda b: b.wkts, reverse=True)
-
-    if len(best_bowlers) > 2:
-        best_bowlers = best_bowlers[:n]
-    # must be a nested list of fixed size elements
-    data_to_print = []
-    for x in range(n):
-        runs = str(most_runs[x].runs)
-        # if not out, put a * in the end
-        if most_runs[x].status:
-            runs += '*'
-
-        # print
-        data_to_print.append([GetShortName(most_runs[x].name),
-                              '%s(%s)' % (runs, most_runs[x].balls),
-                              GetShortName(best_bowlers[x].name),
-                              '%s/%s' % (best_bowlers[x].runs_given, best_bowlers[x].wkts)])
-
-    # print
-    PrintListFormatted(data_to_print, 0.01, logger)
-
-    data_to_print = []
-    print(ch * 45)
-    logger.info(ch * 45)
-
-    msg = '%s %s/%s (%s)' % (result.team2.key,
-                             str(result.team2.total_score),
-                             str(result.team2.wickets_fell),
-                             str(BallsToOvers(result.team2.total_balls)))
-    PrintInColor(msg, Style.BRIGHT)
-    logger.info(msg)
-
-    most_runs = sorted(result.team2.team_array, key=lambda t: t.runs, reverse=True)
-    most_runs = most_runs[:n]
-    best_bowlers = sorted(bowlers1, key=lambda b: b.wkts, reverse=True)
-    best_bowlers = best_bowlers[:n]
-    for x in range(n):
-        runs = str(most_runs[x].runs)
-        # if not out, put a *
-        if most_runs[x].status:
-            runs += '*'
-
-        # print
-        data_to_print.append([GetShortName(most_runs[x].name),
-                              '%s(%s)' % (runs, most_runs[x].balls),
-                              GetShortName(best_bowlers[x].name),
-                              '%s/%s' % (best_bowlers[x].runs_given, best_bowlers[x].wkts)])
-
-    PrintListFormatted(data_to_print, 0.01, logger)
-    print('-' * 43)
-    logger.info('-' * 43)
-    input('Press Enter to continue..')
 
 
 # print bowlers stats
