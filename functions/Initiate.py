@@ -4,7 +4,6 @@
 import json
 from data.resources import *
 from data.commentary import *
-from functions.DisplayScores import DisplayPlayingXI
 from functions.helper import Venue, Team, Player, Match
 from functions.utilities import ChooseFromOptions, PrintInColor, Randomize, Error_Exit
 import random
@@ -164,7 +163,7 @@ def GetMatchInfo(list_of_teams, venue):
         t.total_overs = match.overs
 
     # display squad
-    DisplayPlayingXI(match)
+    match.DisplayPlayingXI()
 
     return match
 

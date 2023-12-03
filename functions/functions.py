@@ -2,10 +2,8 @@
 import logging
 from BookCricket import ScriptPath, venue_data, data_path
 from data.resources import *
-from data.commentary import *
-from functions.DisplayScores import DisplayScore, DisplayBowlingStats, \
-    CurrentMatchStatus, SummarizeBatting, SummarizeBowling, SummarizeBowlerSpell, \
-    DisplayProjectedScore
+from functions.DisplayScores import DisplayScore, \
+    SummarizeBatting, SummarizeBowling, SummarizeBowlerSpell
 from functions.Initiate import ValidateMatchTeams, Toss, GetVenue, ReadTeams
 from functions.Pair import BatsmanOut, PairFaceBall, RotateStrike
 from functions.SimulateDelivery import GenerateRunNew
@@ -71,7 +69,7 @@ def PlayMatch(match):
 
     # display batting and bowling scorecard
     DisplayScore(match, match.team1)
-    DisplayBowlingStats(match)
+    match.DisplayBowlingStats()
 
     # say something about the first innings
     SummarizeBatting(match, match.batting_team)
@@ -89,7 +87,7 @@ def PlayMatch(match):
 
     # show batting and bowling scores
     DisplayScore(match, match.team2)
-    DisplayBowlingStats(match)
+    match.DisplayBowlingStats()
 
     # match ended
     match.status = False
@@ -139,7 +137,7 @@ def MatchAbandon(match):
     match.status = False
     result.result_str = result_str
     DisplayScore(match, batting_team)
-    DisplayBowlingStats(match)
+    match.DisplayBowlingStats()
 
     # change result string
     match.result = result
@@ -336,12 +334,12 @@ def UpdateDismissal(match, dismissal):
 
     PrintCommentaryDismissal(match, dismissal)
     # show score
-    CurrentMatchStatus(match)
+    match.CurrentMatchStatus()
     # get next batsman
     GetNextBatsman(match)
     input('press enter to continue')
     DisplayScore(match, match.batting_team)
-    DisplayProjectedScore(match)
+    match.DisplayProjectedScore()
     return
 
 
@@ -1120,7 +1118,7 @@ def Play(match):
 
         # check hows it going in regular intervals
         if over > 1 and over % 5 == 0:
-            CurrentMatchStatus(match)
+            match.CurrentMatchStatus()
 
         # play an over
         match.batting_team.current_pair = pair
@@ -1139,9 +1137,9 @@ def Play(match):
             logger.info(msg)
 
         match.ShowHighlights()
-        DisplayBowlingStats(match)
+        match.DisplayBowlingStats()
         DisplayScore(match, match.batting_team)
-        DisplayProjectedScore(match)
+        match.DisplayProjectedScore()
         # rotate strike after an over
         RotateStrike(pair)
 
