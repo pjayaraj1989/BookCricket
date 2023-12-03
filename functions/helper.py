@@ -1,6 +1,9 @@
-from functions.utilities import FillAttributes, BallsToOvers, PrintInColor, GetShortName, PrintListFormatted, Randomize
+from functions.utilities import FillAttributes, BallsToOvers, PrintInColor, GetShortName, PrintListFormatted, Randomize, \
+    Error_Exit, ChooseFromOptions, GetFirstName, GetSurname
 from colorama import Style, Fore
 from data.commentary import *
+from numpy.random import choice
+import random
 
 # mainly used classes
 # add the default attributes and values here
@@ -77,6 +80,330 @@ class Match:
                  'batting_first': None, 'batting_second': None, 'won': False, 'autoplay': False, 'batting_team': None,
                  'bowling_team': None}
         self = FillAttributes(self, attrs, kwargs)
+
+    # toss
+    def Toss(self):
+        logger = self.logger
+        print('Toss..')
+        print('We have the captains %s(%s) and %s(%s) in the middle' % (self.team1.captain.name,
+                                                                        self.team1.name,
+                                                                        self.team2.captain.name,
+                                                                        self.team2.name))
+
+        print('%s is gonna flip the coin' % self.team2.captain.name)
+        # FIXME: use the ChooseFromOptions function here
+        opts = [1, 2]
+        call = input('%s, your call, Heads or tails? 1.Heads 2.Tails\n' % self.team1.captain.name)
+        # if invalid, auto-select
+        if call == '' or None:
+            call = int(Randomize(opts))
+            print("Invalid choice, auto-selected")
+        coin = int(Randomize(opts))
+
+        # check if call == coin selected
+        if coin == call:
+            call = input('%s, you have won the toss, do you wanna 1.Bat 2.Bowl first?\n' % self.team1.captain.name)
+            # if invalid, auto-select
+            if call == '' or None:
+                call = int(Randomize(opts))
+                print("Invalid choice, auto-selected")
+            if int(call) == 1:
+                msg = '%s has elected to bat first' % self.team1.captain.name
+                PrintInColor(msg, self.team1.color)
+                self.team1.batting_second = False
+                self.team2.batting_second = True
+                logger.info(msg)
+            else:
+                msg = '%s has elected to bowl first' % self.team1.captain.name
+                PrintInColor(msg, self.team1.color)
+                self.team2.batting_second = False
+                self.team1.batting_second = True
+                logger.info(msg)
+        else:
+            call = input('%s, you have won the toss, do you wanna 1.Bat 2.Bowl first?\n' % self.team2.captain.name)
+            # if invalid, auto-select
+            if call == '' or None:
+                call = int(Randomize(opts))
+                print("Invalid choice, auto-selected")
+            if int(call) == 1:
+                msg = '%s has elected to bat first' % self.team2.captain.name
+                PrintInColor(msg, self.team2.color)
+                self.team2.batting_second = False
+                self.team1.batting_second = True
+                logger.info(msg)
+            else:
+                msg = '%s has elected to bowl first' % self.team2.captain.name
+                PrintInColor(msg, self.team2.color)
+                self.team1.batting_second = False
+                self.team2.batting_second = True
+                logger.info(msg)
+
+        # now find out who is batting first
+        batting_first = next((x for x in [self.team1, self.team2] if not x.batting_second), None)
+        batting_second = next((x for x in [self.team1, self.team2] if x.batting_second), None)
+        self.batting_first = batting_first
+        self.batting_second = batting_second
+
+        # do you need DRS?
+        drs_opted = ChooseFromOptions(['y', 'n'], "Do you need DRS for this match? ", 5)
+        if drs_opted == 'y':
+            print("DRS opted")
+            self.drs = True
+            input("press enter to continue")
+
+        self.status = True
+        return
+
+    # validate teams
+    def ValidateMatchTeams(self):
+        if self.team1 is None or self.team2 is None:
+            Error_Exit('No teams found!')
+
+        for t in [self.team1, self.team2]:
+            # check if 11 players
+            if len(t.team_array) != 11:
+                Error_Exit('Only %s members in team %s' % (len(t.team_array), t.name))
+
+            # check if keeper exists
+            if t.keeper is None:
+                Error_Exit('No keeper found in team %s' % t.name)
+
+            # check if more than one keeper or captain
+            if len([plr for plr in t.team_array if plr.attr.iskeeper]) > 1:
+                Error_Exit("More than one keeper found")
+            if len([plr for plr in t.team_array if plr.attr.iscaptain]) > 1:
+                Error_Exit("More than one captain found")
+
+            # check for captain
+            if t.captain is None:
+                Error_Exit('No captain found in team %s' % t.name)
+
+            # get bowlers who has bowling attribute
+            bowlers = [plr for plr in t.team_array if plr.attr.bowling > 0]
+            if len(bowlers) < 6:
+                Error_Exit('Team %s should have 6 bowlers in the playing XI' % t.name)
+            else:
+                t.bowlers = bowlers
+                # assign max overs for bowlers
+                for bowler in t.bowlers:
+                    bowler.max_overs = self.bowler_max_overs
+
+        # ensure no common members in the teams
+        common_players = list(set(self.team1.team_array).intersection(self.team2.team_array))
+        if common_players:
+            Error_Exit("Common players in teams found! : %s" % (','.join([p.name for p in common_players])))
+
+        # make first batsman on strike
+        for t in [self.team1, self.team2]:
+            t.opening_pair[0].onstrike, t.opening_pair[1].onstrike = True, False
+            t.opening_pair[0].onfield, t.opening_pair[1].onfield = True, True
+
+        # check if players have numbers, else assign randomly
+        # using np instead of random.choice so that there are no duplicates
+        import numpy as np
+        for t in [self.team1, self.team2]:
+            for player in t.team_array:
+                if player.no is None:
+                    player.no = np.random.choice(list(range(100)), size=1, replace=False)[0]
+        PrintInColor('Validated teams', Style.BRIGHT)
+        return
+
+    # check ball history so far
+    def GetBallHistory(self):
+        batting_team = self.batting_team
+        # check extras
+        # FIXME: this isnt used?
+        noballs = batting_team.ball_history.count('NB')
+        wides = batting_team.ball_history.count('WD')
+        runouts = batting_team.ball_history.count('RO')
+        sixes = batting_team.ball_history.count(6)
+        fours = batting_team.ball_history.count(4)
+        return
+
+    # update extras
+    def UpdateExtras(self):
+        batting_team, bowling_team = self.batting_team, self.bowling_team
+        bowler = bowling_team.current_bowler
+
+        logger = self.logger
+        bowler.runs_given += 1
+        batting_team.extras += 1
+        batting_team.total_score += 1
+        # generate wide or no ball
+        extra = random.choice(['wd', 'nb'])
+        if extra == 'wd':
+            # add this to bowlers history
+            bowler.ball_history.append('WD')
+            batting_team.ball_history.append('WD')
+            PrintInColor("WIDE...!", Fore.LIGHTCYAN_EX)
+            PrintInColor(Randomize(commentary.commentary_wide) % self.umpire, Style.BRIGHT)
+            logger.info("WIDE")
+        elif extra == 'nb':
+            # no balls
+            bowler.ball_history.append('NB')
+            batting_team.ball_history.append('NB')
+            PrintInColor("NO BALL...!", Fore.LIGHTCYAN_EX)
+            PrintInColor(Randomize(commentary.commentary_no_ball), Style.BRIGHT)
+            logger.info("NO BALL")
+
+        return
+
+    # get bowler comments
+    def GetBowlerComments(self):
+        bowler = self.bowling_team.current_bowler
+        # check if bowler is captain
+        if bowler.attr.iscaptain:
+            PrintInColor(Randomize(commentary.commentary_captain_to_bowl), Style.BRIGHT)
+        # check if spinner or seamer
+        if bowler.attr.isspinner:
+            PrintInColor(Randomize(commentary.commentary_spinner_into_attack), Style.BRIGHT)
+        elif bowler.attr.ispacer:
+            PrintInColor(Randomize(commentary.commentary_pacer_into_attack), Style.BRIGHT)
+        else:
+            PrintInColor(Randomize(commentary.commentary_medium_into_attack), Style.BRIGHT)
+        # check if it is his last over!
+        if (BallsToOvers(bowler.balls_bowled) == self.bowler_max_overs - 1) and (bowler.balls_bowled != 0):
+            PrintInColor(Randomize(commentary.commentary_bowler_last_over), Style.BRIGHT)
+            if bowler.wkts >= 3 or bowler.eco <= 5.0:
+                PrintInColor(Randomize(commentary.commentary_bowler_good_spell), Style.BRIGHT)
+            elif bowler.eco >= 7.0:
+                PrintInColor(Randomize(commentary.commentary_bowler_bad_spell), Style.BRIGHT)
+        return
+
+    # check for milestones
+    def CheckMilestone(self):
+        logger = self.logger
+        batting_team = self.batting_team
+        pair = batting_team.current_pair
+
+        # call_by_first_name = Randomize([True, False])
+
+        for p in pair:
+            name = GetFirstName(p.name)
+            if not Randomize([True, False]):
+                name = GetSurname(p.name)
+            # if nickname defined, call by it
+            if p.nickname != '' or None:
+                name = p.nickname
+
+            # first fifty
+            if p.runs >= 50 and p.fifty == 0:
+                p.fifty += 1
+                msg = "50 for %s!" % name
+                PrintInColor(msg, batting_team.color)
+                logger.info(msg)
+                PrintInColor("%s fours and %s sixes" % (str(p.fours), str(p.sixes)), Style.BRIGHT)
+                # check if captain
+                if p.attr.iscaptain:
+                    PrintInColor(Randomize(commentary.commentary_captain_leading), batting_team.color)
+
+                # call by first name or last name
+                PrintInColor(Randomize(commentary.commentary_milestone) % name, batting_team.color)
+
+                #  check if he had a good day with the ball as well
+                if p.wkts >= 2:
+                    PrintInColor(Randomize(commentary.commentary_all_round_batsman), batting_team.color)
+
+            elif p.runs >= 100 and (p.fifty == 1 and p.hundred == 0):
+                # after first fifty is done
+                p.hundred += 1
+                p.fifty += 1
+                msg = "100 for %s!" % name
+                PrintInColor(msg, batting_team.color)
+                logger.info(msg)
+                PrintInColor("%s fours and %s sixes" % (str(p.fours), str(p.sixes)), Style.BRIGHT)
+                # check if captain
+                if p.attr.iscaptain:
+                    PrintInColor(Randomize(commentary.commentary_captain_leading), batting_team.color)
+                PrintInColor(Randomize(commentary.commentary_milestone) % p.name, batting_team.color)
+
+            elif p.runs >= 200 and (p.hundred == 1):
+                # after first fifty is done
+                p.hundred += 1
+                msg = "200 for %s! What a superman!" % name
+                PrintInColor(msg, batting_team.color)
+                logger.info(msg)
+                PrintInColor("%s fours and %s sixes" % (str(p.fours), str(p.sixes)), Style.BRIGHT)
+                # check if captain
+                if p.attr.iscaptain:
+                    PrintInColor(Randomize(commentary.commentary_captain_leading), batting_team.color)
+                PrintInColor(Randomize(commentary.commentary_milestone) % name, batting_team.color)
+
+        input('press enter to continue..')
+        return
+
+    # update last partnership
+    def UpdateLastPartnership(self):
+        batting_team = self.batting_team
+        pair = batting_team.current_pair
+
+        # update last partnership
+        if batting_team.wickets_fell > 0:
+            last_fow = batting_team.fow[-1].runs
+            last_partnership_runs = batting_team.total_score - last_fow
+            last_partnership = Partnership(batsman_dismissed=pair[0],
+                                           batsman_onstrike=pair[1],
+                                           runs=last_partnership_runs)
+            # not all out
+            if batting_team.wickets_fell < 10:
+                last_partnership.both_notout = True
+
+            batting_team.partnerships.append(last_partnership)
+        # if no wkt fell
+        elif batting_team.wickets_fell == 0:
+            last_partnership_runs = batting_team.total_score
+            last_partnership = Partnership(batsman_dismissed=pair[0],
+                                           batsman_onstrike=pair[1],
+                                           both_notout=True,
+                                           runs=last_partnership_runs)
+            batting_team.partnerships.append(last_partnership)
+
+    # randomly select a mode of dismissals
+    def GenerateDismissal(self):
+        bowling_team = self.bowling_team
+        bowler = bowling_team.current_bowler
+        keeper = bowling_team.keeper
+
+        dismissal_str = None
+        # now get a list of fielders
+        fielder = Randomize(bowling_team.team_array)
+        # list of mode of dismissals
+        if bowler.attr.isspinner:
+            dismissal_types = ['c', 'st', 'runout', 'lbw', 'b']
+            dismissal_prob = [0.38, 0.2, 0.02, 0.2, 0.2]
+        else:
+            dismissal_types = ['c', 'runout', 'lbw', 'b']
+            dismissal_prob = [0.45, 0.05, 0.25, 0.25]
+
+        # generate dismissal
+        dismissal = choice(dismissal_types, 1, p=dismissal_prob, replace=False)[0]
+
+        # generate dismissal string
+        if dismissal == 'lbw' or dismissal == 'b':
+            dismissal_str = '%s %s' % (dismissal, GetShortName(bowler.name))
+        elif dismissal == 'st':
+            # stumped
+            dismissal_str = 'st %s b %s' % (GetShortName(keeper.name), GetShortName(bowler.name))
+            keeper.stumpings += 1
+
+        elif dismissal == 'c':
+            fielder.catches += 1
+            # check if catcher is the bowler
+            if fielder == bowler:
+                dismissal_str = 'c&b %s' % (GetShortName(bowler.name))
+            else:
+                dismissal_str = '%s %s b %s' % (dismissal, GetShortName(fielder.name), GetShortName(bowler.name))
+        elif dismissal == 'runout':
+            fielder.runouts += 1
+            dismissal_str = 'runout %s' % (GetShortName(fielder.name))
+
+        # check if fielder is on fire!
+        if fielder.runouts >= 2 or fielder.catches >= 2:
+            PrintInColor(Randomize(commentary.commentary_fielder_on_fire) % fielder.name, bowling_team.color)
+        if keeper.stumpings >= 2:
+            PrintInColor(Randomize(commentary.commentary_fielder_on_fire) % keeper.name, bowling_team.color)
+
+        return dismissal_str
 
     # Showhighights
     def ShowHighlights(self):
