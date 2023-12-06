@@ -6,7 +6,10 @@ import json
 from BookCricket import data_path, venue_data
 from data.resources import *
 from data.commentary import *
-from functions.helper import Venue, Team, Player, Match
+from functions.helper import Venue
+from functions.Base.Player import Player
+from functions.Base.Match import Match
+from functions.Base.Team import Team
 from functions.utilities import ChooseFromOptions, PrintInColor, Randomize, Error_Exit
 import random
 from numpy.random import choice
