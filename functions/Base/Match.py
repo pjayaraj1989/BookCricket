@@ -3,7 +3,6 @@ import os
 import random
 import time
 from operator import attrgetter
-
 from colorama import Style, Fore
 from numpy.random import choice
 from data.commentary import commentary
@@ -339,8 +338,8 @@ class Match:
             PrintInColor(Randomize(commentary.commentary_expensive_over) % bowler.name + '\n' +
                          '%s runs in this over!' % (str(total_runs_in_over)),
                          Style.BRIGHT)
-        # check if maiden over
-        elif total_runs_in_over == 0:
+        # check if maiden over only if over is finished
+        elif total_runs_in_over == 0 and isinstance((BallsToOvers(bowler.balls_bowled)), int):
             PrintInColor(Randomize(commentary.commentary_maiden_over) % bowler.name,
                          Style.BRIGHT)
             bowler.maidens += 1
