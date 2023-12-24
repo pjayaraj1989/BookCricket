@@ -109,8 +109,8 @@ def ReadData():
 # get match info
 def GetMatchInfo(list_of_teams, venue):
     intro = Randomize(commentary.intro_dialogues)
-    commentator = random.sample(set(resources.commentators), 3)
-    umpire = random.sample(set(resources.umpires), 2)
+    commentator = random.choices(list(resources.commentators), k=3)
+    umpire = random.choices(list(resources.umpires), k=2)
 
     # get list of teams
     teams = [team.key for team in list_of_teams]
