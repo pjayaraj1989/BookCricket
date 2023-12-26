@@ -4,6 +4,7 @@ import time
 import sys
 from functions.Initiate import *
 import random
+import os
 
 # function used to fill class attributes based on input arguments
 def FillAttributes(obj, attrs, kwargs):
