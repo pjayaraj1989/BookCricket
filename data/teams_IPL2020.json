@@ -38,7 +38,7 @@
 
 	"ChennaiSuperKings": {
       "players": [
-        {"name": "Rituraj Gaikwad","batting": 7, "opener1": 1},
+        {"name": "Ruturaj Gaikwad","batting": 7, "opener1": 1},
         {"name": "Faf duPlessis","batting": 8,"opener2": 1},
         {"name": "Ambati Rayudu","batting": 8},
         {"name": "M.S. Dhoni","batting": 8,"keeper": 1, "captain":1},

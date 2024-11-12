@@ -4,16 +4,16 @@
 class commentary:
     intro_game = '*' * 50 + '\n' + '*' * 14 + 'Book Cricket Simulator' + '*' * 14 + '\n' + '*' * 50
 
-    intro_dialogues = ['Welcome everybody, here we are at ',
-                       'Hello everyone, here we are at ',
-                       'Hello and welcome everyone to ',
-                       'Electrifying atmosphere here at ',
-                       'Warm welcome to everybody to ']
+    intro_dialogues = ['Welcome everybody! Here we are, at ',
+                       'Hello everyone, here we are, at ',
+                       'Hello and welcome everyone, to, ',
+                       'Electrifying atmosphere here at, ',
+                       'Warm welcome to everybody, to ']
 
     # Run rates
     commentary_less_req_rate = ['looks easily gettable for %s',
                                 'not a big task for %s at all!',
-                                'target looks easy for %s but they are going to face some quality bowling attack!',
+                                'target looks easy for %s , but they are going to face some quality bowling attack!',
                                 'looks like an easy target for %s!']
     commentary_high_req_rate = ['required rate is really high for %s!',
                                 'this is gonna be a tough chase for %s!',
@@ -399,18 +399,18 @@ class commentary:
                              'the bowler pleads with %s, and finally given!',
                              'big appeal.. and the umpire %s says out! oh that looks like a harsh decision!', ]
     commentary_lbw_drs_taken = ['%s looks confused.. long chat with his partner %s.. and finally takes it upstairs!',
-                                '%s is desperate here, long discussion with %s.. and finally decides to go for the DRS',
-                                'Oh they had a quick chat, %s and %s, and they are going with the DRS.. looks like a review wasted?',
-                                '%s is quickly having a chat with %s.. and decides to opt for the DRS',
-                                'This is a tough call.. Will they waste a DRS chance here? %s looks confident, '
+                                '%s is desperate here, long discussion with %s.. and finally decides to go for the D.R.S',
+                                'Oh they had a quick chat, %s and %s, and they are going with the D.R.S.. looks like a review wasted?',
+                                '%s is quickly having a chat with %s.. and decides to opt for the D.R.S',
+                                'This is a tough call.. Will they waste a D.R.S chance here? %s looks confident, '
                                 'but %s doesn\'t!',
                                 'well, %s hasn\'t even discussed with %s, has gone upstairs instantly!',
                                 'well %s has gone for the review instantly.. didn\'t even look at %s!']
     commentary_lbw_drs_not_taken = ['he is having a long chat with the non striker.. and finally he is walking off..',
                                     'it looked close to me, he discusses with the non striker, will not be wasting a '
-                                    'DRS chance here',
+                                    'D.R.S chance here',
                                     'Will he go upstairs ? don\'t think so.. a nod at his partner, and he is walking off the field',
-                                    'are they going for the DRS here? I don\'t think so they are interested..']
+                                    'are they going for the D.R.S here? I don\'t think so they are interested..']
     commentary_lbw_decision_stays = [
         'Well it shows that the ball will be hitting the top of off!. Decision stays.. good on field call %s!',
         'Pitching in line, impact in line.. hitting middle.. %s gets it dead right!!',
@@ -659,7 +659,7 @@ class commentary:
                                   'superb over %s!.. very disciplined!',
                                   'very economical bowling from %s!',
                                   'an economical over by %s!']
-    commentary_bowler_finished_spell = ['thats the end of %s s spell',
+    commentary_bowler_finished_spell = ['thats the end of %s\'s spell',
                                         'end of the spell for %s',
                                         '%s has finished his spell!']
     commentary_maiden_over = ['what a bowler %s is.. that\'s a maiden over!',

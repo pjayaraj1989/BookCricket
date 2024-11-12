@@ -1,4 +1,5 @@
-from functions.utilities import FillAttributes, BallsToOvers
+from colorama import Style
+from functions.utilities import FillAttributes, BallsToOvers, PrintInColor, PrintListFormatted
 
 
 class Team:
@@ -30,7 +31,7 @@ class Team:
         if wkts == 10:
             msg += 'They have been bowled out!'
 
-        print(msg)
+        PrintInColor(msg, Style.BRIGHT)
         # now say about the top order
         top_order_collapse = middle_order_collapse = False
         tail_good_performance = False
@@ -58,38 +59,38 @@ class Team:
         if len(top_order) != 0:
             if len(top_order_good) != 0:
                 msg = ','.join(x.name for x in top_order_good)
-                print("In the top order, there were some stable performers %s played really well" % msg)
+                PrintInColor("In the top order, there were some stable performers %s played really well" % msg, Style.BRIGHT)
             if len(top_order_great) != 0:
                 msg = ','.join(x.name for x in top_order_great)
-                print("terrific from %s high quality batting" % msg)
+                PrintInColor("terrific from %s high quality batting" % msg, Style.BRIGHT)
             if len(top_order_poor) != 0:
                 msg = ','.join(x.name for x in top_order_poor)
-                print("Disappointment for %s" % msg)
+                PrintInColor("Disappointment for %s" % msg, Style.BRIGHT)
 
         # same for middle order and tail
         if len(middle_order) != 0:
             if len(middle_order_good) != 0:
                 msg = ','.join(x.name for x in middle_order_good)
-                print("some stable performance in the middle order %s" % msg)
+                PrintInColor("some stable performance in the middle order %s" % msg, Style.BRIGHT)
             if len(middle_order_great) != 0:
                 msg = ','.join(x.name for x in middle_order_great)
-                print("terrific batting from %s" % msg)
+                PrintInColor("terrific batting from %s" % msg, Style.BRIGHT)
             if len(middle_order_poor) != 0:
                 msg = ','.join(x.name for x in middle_order_poor)
-                print("Disappointment for %s" % msg)
+                PrintInColor("Disappointment for %s" % msg, Style.BRIGHT)
 
         # see if tail did great
         if len(tail) != 0 and len(tail_good) != 0:
             msg = ','.join(x.name for x in tail_great)
-            print("terrific effort from the lower order! %s" % msg)
+            PrintInColor("terrific effort from the lower order! %s" % msg, Style.BRIGHT)
 
         # randomize this commentary
         if top_order_collapse and not middle_order_collapse:
-            print("We have seen some top order collapse!.. but good come back in the middle order")
+            PrintInColor("We have seen some top order collapse!.. but good come back in the middle order", Style.BRIGHT)
         if not top_order_collapse and middle_order_collapse:
-            print("The top order gave a good start.. but middle order collapsed!")
+            PrintInColor("The top order gave a good start.. but middle order collapsed!", Style.BRIGHT)
         if tail_good_performance:
-            print("Some terrific fightback from the tail!")
+            PrintInColor("Some terrific fightback from the tail!", Style.BRIGHT)
         # FIXME say about chasing, facing bowlers, etc
         input()
         return
@@ -102,10 +103,10 @@ class Team:
         if len(best_economical_bowlers) > 0:
             msg = ','.join(x.name for x in best_economical_bowlers)
             # FIXME randomize this commentary
-            print("Very economical stuff from %s" % msg)
+            PrintInColor("Very economical stuff from %s" % msg, Style.BRIGHT)
         if len(best_wickets_bowlers) > 0:
             msg = ','.join(x.name for x in best_wickets_bowlers)
-            print("Most wickets taken by %s" % msg)
+            PrintInColor("Most wickets taken by %s" % msg, Style.BRIGHT)
         input()
         return
 

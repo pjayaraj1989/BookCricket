@@ -20,4 +20,6 @@ if __name__ == "__main__":
             continue
         else:
             break
-    input("Thanks for playing, goodbye!")
+    msg = "Thanks for playing, goodbye!"
+    PrintInColor(msg, Style.BRIGHT)
+    #input()

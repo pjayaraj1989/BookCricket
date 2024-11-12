@@ -1,5 +1,6 @@
+from colorama import Style
 from functions.Base.PlayerAttr import PlayerAttr
-from functions.utilities import FillAttributes, BallsToOvers
+from functions.utilities import FillAttributes, BallsToOvers, PrintInColor
 
 
 class Player:
@@ -39,7 +40,7 @@ class Player:
                 char_overs = 's'
             if self.wkts > 1:
                 char_wkts = 's'
-            res += " Took %s wkt%s,conceding %s run%s in %s over%s" % (str(self.wkts),
+            res += " Took %s wicket%s,conceding %s run%s in %s over%s" % (str(self.wkts),
                                                                        char_wkts,
                                                                        str(self.runs_given),
                                                                        char_runs_given,
@@ -51,10 +52,10 @@ class Player:
     def SummarizeBowlerSpell(self):
         # FIXME randomize these commentary
         # FIXME also based on match (in T20, this might be good
-        if self.eco <= 5.0:   print("Very economical spell from %s" % self.name)
-        if self.eco < 6.0 and self.wkts >= 3:   print("A terrific spell from him!")
-        if self.eco > 6.0 and self.wkts >= 3:   print("Got %s wkts but slightly expensive today" % str(self.wkts))
-        if self.eco > 7.0 and self.wkts == 0:   print("Very disappointing performance from him!")
+        if self.eco <= 5.0:   PrintInColor("Very economical spell from %s" % self.name, Style.BRIGHT)
+        if self.eco < 6.0 and self.wkts >= 3:   PrintInColor("A terrific spell from him!", Style.BRIGHT)
+        if self.eco > 6.0 and self.wkts >= 3:   PrintInColor("Got %s wkts but slightly expensive today" % str(self.wkts), Style.BRIGHT)
+        if self.eco > 7.0 and self.wkts == 0:   PrintInColor("Very disappointing performance from him!", Style.BRIGHT)
 
         # check if he has got any key wickets!
         key_wkts = []

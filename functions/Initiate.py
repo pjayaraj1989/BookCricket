@@ -28,7 +28,7 @@ def GetVenue(venue_data):
 
     # now get venues in this
     venue = random.choice(countries[country]['places'])
-    print("Selected Stadium: %s" % venue['name'])
+    PrintInColor("Selected Stadium: %s" % venue['name'], Style.BRIGHT)
     venue_obj = Venue(name=venue['name'], run_prob=venue['run_prob'])
 
     # populate run_prob_t20
@@ -116,7 +116,9 @@ def GetMatchInfo(list_of_teams, venue):
     teams = [team.key for team in list_of_teams]
 
     # select overs
-    overs = input('Select overs (multiple of 5)\n')
+    msg = "Select overs (multiple of 5)"
+    PrintInColor(msg, Style.BRIGHT)
+    overs = input()
 
     # if not multiple of 5 or invalid entry, it selects default (5 overs)
     if (not overs.isdigit()) or \
@@ -131,9 +133,12 @@ def GetMatchInfo(list_of_teams, venue):
     bowler_max_overs = overs / 5
 
     # input teams
-    t1 = ChooseFromOptions(teams, "Select your team", 5)
+    msg = "Select your team"
+    PrintInColor(msg, Style.BRIGHT)
+    t1 = ChooseFromOptions(teams, '', 5)
     teams.remove(t1)
-    t2 = ChooseFromOptions(teams, 'Select opponent', 5)
+    msg = "Select opponent"
+    t2 = ChooseFromOptions(teams, '', 5)
     print('Selected %s and %s' % (t1, t2))
 
     # find teams from user input
@@ -171,11 +176,11 @@ def GetMatchInfo(list_of_teams, venue):
                                                              team2.name,)
     PrintInColor(msg, Fore.LIGHTCYAN_EX)
 
-    print('In the commentary box, myself %s with %s, and %s' % (commentator[0],
+    PrintInColor('In the commentary box, myself %s with %s, and %s' % (commentator[0],
                                                                 commentator[1],
                                                                 commentator[2],
-                                                                ))
-    print('Umpires: %s and %s' % (umpire[0], umpire[1]))
+                                                                ), Style.BRIGHT)
+    PrintInColor('Umpires for todays match are %s and %s' % (umpire[0], umpire[1]), Style.BRIGHT)
     input('press enter to continue..')
 
     # set overs to team also

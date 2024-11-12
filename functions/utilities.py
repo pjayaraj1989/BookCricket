@@ -5,6 +5,7 @@ import sys
 from functions.Initiate import *
 import random
 import os
+import pyttsx3
 
 # function used to fill class attributes based on input arguments
 def FillAttributes(obj, attrs, kwargs):
@@ -100,7 +101,7 @@ def PrintListFormatted(data_to_print, seconds, logger):
     col_width = max(len(word) for row in data_to_print for word in row) + 1
     for row in data_to_print:
         msg = "".join(word.ljust(col_width) for word in row)
-        PrintInColor(msg, Style.BRIGHT)
+        print(msg)
         if logger is not None:
             logger.info(msg)
         time.sleep(seconds)
@@ -111,7 +112,10 @@ def PrintInColor(msg, color):
     init(wrap=False)
     stream = AnsiToWin32(sys.stderr).stream
     print(color + msg + Style.RESET_ALL, file=stream)
-
+    # speak text
+    engine = pyttsx3.init()
+    engine.say(msg)
+    engine.runAndWait()
 
 # just error and exit
 def Error_Exit(msg):
