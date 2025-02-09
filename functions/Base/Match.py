@@ -1468,7 +1468,7 @@ class Match:
             dismissal_str = '%s %s' % (dismissal, GetShortName(bowler.name))
         elif dismissal == 'st':
             # stumped
-            dismissal_str = 'st %s b %s' % (GetShortName(keeper.name), GetShortName(bowler.name))
+            dismissal_str = 'st +%s b %s' % (GetShortName(keeper.name), GetShortName(bowler.name))
             keeper.stumpings += 1
 
         elif dismissal == 'c':
@@ -1477,7 +1477,10 @@ class Match:
             if fielder == bowler:
                 dismissal_str = 'c&b %s' % (GetShortName(bowler.name))
             else:
-                dismissal_str = '%s %s b %s' % (dismissal, GetShortName(fielder.name), GetShortName(bowler.name))
+                if fielder.attr.iskeeper:
+                    dismissal_str = '%s +%s b %s' % (dismissal, GetShortName(fielder.name), GetShortName(bowler.name))
+                else:
+                    dismissal_str = '%s %s b %s' % (dismissal, GetShortName(fielder.name), GetShortName(bowler.name))
         elif dismissal == 'runout':
             fielder.runouts += 1
             dismissal_str = 'runout %s' % (GetShortName(fielder.name))
