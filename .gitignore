@@ -1,3 +1,7 @@
 **/*.pyc
 **/*.log
 .idea/
+**/*.txt
+venv3/
+.vscode/
+
