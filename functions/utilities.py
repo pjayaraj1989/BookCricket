@@ -109,13 +109,26 @@ def PrintListFormatted(data_to_print, seconds, logger):
 
 # print in color
 def PrintInColor(msg, color):
+    commentary_enabled = False
+    # read commentary_enabled from file if available #FIXME, a bad idea, this should be a global variable!
+    if os.path.exists('commentary_enabled.txt'):
+        f = open('commentary_enabled.txt', 'r')
+        # if the file contains string 'True', set commentary_enabled to True, else False
+        if 'true' in f.read().strip().lower():
+            commentary_enabled = True
+            print ("Commentary enabled")
+        else:
+            print ("Commentary disabled")
+        f.close()
+
     init(wrap=False)
     stream = AnsiToWin32(sys.stderr).stream
     print(color + msg + Style.RESET_ALL, file=stream)
     # speak text
-    engine = pyttsx3.init()
-    engine.say(msg)
-    engine.runAndWait()
+    if commentary_enabled == True:
+        engine = pyttsx3.init()
+        engine.say(msg)
+        engine.runAndWait()
 
 # just error and exit
 def Error_Exit(msg):
