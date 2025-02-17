@@ -116,9 +116,6 @@ def PrintInColor(msg, color):
         # if the file contains string 'True', set commentary_enabled to True, else False
         if 'true' in f.read().strip().lower():
             commentary_enabled = True
-            print ("Commentary enabled")
-        else:
-            print ("Commentary disabled")
         f.close()
 
     init(wrap=False)
