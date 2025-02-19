@@ -27,7 +27,7 @@ def FillAttributes(obj, attrs, kwargs):
 
 
 # choose from options a list
-def ChooseFromOptions(options, msg, tries):
+def ChooseFromOptions(options: list, msg: str, tries: int):
     """
     Choose an option from a list of options.
 
@@ -69,7 +69,7 @@ def ChooseFromOptions(options, msg, tries):
 
 
 # randomize
-def Randomize(mylist):
+def Randomize(mylist: list):
     """
     Randomly select an element from a list.
 
@@ -84,7 +84,7 @@ def Randomize(mylist):
 
 
 # check for N consecutive elements in a list
-def CheckForConsecutiveElements(arr, element, N):
+def CheckForConsecutiveElements(arr: list, element, N: int):
     """
     Check for N consecutive elements in a list.
 
@@ -111,7 +111,7 @@ def CheckForConsecutiveElements(arr, element, N):
 
 
 # get short name
-def GetShortName(name):
+def GetShortName(name: str):
     """
     Get the short name from a full name.
 
@@ -133,7 +133,7 @@ def GetShortName(name):
 
 
 # get second name
-def GetSurname(name):
+def GetSurname(name: str):
     """
     Get the surname from a full name.
 
@@ -147,7 +147,7 @@ def GetSurname(name):
 
 
 # get first name
-def GetFirstName(name):
+def GetFirstName(name: str):
     """
     Get the first name from a full name.
 
@@ -161,7 +161,7 @@ def GetFirstName(name):
 
 
 # print nested array in formatted way
-def PrintListFormatted(data_to_print, seconds, logger):
+def PrintListFormatted(data_to_print: list, seconds: int, logger):
     """
     Print a nested array in a formatted way.
 
@@ -184,7 +184,7 @@ def PrintListFormatted(data_to_print, seconds, logger):
 
 
 # print in color
-def PrintInColor(msg, color):
+def PrintInColor(msg: str, color):
     """
     Print a message in color and optionally speak it.
 
@@ -235,7 +235,7 @@ def Error_Exit(msg):
 
 
 # balls to overs
-def BallsToOvers(balls):
+def BallsToOvers(balls: int):
     """
     Convert balls to overs.
 
