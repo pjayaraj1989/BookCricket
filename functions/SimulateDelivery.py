@@ -3,24 +3,85 @@ from functions.KeyPressDetect import GetKeyPressTime
 from functions.helper import Delivery, Shot
 from functions.utilities import Randomize
 
-deliveries_pacer = ['inswing', 'outswing', 'straight', 'reverse', 'offcutter', 'legcutter', 'knuckle', 'dipper', ]
-deliveries_spinner = ['offspin', 'legspin', 'googly', 'wrongun', 'arm', 'carrom', 'topspin', ]
+deliveries_pacer = [
+    "inswing",
+    "outswing",
+    "straight",
+    "reverse",
+    "offcutter",
+    "legcutter",
+    "knuckle",
+    "dipper",
+]
+deliveries_spinner = [
+    "offspin",
+    "legspin",
+    "googly",
+    "wrongun",
+    "arm",
+    "carrom",
+    "topspin",
+]
 
 # speed
-ball_speed = ['slow', 'med', 'fast', ]
+ball_speed = [
+    "slow",
+    "med",
+    "fast",
+]
 
 # length
-ball_length = ['short', 'goodlength', 'full']
+ball_length = ["short", "goodlength", "full"]
 
 # line
-ball_line = ['offwide', 'outsideoff', 'off', 'middle', 'leg', 'outsideleg', 'legwide', ]
+ball_line = [
+    "offwide",
+    "outsideoff",
+    "off",
+    "middle",
+    "leg",
+    "outsideleg",
+    "legwide",
+]
 
 # shots
-attrs = {'type': None, 'direction': None, 'foot': None, }
-shot_type = ['defend', 'leave', 'drive', 'sweep', 'loft', 'hook', 'reverse', 'cut', 'pull']
-shot_direction = ['firstslip', 'gully', 'point', 'cover', 'extracover', 'midoff', 'straight', 'midon', 'midwicket',
-                  'squareleg', 'backwardsquareleg', 'fineleg', 'legslip', 'scoop',]
-shot_foot = ['backfoot', 'frontfoot', 'advance', ]
+attrs = {
+    "type": None,
+    "direction": None,
+    "foot": None,
+}
+shot_type = [
+    "defend",
+    "leave",
+    "drive",
+    "sweep",
+    "loft",
+    "hook",
+    "reverse",
+    "cut",
+    "pull",
+]
+shot_direction = [
+    "firstslip",
+    "gully",
+    "point",
+    "cover",
+    "extracover",
+    "midoff",
+    "straight",
+    "midon",
+    "midwicket",
+    "squareleg",
+    "backwardsquareleg",
+    "fineleg",
+    "legslip",
+    "scoop",
+]
+shot_foot = [
+    "backfoot",
+    "frontfoot",
+    "advance",
+]
 
 
 def Bowl(bowler):
@@ -64,15 +125,15 @@ def GenerateRunNew(match, over, player_on_strike):
 
     if 0.0 <= response_time <= 4.0:
         # this is an early shot
-        shot_timing = 'early'
+        shot_timing = "early"
     elif 4.0 <= response_time <= 5.9:
-        shot_timing = 'best'
+        shot_timing = "best"
     elif response_time > 5.9:
-        shot_timing = 'late'
+        shot_timing = "late"
 
-    if shot_timing == 'early':
+    if shot_timing == "early":
         run = Randomize([0, -1])
-    elif shot_timing == 'late':
+    elif shot_timing == "late":
         run = Randomize([1, 2, 3])
     else:
         run = Randomize([4, 6, 5])

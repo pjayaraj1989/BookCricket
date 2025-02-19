@@ -7,6 +7,7 @@ import random
 import os
 import pyttsx3
 
+
 # function used to fill class attributes based on input arguments
 def FillAttributes(obj, attrs, kwargs):
     """
@@ -43,9 +44,9 @@ def ChooseFromOptions(options, msg, tries):
     options_dict = {}
     for x in range(len(options)):
         options_dict[str(x)] = options[x]
-    msg = ''
+    msg = ""
     for k, v in options_dict.items():
-        msg += '%s.%s ' % (k, v)
+        msg += "%s.%s " % (k, v)
     keys = list(options_dict.keys())
     n = tries
     while n > 0:
@@ -55,7 +56,7 @@ def ChooseFromOptions(options, msg, tries):
             if n == 0:
                 Error_Exit("exiting!")
             else:
-                print('Invalid choice! Try again')
+                print("Invalid choice! Try again")
                 continue
         else:
             for k, v in options_dict.items():
@@ -121,13 +122,13 @@ def GetShortName(name):
         The short name.
     """
     # get first part and make it initial
-    pieces = name.split(' ')
+    pieces = name.split(" ")
     firstname, lastname = pieces[0], pieces[-1]
-    if '.' in firstname:
+    if "." in firstname:
         initials = firstname
     else:
-        initials = firstname[0] + '.'
-    shortname = initials + ' ' + lastname
+        initials = firstname[0] + "."
+    shortname = initials + " " + lastname
     return shortname
 
 
@@ -142,7 +143,7 @@ def GetSurname(name):
     Returns:
         The surname.
     """
-    return name.split(' ')[-1]
+    return name.split(" ")[-1]
 
 
 # get first name
@@ -156,7 +157,7 @@ def GetFirstName(name):
     Returns:
         The first name.
     """
-    return name.split(' ')[0]
+    return name.split(" ")[0]
 
 
 # print nested array in formatted way
@@ -196,10 +197,10 @@ def PrintInColor(msg, color):
     """
     commentary_enabled = False
     # read commentary_enabled from file if available #FIXME, a bad idea, this should be a global variable!
-    if os.path.exists('commentary_enabled.txt'):
-        f = open('commentary_enabled.txt', 'r')
+    if os.path.exists("commentary_enabled.txt"):
+        f = open("commentary_enabled.txt", "r")
         # if the file contains string 'True', set commentary_enabled to True, else False
-        if 'true' in f.read().strip().lower():
+        if "true" in f.read().strip().lower():
             commentary_enabled = True
         f.close()
 
@@ -212,6 +213,7 @@ def PrintInColor(msg, color):
         engine.say(msg)
         engine.runAndWait()
 
+
 # just error and exit
 def Error_Exit(msg):
     """
@@ -223,12 +225,12 @@ def Error_Exit(msg):
     Returns:
         None
     """
-    if 'nt' in os.name:
+    if "nt" in os.name:
         print(msg)
     else:
         colorama.init()
         PrintInColor("Error: %s" % msg, Fore.RED)
-    input('Press enter to continue..')
+    input("Press enter to continue..")
     sys.exit(0)
 
 
@@ -245,7 +247,5 @@ def BallsToOvers(balls):
     """
     overs = 0.0
     if balls >= 0:
-        overs = float(str(int(balls / 6)) + '.' + str(balls % 6))
+        overs = float(str(int(balls / 6)) + "." + str(balls % 6))
     return overs
-
-

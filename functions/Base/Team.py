@@ -1,5 +1,10 @@
 from colorama import Style
-from functions.utilities import FillAttributes, BallsToOvers, PrintInColor, PrintListFormatted
+from functions.utilities import (
+    FillAttributes,
+    BallsToOvers,
+    PrintInColor,
+    PrintListFormatted,
+)
 
 
 class Team:
@@ -10,16 +15,40 @@ class Team:
         Args:
             **kwargs: Keyword arguments to set the attributes of the Team object.
         """
-        attrs = {'total_overs': 0, 'drs_chances': 2, 'total_score': 0, 'target': 0, 'wickets_fell': 0, 'total_balls': 0,
-                 'extras': 0, 'top_scorer': None, 'most_wkts': None, 'off_the_mark': False,
-                 'fours': 0, 'sixes': 0,
-                 'fifty_up': False, 'hundred_up': False, 'two_hundred_up': False, 'three_hundred_up': False,
-                 'innings_over': False, 'batting_second': False, 'name': ' ', 'key': ' ',
-                 'last_bowler': None, 'captain': None, 'keeper': None, 'color': None,
-                 'team_array': [], 'opening_pair': [], 'bowlers': [], 'fow': [], 'partnerships': [],
-                 'current_pair': [],
-                 'current_bowler': None,
-                 'ball_history': [], }
+        attrs = {
+            "total_overs": 0,
+            "drs_chances": 2,
+            "total_score": 0,
+            "target": 0,
+            "wickets_fell": 0,
+            "total_balls": 0,
+            "extras": 0,
+            "top_scorer": None,
+            "most_wkts": None,
+            "off_the_mark": False,
+            "fours": 0,
+            "sixes": 0,
+            "fifty_up": False,
+            "hundred_up": False,
+            "two_hundred_up": False,
+            "three_hundred_up": False,
+            "innings_over": False,
+            "batting_second": False,
+            "name": " ",
+            "key": " ",
+            "last_bowler": None,
+            "captain": None,
+            "keeper": None,
+            "color": None,
+            "team_array": [],
+            "opening_pair": [],
+            "bowlers": [],
+            "fow": [],
+            "partnerships": [],
+            "current_pair": [],
+            "current_bowler": None,
+            "ball_history": [],
+        }
         self = FillAttributes(self, attrs, kwargs)
 
     def SummarizeBatting(self):
@@ -35,13 +64,16 @@ class Team:
         total_overs = self.total_overs
         wkts = self.wickets_fell
         # say if this was a good total
-        msg = 'Thats the end of the innings, and %s has scored %s off %s overs..' % (
-            self.name, str(total_runs), str(total_overs))
+        msg = "Thats the end of the innings, and %s has scored %s off %s overs.." % (
+            self.name,
+            str(total_runs),
+            str(total_overs),
+        )
         nrr = self.GetCurrentRate()
         if nrr > 7.0 and wkts < 10:
-            msg += 'They have scored at a terrific rate of %s ' % (str(nrr))
+            msg += "They have scored at a terrific rate of %s " % (str(nrr))
         if wkts == 10:
-            msg += 'They have been bowled out!'
+            msg += "They have been bowled out!"
 
         PrintInColor(msg, Style.BRIGHT)
         # now say about the top order
@@ -70,37 +102,51 @@ class Team:
 
         if len(top_order) != 0:
             if len(top_order_good) != 0:
-                msg = ','.join(x.name for x in top_order_good)
-                PrintInColor("In the top order, there were some stable performers %s played really well" % msg, Style.BRIGHT)
+                msg = ",".join(x.name for x in top_order_good)
+                PrintInColor(
+                    "In the top order, there were some stable performers %s played really well"
+                    % msg,
+                    Style.BRIGHT,
+                )
             if len(top_order_great) != 0:
-                msg = ','.join(x.name for x in top_order_great)
-                PrintInColor("terrific from %s high quality batting" % msg, Style.BRIGHT)
+                msg = ",".join(x.name for x in top_order_great)
+                PrintInColor(
+                    "terrific from %s high quality batting" % msg, Style.BRIGHT
+                )
             if len(top_order_poor) != 0:
-                msg = ','.join(x.name for x in top_order_poor)
+                msg = ",".join(x.name for x in top_order_poor)
                 PrintInColor("Disappointment for %s" % msg, Style.BRIGHT)
 
         # same for middle order and tail
         if len(middle_order) != 0:
             if len(middle_order_good) != 0:
-                msg = ','.join(x.name for x in middle_order_good)
-                PrintInColor("some stable performance in the middle order %s" % msg, Style.BRIGHT)
+                msg = ",".join(x.name for x in middle_order_good)
+                PrintInColor(
+                    "some stable performance in the middle order %s" % msg, Style.BRIGHT
+                )
             if len(middle_order_great) != 0:
-                msg = ','.join(x.name for x in middle_order_great)
+                msg = ",".join(x.name for x in middle_order_great)
                 PrintInColor("terrific batting from %s" % msg, Style.BRIGHT)
             if len(middle_order_poor) != 0:
-                msg = ','.join(x.name for x in middle_order_poor)
+                msg = ",".join(x.name for x in middle_order_poor)
                 PrintInColor("Disappointment for %s" % msg, Style.BRIGHT)
 
         # see if tail did great
         if len(tail) != 0 and len(tail_good) != 0:
-            msg = ','.join(x.name for x in tail_great)
+            msg = ",".join(x.name for x in tail_great)
             PrintInColor("terrific effort from the lower order! %s" % msg, Style.BRIGHT)
 
         # randomize this commentary
         if top_order_collapse and not middle_order_collapse:
-            PrintInColor("We have seen some top order collapse!.. but good come back in the middle order", Style.BRIGHT)
+            PrintInColor(
+                "We have seen some top order collapse!.. but good come back in the middle order",
+                Style.BRIGHT,
+            )
         if not top_order_collapse and middle_order_collapse:
-            PrintInColor("The top order gave a good start.. but middle order collapsed!", Style.BRIGHT)
+            PrintInColor(
+                "The top order gave a good start.. but middle order collapsed!",
+                Style.BRIGHT,
+            )
         if tail_good_performance:
             PrintInColor("Some terrific fightback from the tail!", Style.BRIGHT)
         # FIXME say about chasing, facing bowlers, etc
@@ -116,14 +162,18 @@ class Team:
         """
         # get best bowlers
         # FIXME say if good performance
-        best_economical_bowlers = [x for x in self.team_array if x.eco < 6.0 and x.balls_bowled > 0]
-        best_wickets_bowlers = [x for x in self.team_array if x.wkts >= 3 and x.balls_bowled > 0]
+        best_economical_bowlers = [
+            x for x in self.team_array if x.eco < 6.0 and x.balls_bowled > 0
+        ]
+        best_wickets_bowlers = [
+            x for x in self.team_array if x.wkts >= 3 and x.balls_bowled > 0
+        ]
         if len(best_economical_bowlers) > 0:
-            msg = ','.join(x.name for x in best_economical_bowlers)
+            msg = ",".join(x.name for x in best_economical_bowlers)
             # FIXME randomize this commentary
             PrintInColor("Very economical stuff from %s" % msg, Style.BRIGHT)
         if len(best_wickets_bowlers) > 0:
-            msg = ','.join(x.name for x in best_wickets_bowlers)
+            msg = ",".join(x.name for x in best_wickets_bowlers)
             PrintInColor("Most wickets taken by %s" % msg, Style.BRIGHT)
         input()
         return

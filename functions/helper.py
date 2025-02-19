@@ -4,6 +4,7 @@ from functions.utilities import FillAttributes
 # add the default attributes and values here
 # the FillAttributes function will populate it accordingly
 
+
 class Tournament:
     def __init__(self, **kwargs):
         """
@@ -12,8 +13,7 @@ class Tournament:
         Args:
             **kwargs: Keyword arguments to set the attributes of the Tournament object.
         """
-        attrs = {'name': ' ',
-                 'teams': []}
+        attrs = {"name": " ", "teams": []}
         self = FillAttributes(self, attrs, kwargs)
 
 
@@ -25,10 +25,7 @@ class Venue:
         Args:
             **kwargs: Keyword arguments to set the attributes of the Venue object.
         """
-        attrs = {'name': ' ',
-                 'run_prob': [],
-                 'run_prob_t20': [],
-                 'weather': None}
+        attrs = {"name": " ", "run_prob": [], "run_prob_t20": [], "weather": None}
         self = FillAttributes(self, attrs, kwargs)
 
 
@@ -40,7 +37,13 @@ class Innings:
         Args:
             **kwargs: Keyword arguments to set the attributes of the Innings object.
         """
-        attrs = {'status': False, 'overs': 0, 'result': None, 'batting_team': None, 'bowling_team': None}
+        attrs = {
+            "status": False,
+            "overs": 0,
+            "result": None,
+            "batting_team": None,
+            "bowling_team": None,
+        }
         self = FillAttributes(self, attrs, kwargs)
 
 
@@ -52,7 +55,13 @@ class Fow:
         Args:
             **kwargs: Keyword arguments to set the attributes of the Fow object.
         """
-        attrs = {'total_balls': 0, 'wkt': 0, 'runs': 0, 'player_dismissed': None, 'player_onstrike': None}
+        attrs = {
+            "total_balls": 0,
+            "wkt": 0,
+            "runs": 0,
+            "player_dismissed": None,
+            "player_onstrike": None,
+        }
         self = FillAttributes(self, attrs, kwargs)
 
 
@@ -64,7 +73,13 @@ class Partnership:
         Args:
             **kwargs: Keyword arguments to set the attributes of the Partnership object.
         """
-        attrs = {'balls': 0, 'runs': 0, 'batsman_dismissed': None, 'batsman_onstrike': None, 'both_notout': False}
+        attrs = {
+            "balls": 0,
+            "runs": 0,
+            "batsman_dismissed": None,
+            "batsman_onstrike": None,
+            "both_notout": False,
+        }
         self = FillAttributes(self, attrs, kwargs)
 
 
@@ -76,8 +91,16 @@ class Result:
         Args:
             **kwargs: Keyword arguments to set the attributes of the Result object.
         """
-        attrs = {'team1': None, 'team2': None, 'winner': None, 'most_runs': None, 'most_wkts': None, 'best_eco': None,
-                 'mom': None, 'result_str': ' '}
+        attrs = {
+            "team1": None,
+            "team2": None,
+            "winner": None,
+            "most_runs": None,
+            "most_wkts": None,
+            "best_eco": None,
+            "mom": None,
+            "result_str": " ",
+        }
         self = FillAttributes(self, attrs, kwargs)
 
 
@@ -89,7 +112,12 @@ class Delivery:
         Args:
             **kwargs: Keyword arguments to set the attributes of the Delivery object.
         """
-        attrs = {'type': None, 'speed': None, 'line': None, 'length': None, }
+        attrs = {
+            "type": None,
+            "speed": None,
+            "line": None,
+            "length": None,
+        }
         self = FillAttributes(self, attrs, kwargs)
 
 
@@ -101,5 +129,9 @@ class Shot:
         Args:
             **kwargs: Keyword arguments to set the attributes of the Shot object.
         """
-        attrs = {'type': None, 'direction': None, 'foot': None, }
+        attrs = {
+            "type": None,
+            "direction": None,
+            "foot": None,
+        }
         self = FillAttributes(self, attrs, kwargs)
