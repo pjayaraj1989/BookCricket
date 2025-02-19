@@ -369,7 +369,7 @@ class Match:
                          '%s runs in this over!' % (str(total_runs_in_over)),
                          Style.BRIGHT)
         # check if maiden over only if over is finished
-        elif total_runs_in_over == 0 and isinstance((BallsToOvers(bowler.balls_bowled)), int):
+        elif total_runs_in_over == 0 :
             PrintInColor(Randomize(commentary.commentary_maiden_over) % bowler.name,
                          Style.BRIGHT)
             bowler.maidens += 1
