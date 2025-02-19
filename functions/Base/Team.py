@@ -4,6 +4,12 @@ from functions.utilities import FillAttributes, BallsToOvers, PrintInColor, Prin
 
 class Team:
     def __init__(self, **kwargs):
+        """
+        Initialize a Team object with the given attributes.
+
+        Args:
+            **kwargs: Keyword arguments to set the attributes of the Team object.
+        """
         attrs = {'total_overs': 0, 'drs_chances': 2, 'total_score': 0, 'target': 0, 'wickets_fell': 0, 'total_balls': 0,
                  'extras': 0, 'top_scorer': None, 'most_wkts': None, 'off_the_mark': False,
                  'fours': 0, 'sixes': 0,
@@ -17,6 +23,12 @@ class Team:
         self = FillAttributes(self, attrs, kwargs)
 
     def SummarizeBatting(self):
+        """
+        Summarize the batting performance of the team.
+
+        Returns:
+            None
+        """
         # find what happened in the top order
         # check if it was a good score
         total_runs = self.total_score
@@ -96,6 +108,12 @@ class Team:
         return
 
     def SummarizeBowling(self):
+        """
+        Summarize the bowling performance of the team.
+
+        Returns:
+            None
+        """
         # get best bowlers
         # FIXME say if good performance
         best_economical_bowlers = [x for x in self.team_array if x.eco < 6.0 and x.balls_bowled > 0]
@@ -111,6 +129,12 @@ class Team:
         return
 
     def GetCurrentRate(self):
+        """
+        Calculate the current run rate of the team.
+
+        Returns:
+            float: The current run rate.
+        """
         crr = 0.0
         if self.total_balls > 0:
             crr = self.total_score / BallsToOvers(self.total_balls)
@@ -118,6 +142,12 @@ class Team:
         return crr
 
     def GetRequiredRate(self):
+        """
+        Calculate the required run rate for the team.
+
+        Returns:
+            float: The required run rate.
+        """
         nrr = 0.0
         # if chasing, calc net nrr
         balls_remaining = self.total_overs * 6 - self.total_balls

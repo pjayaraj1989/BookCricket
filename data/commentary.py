@@ -2,6 +2,9 @@
 
 # commentary phrases
 class commentary:
+    """
+    A class to hold all the commentary phrases used in the game.
+    """
     intro_game = '*' * 50 + '\n' + '*' * 14 + 'Book Cricket Simulator' + '*' * 14 + '\n' + '*' * 50
 
     intro_dialogues = ['Welcome everybody! Here we are, at ',
@@ -392,7 +395,7 @@ class commentary:
     # modify this as per DRS
     commentary_lbw_umpire = ['big appeal.. and %s\'s finger goes up!',
                              'that looks in line and %s says out!',
-                             'looks plumb, and the umpire %s\'s finger raises!',
+                             'looks plumb, and %s\'s finger raises!',
                              'hit on the pads! and given out by %s!',
                              'looks dead straight to me... and %s says out!',
                              'that\'s a big appeal.. and finally given lbw by %s!!',

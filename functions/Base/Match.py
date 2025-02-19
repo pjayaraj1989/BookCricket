@@ -15,6 +15,12 @@ from functions.utilities import FillAttributes, PrintInColor, Randomize, Error_E
 
 class Match:
     def __init__(self, **kwargs):
+        """
+        Initialize a Match object with the given attributes.
+
+        Args:
+            **kwargs: Keyword arguments to set the attributes of the Match object.
+        """
         attrs = {'status': False, 'overs': 0, 'match_type': None, 'bowler_max_overs': 0,
                  'logger': None, 'result': None, 'team1': None, 'team2': None, 'winner': None, 'loser': None,
                  'venue': None, 'umpire': None, 'commentators': None,
@@ -24,8 +30,16 @@ class Match:
                  'bowling_team': None}
         self = FillAttributes(self, attrs, kwargs)
 
-    # play match :  start
     def PlayMatch(self, ScriptPath):
+        """
+        Play the match.
+
+        Args:
+            ScriptPath: The path to the script directory.
+
+        Returns:
+            None
+        """
         # logging
         log_file = 'log_%s_v_%s_%s_%s_overs.log' % (self.team1.name,
                                                     self.team2.name,
@@ -100,8 +114,13 @@ class Match:
         handler.close()
         return
 
-    # play!
     def Play(self):
+        """
+        Play the innings.
+
+        Returns:
+            None
+        """
         batting_team = self.batting_team
         overs = self.overs
         logger = self.logger
@@ -180,8 +199,16 @@ class Match:
             RotateStrike(pair)
         return
 
-    # play an over
     def PlayOver(self, over):
+        """
+        Play an over.
+
+        Args:
+            over: The current over number.
+
+        Returns:
+            None
+        """
         pair = self.batting_team.current_pair
         overs = self.overs
         batting_team, bowling_team = self.batting_team, self.bowling_team
@@ -360,8 +387,16 @@ class Match:
             bowler.SummarizeBowlerSpell()
         return
 
-    # play a ball
     def Ball(self, run):
+        """
+        Play a ball.
+
+        Args:
+            run: The number of runs scored on the ball.
+
+        Returns:
+            None
+        """
         batting_team, bowling_team = self.batting_team, self.bowling_team
         bowler = bowling_team.current_bowler
         logger = self.logger
@@ -522,8 +557,16 @@ class Match:
         self.CheckMilestone()
         return
 
-    # update dismissal
     def UpdateDismissal(self, dismissal):
+        """
+        Update the dismissal of a batsman.
+
+        Args:
+            dismissal: The dismissal string.
+
+        Returns:
+            None
+        """
         batting_team, bowling_team = self.batting_team, self.bowling_team
         pair = batting_team.current_pair
         bowler = bowling_team.current_bowler
@@ -632,8 +675,13 @@ class Match:
         self.DisplayProjectedScore()
         return
 
-    # batting summary - scoreboard
     def DisplayScore(self):
+        """
+        Display the batting summary scoreboard.
+
+        Returns:
+            None
+        """
         batting_team = self.batting_team
         logger = self.logger
         ch = '-'
@@ -718,9 +766,17 @@ class Match:
         logger.info(ch * 45)
         return
 
-    # generate run
-    # FIXME: check current over, current player on strike, avoid this args
     def GenerateRun(self, over, player_on_strike):
+        """
+        Generate the number of runs scored on a ball.
+
+        Args:
+            over: The current over number.
+            player_on_strike: The player on strike.
+
+        Returns:
+            int: The number of runs scored.
+        """
         batting_team = self.batting_team
         bowler = self.bowling_team.current_bowler
         overs = self.overs
@@ -766,8 +822,16 @@ class Match:
         run = choice(run_array, 1, p=prob, replace=False)[0]
         return run
 
-    # death over
     def DetectDeathOvers(self, over):
+        """
+        Detect if the current over is a death over.
+
+        Args:
+            over: The current over number.
+
+        Returns:
+            None
+        """
         batting_team = self.batting_team
         overs = self.overs
         # towards the death overs, show a highlights
@@ -789,8 +853,13 @@ class Match:
                                  Style.BRIGHT)
         return
 
-    # match abandon due to rain
     def MatchAbandon(self):
+        """
+        Abandon the match due to rain.
+
+        Returns:
+            None
+        """
         batting_team, bowling_team = self.batting_team, self.bowling_team
 
         # abandon due to rain
@@ -826,6 +895,12 @@ class Match:
         return
 
     def CheckDRS(self):
+        """
+        Check the Decision Review System (DRS) for a dismissal.
+
+        Returns:
+            bool: True if the decision is overturned, False otherwise.
+        """
         result = False
         team = self.batting_team
         pair = team.current_pair
@@ -863,8 +938,16 @@ class Match:
                     team.drs_chances -= 1
         return result
 
-    # print commentary for dismissal
     def PrintCommentaryDismissal(self, dismissal):
+        """
+        Print the commentary for a dismissal.
+
+        Args:
+            dismissal: The dismissal string.
+
+        Returns:
+            None
+        """
         # commentary
         comment = ' '
         pair = self.batting_team.current_pair
@@ -934,8 +1017,13 @@ class Match:
             PrintInColor(Randomize(commentary.commentary_lastman), batting_team.color)
         return
 
-    # assign bowler
     def AssignBowler(self):
+        """
+        Assign a bowler for the current over.
+
+        Returns:
+            Bowler: The assigned bowler.
+        """
         bowler = None
         bowling_team = self.bowling_team
         bowlers = bowling_team.bowlers
@@ -966,8 +1054,13 @@ class Match:
 
         return bowler
 
-    # get next batsman
     def GetNextBatsman(self):
+        """
+        Get the next batsman to come to the crease.
+
+        Returns:
+            list: The updated pair of batsmen.
+        """
         batting_team = self.batting_team
         pair = batting_team.current_pair
         player_dismissed = next((x for x in pair if not x.status), None)
@@ -996,8 +1089,16 @@ class Match:
         batting_team.current_pair = pair
         return pair
 
-    # assign batsman
     def AssignBatsman(self, pair):
+        """
+        Assign the next batsman to come to the crease.
+
+        Args:
+            pair: The current pair of batsmen.
+
+        Returns:
+            Batsman: The assigned batsman.
+        """
         batting_team = self.batting_team
         remaining_batsmen = [plr for plr in batting_team.team_array if (plr.status and plr not in pair)]
 
@@ -1010,8 +1111,13 @@ class Match:
         if batsman is None: Error_Exit("No batsman assigned!")
         return batsman
 
-    # calculate match result
     def CalculateResult(self):
+        """
+        Calculate the result of the match.
+
+        Returns:
+            None
+        """
         team1 = self.team1
         team2 = self.team2
 
@@ -1057,8 +1163,13 @@ class Match:
 
         self.result = result
 
-    # find best player
     def FindBestPlayers(self):
+        """
+        Find the best players in the match.
+
+        Returns:
+            Result: The result object with the best players.
+        """
         result = self.result
         total_players = result.team1.team_array + result.team2.team_array
         bowlers_list = self.team1.bowlers + self.team2.bowlers
@@ -1083,8 +1194,13 @@ class Match:
 
         return result
 
-    # Man of the match
     def FindPlayerOfTheMatch(self):
+        """
+        Find the player of the match.
+
+        Returns:
+            None
+        """
         # find which team won
         # if tied
         if self.team1.total_score == self.team2.total_score:
@@ -1161,8 +1277,13 @@ class Match:
         PrintInColor(msg, Style.BRIGHT)
         self.logger.info(msg)
 
-    # toss
     def Toss(self):
+        """
+        Perform the toss to decide which team bats first.
+
+        Returns:
+            None
+        """
         logger = self.logger
         PrintInColor('Toss..', Style.BRIGHT)
         PrintInColor('We have the captains %s from %s and %s from %s in the middle' % (self.team1.captain.name,
@@ -1239,8 +1360,13 @@ class Match:
         self.status = True
         return
 
-    # validate teams
     def ValidateMatchTeams(self):
+        """
+        Validate the teams for the match.
+
+        Returns:
+            None
+        """
         if self.team1 is None or self.team2 is None:
             Error_Exit('No teams found!')
 
@@ -1293,8 +1419,13 @@ class Match:
         print('Validated teams')
         return
 
-    # check ball history so far
     def GetBallHistory(self):
+        """
+        Get the ball history so far.
+
+        Returns:
+            None
+        """
         batting_team = self.batting_team
         # check extras
         # FIXME: this isnt used?
@@ -1305,8 +1436,13 @@ class Match:
         fours = batting_team.ball_history.count(4)
         return
 
-    # update extras
     def UpdateExtras(self):
+        """
+        Update the extras for the current over.
+
+        Returns:
+            None
+        """
         batting_team, bowling_team = self.batting_team, self.bowling_team
         bowler = bowling_team.current_bowler
 
@@ -1333,8 +1469,13 @@ class Match:
 
         return
 
-    # get bowler comments
     def GetBowlerComments(self):
+        """
+        Get comments about the current bowler.
+
+        Returns:
+            None
+        """
         bowler = self.bowling_team.current_bowler
         # check if bowler is captain
         if bowler.attr.iscaptain:
@@ -1355,8 +1496,13 @@ class Match:
                 PrintInColor(Randomize(commentary.commentary_bowler_bad_spell), Style.BRIGHT)
         return
 
-    # check for milestones
     def CheckMilestone(self):
+        """
+        Check for milestones achieved by the batsmen.
+
+        Returns:
+            None
+        """
         logger = self.logger
         batting_team = self.batting_team
         pair = batting_team.current_pair
@@ -1417,8 +1563,13 @@ class Match:
         input('press enter to continue..')
         return
 
-    # update last partnership
     def UpdateLastPartnership(self):
+        """
+        Update the last partnership details.
+
+        Returns:
+            None
+        """
         batting_team = self.batting_team
         pair = batting_team.current_pair
 
@@ -1443,8 +1594,13 @@ class Match:
                                            runs=last_partnership_runs)
             batting_team.partnerships.append(last_partnership)
 
-    # randomly select a mode of dismissals
     def GenerateDismissal(self):
+        """
+        Generate a random mode of dismissal.
+
+        Returns:
+            str: The dismissal string.
+        """
         bowling_team = self.bowling_team
         bowler = bowling_team.current_bowler
         keeper = bowling_team.keeper
@@ -1493,8 +1649,13 @@ class Match:
 
         return dismissal_str
 
-    # Showhighights
     def ShowHighlights(self):
+        """
+        Show the highlights of the match.
+
+        Returns:
+            None
+        """
         logger = self.logger
         batting_team, bowling_team = self.batting_team, self.bowling_team
         crr = batting_team.GetCurrentRate()
@@ -1516,8 +1677,13 @@ class Match:
         logger.info(msg)
         return
 
-    # comment about the current match status
     def CurrentMatchStatus(self):
+        """
+        Print the current match status.
+
+        Returns:
+            None
+        """
         logger = self.logger
         batting_team, bowling_team = self.batting_team, self.bowling_team
         crr = batting_team.GetCurrentRate()
@@ -1635,8 +1801,13 @@ class Match:
 
         return
 
-    # display projected score
     def DisplayProjectedScore(self):
+        """
+        Display the projected score based on the current run rate.
+
+        Returns:
+            None
+        """
         if not self.status:   return
         if BallsToOvers(self.batting_team.total_balls) == self.overs: return
         import numpy as np
@@ -1654,8 +1825,13 @@ class Match:
             crr += 1.0
         print('\n')
 
-    # print bowlers stats
     def DisplayBowlingStats(self):
+        """
+        Display the bowling statistics.
+
+        Returns:
+            None
+        """
         logger = self.logger
         team = self.bowling_team
         bowlers = team.bowlers
@@ -1694,8 +1870,13 @@ class Match:
         input('press enter to continue..')
         return
 
-    # print playing XI
     def DisplayPlayingXI(self):
+        """
+        Display the playing XI for both teams.
+
+        Returns:
+            None
+        """
         t1, t2 = self.team1, self.team2
         # print the playing XI
         PrintInColor('Here are the playing elevens', Style.BRIGHT)
@@ -1720,8 +1901,13 @@ class Match:
         # now print it
         PrintListFormatted(data_to_print, 0.1, None)
 
-    # match summary
     def MatchSummary(self):
+        """
+        Print the match summary.
+
+        Returns:
+            None
+        """
         logger = self.logger
         ch = '-'
         result = self.result

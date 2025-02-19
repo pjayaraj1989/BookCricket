@@ -17,6 +17,15 @@ from colorama import Fore, Style
 import os
 
 def GetVenue(venue_data):
+    """
+    Get the venue for the match.
+
+    Args:
+        venue_data: The path to the venue data file.
+
+    Returns:
+        A Venue object with the selected venue details.
+    """
     f = open(venue_data)
     data = json.load(f)
     if data is None:
@@ -45,6 +54,15 @@ def GetVenue(venue_data):
 
 # read teams and
 def ReadTeams(json_file):
+    """
+    Read the teams from a JSON file.
+
+    Args:
+        json_file: The path to the JSON file containing team data.
+
+    Returns:
+        A list of Team objects.
+    """
     Teams_List = []
     f = open(json_file)
     data = json.load(f)
@@ -93,6 +111,12 @@ def ReadTeams(json_file):
 
 # read data from data files
 def ReadData():
+    """
+    Read the data for the match, including teams and venue.
+
+    Returns:
+        A tuple containing a list of Team objects and a Venue object.
+    """
     # input teams to play    # now get the json files available
     json_files = [f for f in os.listdir(data_path) if (f.startswith('teams_') and f.endswith('.json'))]
     leagues = [json_file.lstrip('teams_').strip('.json') for json_file in json_files]
@@ -108,6 +132,16 @@ def ReadData():
 
 # get match info
 def GetMatchInfo(list_of_teams, venue):
+    """
+    Get the match information, including teams, venue, and match type.
+
+    Args:
+        list_of_teams: A list of Team objects.
+        venue: A Venue object.
+
+    Returns:
+        A Match object with the match details.
+    """
     intro = Randomize(commentary.intro_dialogues)
     commentator = random.choices(list(resources.commentators), k=3)
     umpire = random.choices(list(resources.umpires), k=2)
