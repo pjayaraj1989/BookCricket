@@ -215,7 +215,7 @@ class commentary:
     # check if fielder is good on field
     commentary_fielder_on_fire = [
         "oh this man %s is having a good day on the field!",
-        "its that man % again!",
+        "its that man %s again!",
         "oh %s, he is a live wire on the ground!",
         "%s!  he is super fast on the field!",
     ]
