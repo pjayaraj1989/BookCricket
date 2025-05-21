@@ -19,7 +19,7 @@ import os
 
 def GetVenue(venue_data):
     """
-    Get the venue for the match.
+    Get the venue for the match by letting user choose.
 
     Args:
         venue_data: The path to the venue data file.
@@ -31,24 +31,29 @@ def GetVenue(venue_data):
     data = json.load(f)
     if data is None:
         Error_Exit("No data read from file %s" % f)
-    countries = data["Venues"]
+    countries = data['Venues']
 
     # now get venues for each countries
-    country = ChooseFromOptions(list(countries.keys()), "Select Venue", 5)
+    country = ChooseFromOptions(list(countries.keys()), "Select Country", 5)
 
-    # now get venues in this
-    venue = random.choice(countries[country]["places"])
-    PrintInColor("Selected Stadium: %s" % venue["name"], Style.BRIGHT)
-    venue_obj = Venue(name=venue["name"], run_prob=venue["run_prob"])
+    # Let user choose from available venues in the country
+    venues = countries[country]['places']
+    venue_names = [venue['name'] for venue in venues]
+    msg = "Select Stadium"
+    selected_venue_name = ChooseFromOptions(venue_names, msg, 5)
+    
+    # Get the selected venue details
+    venue = next((v for v in venues if v['name'] == selected_venue_name), None)
+    
+    PrintInColor("Selected Stadium: %s" % venue['name'], Style.BRIGHT)
+    venue_obj = Venue(name=venue['name'], run_prob=venue['run_prob'])
 
     # populate run_prob_t20
-    run_prob_t20 = data["run_prob_t20"]
+    run_prob_t20 = data['run_prob_t20']
     venue_obj.run_prob_t20 = run_prob_t20
 
     # choose weather
-    weather = choice(
-        list(resources.weathers.keys()), 1, p=resources.weather_prob, replace=False
-    )[0]
+    weather = choice(list(resources.weathers.keys()), 1, p=resources.weather_prob, replace=False)[0]
     venue_obj.weather = weather
     PrintInColor(resources.weathers[weather], Style.BRIGHT)
 
