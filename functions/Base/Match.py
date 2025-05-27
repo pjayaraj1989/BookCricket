@@ -22,6 +22,7 @@ from functions.utilities import (
     CheckForConsecutiveElements,
     ChooseFromOptions,
 )
+import functions.utilities as utilities
 
 
 class Match:
@@ -224,6 +225,10 @@ class Match:
             if self.batting_team.wickets_fell == 10:
                 break
             self.PlayOver(over)
+            # update the over_history after each over
+            #batting_team.over_history[over] = batting_team.total_score
+            
+            # if match ended
             if self.status is False:
                 break
 
@@ -478,6 +483,10 @@ class Match:
             )
             # now say about his performance
             bowler.SummarizeBowlerSpell()
+            
+        # update batting team over history
+        nrr = batting_team.GetCurrentRate()
+        batting_team.over_history[over] = nrr
         return
 
     def Ball(self, run):
@@ -940,6 +949,9 @@ class Match:
 
         print(ch * 45)
         logger.info(ch * 45)
+        
+        # plot the graph
+        utilities.PlotOversBarGraph(batting_team.over_history, "RR Graph")
         return
 
     def GenerateRun(self, over, player_on_strike):

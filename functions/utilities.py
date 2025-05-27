@@ -6,6 +6,7 @@ from functions.Initiate import *
 import random
 import os
 import pyttsx3
+from math import ceil
 
 
 # function used to fill class attributes based on input arguments
@@ -249,3 +250,68 @@ def BallsToOvers(balls: int):
     if balls >= 0:
         overs = float(str(int(balls / 6)) + "." + str(balls % 6))
     return overs
+
+
+def PlotOversBarGraph(over_runs_dict: dict, title: str = "Runs per Over"):
+    """
+    Plot a scaled ASCII bar graph from a dictionary of overs and runs.
+    Shows reduced axis labels for better readability.
+    """
+    if not over_runs_dict:
+        return
+
+    # Calculate dimensions with better scaling
+    max_runs = max(over_runs_dict.values())
+    min_runs = min(over_runs_dict.values())
+    
+    # Reduce height for more compact display
+    height = min(12, max(6, int((max_runs - min_runs) / 2) + 3))  # Reduced height range
+    width = len(over_runs_dict)
+    
+    # Calculate scale intervals for better distribution
+    scale_interval = ceil((max_runs - min_runs) / (height - 1))
+    if scale_interval == 0:
+        scale_interval = 1  # Set minimum scale interval to 1
+    max_scale = ceil(max_runs / scale_interval) * scale_interval
+    
+    # Create fewer scale points for y-axis
+    scale_points = [round(i * scale_interval, 1) for i in range(int(max_scale / scale_interval) + 1)]
+    display_points = [scale_points[0]]  # Always show minimum
+    if len(scale_points) > 2:
+        display_points.extend(scale_points[len(scale_points)//2::len(scale_points)//2])  # Show middle and max
+    
+    # Print title and header
+    PrintInColor(f"\n{title}:", Style.BRIGHT)
+    print(f"{'Runs':>6} {'╔' + '═' * (width * 2) + '╗'}")
+
+    # Print bars with reduced height
+    for value in reversed(scale_points):
+        if value in display_points:
+            print(f"{value:>6.0f} ║", end='')
+        else:
+            print(f"{'':>6} ║", end='')
+            
+        for over in sorted(over_runs_dict.keys()):
+            runs = over_runs_dict[over]
+            if runs >= value:
+                print("██", end='')
+            else:
+                print("  ", end='')
+        print("║")
+
+    # Print x-axis with fewer labels
+    print(f"       ╚{'═' * (width * 2)}╝")
+    print("       ", end='')
+    for over in sorted(over_runs_dict.keys()):
+        if over % 3 == 0:  # Show every third over number
+            print(f"{over:2}", end='')
+        else:
+            print("  ", end='')
+    print("\n       " + "Overs".center(width * 2))
+    
+    # Print statistics
+    total_runs = sum(over_runs_dict.values())
+    avg_runs = total_runs / len(over_runs_dict)
+    #PrintInColor(f"\nTotal: {total_runs} runs ({avg_runs:.1f} per over)", Style.BRIGHT)
+    
+    input("\nPress enter to continue...")
