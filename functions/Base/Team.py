@@ -48,6 +48,8 @@ class Team:
             "current_pair": [],
             "current_bowler": None,
             "ball_history": [],
+            "crr" : 0.0,  # current run rate
+            "over_history": {}, # this is a dict with overs as keys and total score at the end of each over as a value
         }
         self = FillAttributes(self, attrs, kwargs)
 
@@ -189,6 +191,7 @@ class Team:
         if self.total_balls > 0:
             crr = self.total_score / BallsToOvers(self.total_balls)
         crr = round(crr, 2)
+        #self.crr = crr
         return crr
 
     def GetRequiredRate(self):
