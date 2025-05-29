@@ -485,8 +485,8 @@ class Match:
             bowler.SummarizeBowlerSpell()
             
         # update batting team over history
-        nrr = batting_team.GetCurrentRate()
-        batting_team.over_history[over] = nrr
+        #nrr = batting_team.GetCurrentRate()
+        batting_team.over_history[over] = batting_team.total_score
         return
 
     def Ball(self, run):
