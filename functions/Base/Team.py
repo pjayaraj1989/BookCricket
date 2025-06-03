@@ -50,6 +50,7 @@ class Team:
             "ball_history": [],
             "crr" : 0.0,  # current run rate
             "over_history": {}, # this is a dict with overs as keys and total score at the end of each over as a value
+            "over_wkt_history": {}, # this is a dict with overs as keys and wickets fell in that over as a value
         }
         self = FillAttributes(self, attrs, kwargs)
 
