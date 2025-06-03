@@ -252,12 +252,11 @@ def BallsToOvers(balls: int):
     return overs
 
 
-def PlotOversBarGraph(over_runs_dict: dict, title: str = "Runs per Over"):
+def PlotOversBarGraph(over_runs_dict: dict, over_wkt_history: dict, title: str = "Runs per Over"):
     """
-    Plot a scaled ASCII bar graph from a dictionary of overs and runs.
-    Shows reduced axis labels for better readability.
+    Plot a scaled ASCII bar graph showing runs and wickets per over.
     """
-    if not over_runs_dict:
+    if not over_runs_dict or not over_wkt_history:
         return
 
     # Calculate dimensions with better scaling
@@ -280,38 +279,53 @@ def PlotOversBarGraph(over_runs_dict: dict, title: str = "Runs per Over"):
     if len(scale_points) > 2:
         display_points.extend(scale_points[len(scale_points)//2::len(scale_points)//2])  # Show middle and max
     
-    # Print title and header
+    # Calculate bar width based on max wickets
+    max_wickets = max(over_wkt_history.values())
+    bar_width = max(2, max_wickets)  # Minimum width of 2, or wider if needed for wickets
+    
+    # Print title and header with adjusted width
     PrintInColor(f"\n{title}:", Style.BRIGHT)
-    print(f"{'Runs':>6} {'╔' + '═' * (width * 2) + '╗'}")
+    print(f"{'Runs':>6} {'╔' + '═' * (width * bar_width) + '╗'}")
 
-    # Print bars with reduced height
+    # Print bars with reduced height and wickets
     for value in reversed(scale_points):
         if value in display_points:
             print(f"{value:>6.0f} ║", end='')
         else:
             print(f"{'':>6} ║", end='')
-            
+        
+        # Print bars and wickets with adjusted width
         for over in sorted(over_runs_dict.keys()):
             runs = over_runs_dict[over]
+            wickets = over_wkt_history.get(over, 0)
+            
             if runs >= value:
-                print("██", end='')
+                # If this is the top of the bar, show wickets with *
+                if value == max(v for v in scale_points if v <= runs):
+                    print(f"{'*' * wickets:{bar_width}}", end='')
+                else:
+                    print(f"{'█' * bar_width}", end='')
             else:
-                print("  ", end='')
+                print(" " * bar_width, end='')
         print("║")
 
-    # Print x-axis with fewer labels
-    print(f"       ╚{'═' * (width * 2)}╝")
+    # Print x-axis with adjusted width
+    print(f"       ╚{'═' * (width * bar_width)}╝")
     print("       ", end='')
     for over in sorted(over_runs_dict.keys()):
-        if over % 3 == 0:  # Show every third over number
-            print(f"{over:2}", end='')
+        if over % 3 == 0:
+            print(f"{over:>{bar_width}}", end='')
         else:
-            print("  ", end='')
-    print("\n       " + "Overs".center(width * 2))
+            print(" " * bar_width, end='')
+    print("\n       " + "Overs".center(width * bar_width))
     
     # Print statistics
     total_runs = sum(over_runs_dict.values())
     avg_runs = total_runs / len(over_runs_dict)
     #PrintInColor(f"\nTotal: {total_runs} runs ({avg_runs:.1f} per over)", Style.BRIGHT)
     
+    # Add wickets legend if any wickets fell
+    #if any(over_wkt_history.values()):
+    #    PrintInColor("\nWickets fell in over *", Style.BRIGHT)
+
     input("\nPress enter to continue...")

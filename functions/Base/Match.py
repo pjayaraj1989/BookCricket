@@ -289,6 +289,7 @@ class Match:
 
         ismaiden = True
         total_runs_in_over = 0
+        total_wickets_in_over = 0
         ball = 1
         over_arr = []
 
@@ -332,6 +333,10 @@ class Match:
             # FIXME dont pass over and player on strike, instead detect it!
             run = self.GenerateRun(over, player_on_strike)
             # run = GenerateRunNew(match, over, player_on_strike)
+
+            # count wkts fell in the over
+            if run == -1:
+                total_wickets_in_over += 1
 
             over_arr.append(run)
 
@@ -487,6 +492,7 @@ class Match:
         # update batting team over history
         #nrr = batting_team.GetCurrentRate()
         batting_team.over_history[over] = batting_team.total_score
+        batting_team.over_wkt_history[over] = total_wickets_in_over
         return
 
     def Ball(self, run):
@@ -951,7 +957,7 @@ class Match:
         logger.info(ch * 45)
         
         # plot the graph
-        utilities.PlotOversBarGraph(batting_team.over_history, "RR Graph")
+        utilities.PlotOversBarGraph(batting_team.over_history, batting_team.over_wkt_history, "RR Graph")
         return
 
     def GenerateRun(self, over, player_on_strike):
