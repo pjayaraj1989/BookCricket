@@ -1,7 +1,78 @@
-# all the commentary phrases are defined here
+import os
+import openai
+from dotenv import load_dotenv
+from functools import lru_cache
+
+# Load environment variables
+load_dotenv()
+
+class CommentaryGenerator:
+    def __init__(self):
+        """Initialize the commentary generator with API key"""
+        self.api_key = os.getenv('OPENAI_API_KEY')
+        openai.api_key = self.api_key
+        self.has_connection = self._check_connection()
+
+    def _check_connection(self):
+        """Check if internet connection is available"""
+        try:
+            import requests
+            requests.get("https://api.openai.com", timeout=5)
+            return True
+        except:
+            #print("Not connected to the internet. Using default commentary.")
+            return False
+
+    @lru_cache(maxsize=100)
+    def generate_commentary(self, event_type, context=None):
+        """
+        Generate commentary for a given event type using OpenAI API.
+        Falls back to default commentary if no connection.
+
+        Args:
+            event_type: Type of cricket event (six, four, wicket etc.)
+            context: Additional context like player names, scores etc.
+
+        Returns:
+            str: Generated commentary phrase
+        """
+        if not self.has_connection:
+            return self._get_default_commentary(event_type)
+
+        try:
+            prompt = self._create_prompt(event_type, context)
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{
+                    "role": "user",
+                    "content": prompt
+                }],
+                max_tokens=50,
+                temperature=0.7
+            )
+            return response.choices[0].message.content.strip()
+        except:
+            return self._get_default_commentary(event_type)
+
+    def _create_prompt(self, event_type, context):
+        """Create appropriate prompt based on event type"""
+        prompts = {
+            'six': "Generate an exciting cricket commentary phrase for a six hit by {batter}",
+            'four': "Generate a cricket commentary phrase for a four hit by {batter}",
+            'wicket': "Generate a cricket commentary phrase for {bowler} taking {batter}'s wicket",
+            'milestone': "Generate a celebratory cricket commentary for {batter} reaching {score} runs",
+            # Add more event types as needed
+        }
+        base_prompt = prompts.get(event_type, "Generate a cricket commentary phrase")
+        if context:
+            return base_prompt.format(**context)
+        return base_prompt
+
+    def _get_default_commentary(self, event_type):
+        """Fallback to default hardcoded commentary"""
+        return commentary.get_default_commentary(event_type)
 
 
-# commentary phrases
 class commentary:
     """
     A class to hold all the commentary phrases used in the game.
@@ -935,3 +1006,13 @@ class commentary:
         "this is an unfortunate end ! Rain has forced to call off the match",
         "heavy rains.. and the umpires and the match referee have decided to call off the match",
     ]
+
+# Example usage in Match.py
+def Ball(self, run):
+    if run == 6:
+        context = {
+            "batter": self.batting_team.current_pair[0].name,
+            "score": self.batting_team.total_score
+        }
+        comment = commentary.get_commentary("six", context)
+        PrintInColor(comment, Style.BRIGHT)
