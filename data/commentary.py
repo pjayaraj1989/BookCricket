@@ -73,11 +73,11 @@ class commentary:
     commentary_situation_reqd_rate_high = [
         "required rate is high for %s!",
         "%s need to push themselves hard to stay on course!",
-        "%s need some big hits to boost up the run rate!",
-        "singles and doubles wont take %s home!",
-        "%s need to boost up the run rate!",
-        "required rate is going higher for %s.. pressure building!",
-        "bowlers are not giving %s room to cope up with the required rate!",
+        "%s need some big hits to boost the run rate!",
+        "singles and doubles won't take %s home!",
+        "%s need to boost the run rate!",
+        "required rate is going higher for %s... pressure building!",
+        "bowlers are not giving %s room to keep up with the required rate!",
         "%s will have to struggle to get home with this scoring rate!",
         "chase looks pretty sluggish for %s!",
         "%s need some hard hitters to stay alive in this chase!",
@@ -224,7 +224,9 @@ class commentary:
     commentary_first_runs = [
         "first runs of the day for %s and %s",
         "he's away! first runs on the board for %s and %s",
-        "%s and %s are off the mark with that shot",
+        "%s are off the mark, and it's %s with the first runs",
+        "%s are off the mark and it's %s to open the account",
+        "%s off the mark with %s getting the first runs",
         "%s, and also %s are up and running",
         "%s and %s are away with that!",
     ]
@@ -792,11 +794,12 @@ class commentary:
     ]
     commentary_last_ball_innings = ["last ball of this innings !"]
     commentary_last_over_match = [
-        "last over of the match!",
-        "last over! the crowd on their feet!",
-        "we are all set to witness a last over thriller!",
-        "here we go! last over of this match!",
-        "this is what it has come down to! the last over!",
+        "This is the last over of the match!",
+        "the final over of the match!!",
+        "match comes down to last over!!",
+        "everything comes down to last over!",
+        "what an exciting finish!!",
+        "This is going to be a nerve-wracking last over!!",
     ]
     commentary_last_over_innings = [
         "last over of this innings coming up",
@@ -840,9 +843,9 @@ class commentary:
         "%s has finished his spell!",
     ]
     commentary_maiden_over = [
-        "what a bowler %s is.. that's a maiden over!",
-        "maiden over from %s!!!.. brilliant!",
-        "that's it.. its a maiden over for %s.. brilliant!",
+        "Excellent over from %s... that's a maiden over!",
+        "brilliant bowling from %s... no runs from this over!",
+        "superb bowling from %s... that's a maiden over!",
     ]
 
     # bowler's last over

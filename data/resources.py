@@ -27,7 +27,7 @@ class resources:
         "sunny": "Weather looks so pleasant and sunny, ideal for cricket",
         "overcast": "Overcast weather, might help the swing bowlers",
         "rainy": "There is a slight rain scare",
-        "cloudy": "cloudy weather, hope we wont have a rain interruption",
+        "cloudy": "cloudy weather, hope we won't have a rain interruption",
         "humid": "A very humid day!",
     }
 
@@ -84,7 +84,7 @@ class resources:
     # fielders
     fields = {
         4: [
-            "thats gone over first slip!",
+            "that's gone over first slip!",
             "between the first slip and short third man!",
             "through the covers",
             "hit nice and straight!",
@@ -99,11 +99,11 @@ class resources:
             "that is a fierce square cut!",
             "worked that through short midwicket",
             "reverse sweep",
-            "delicately steered it through slips..",
+            "delicately steered it through slips...",
             "smashed like a bullet!",
             "upper cut over the keepers hands!",
-            "soft hands.. steered it through second slip!",
-            "in the air.. just over the fielder at point!",
+            "soft hands... steered it through second slip!",
+            "in the air... just over the fielder at point!",
             "hit through midoff",
             "delicately pushed it to fine leg",
             "wristy flick, well steered into the legside",
@@ -155,7 +155,7 @@ class resources:
             "through square leg",
             "between first slip and short third man",
             "between point and backward point",
-            "well timed it into the leg side ",
+            "well timed it into the leg side!",
             "between leg slip and the gully",
             "steered expertly into the gap!",
             "advances and drives it straight!",
