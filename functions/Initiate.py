@@ -154,7 +154,7 @@ def ReadData(autoplay):
 
 
 # get match info
-def GetMatchInfo(list_of_teams, venue, autoplay):
+def GetMatchInfo(list_of_teams, venue, autoplay, overs):
     """
     Get the match information, including teams, venue, and match type.
 
@@ -177,7 +177,7 @@ def GetMatchInfo(list_of_teams, venue, autoplay):
     PrintInColor(msg, Style.BRIGHT)
     
     if autoplay:
-        overs = '5'
+        overs = overs
     else:
         overs = input()
 
