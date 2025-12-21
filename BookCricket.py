@@ -11,9 +11,11 @@ venue_data = os.path.join(data_path, 'venue_data.json')
 commentary_enabled = False
 
 if __name__ == "__main__":
+    overs = None
     # check if an argument is passed for autoplay
-    if len(sys.argv) == 2 and sys.argv[1] == 'autoplay':
+    if len(sys.argv) > 2 and sys.argv[1] == 'autoplay':
         autoplay = True
+        overs = sys.argv[2]
     else:
         autoplay = False
     while True:
@@ -27,7 +29,7 @@ if __name__ == "__main__":
         else:   commentary_enabled = False
         
         teams, venue = ReadData(autoplay)
-        match = GetMatchInfo(teams, venue, autoplay)
+        match = GetMatchInfo(teams, venue, autoplay, overs)
         match.commentary_enabled = commentary_enabled
         match.PlayMatch(ScriptPath)
         while True:
