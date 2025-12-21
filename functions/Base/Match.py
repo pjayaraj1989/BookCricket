@@ -110,9 +110,9 @@ class Match:
         self.DisplayBowlingStats()
 
         # say something about the first innings
-        self.batting_team.SummarizeBatting()
+        self.batting_team.SummarizeBatting(self.autoplay)
         # summarize about bowling performance
-        self.bowling_team.SummarizeBowling()
+        self.bowling_team.SummarizeBowling(self.autoplay)
 
         # play second inns with target
         self.team2.target = self.team1.total_score + 1
@@ -134,9 +134,9 @@ class Match:
         self.CalculateResult()
 
         # say something about the first innings
-        self.batting_team.SummarizeBatting()
+        self.batting_team.SummarizeBatting(self.autoplay)
         # summarize about bowling performance
-        self.bowling_team.SummarizeBowling()
+        self.bowling_team.SummarizeBowling(self.autoplay)
 
         self.MatchSummary()
         self.FindPlayerOfTheMatch()
@@ -197,7 +197,8 @@ class Match:
                     self.MatchAbandon()
                     self.result.result_str = "No result"
                     Error_Exit("Match abandoned due to rain!!")
-                input("Press enter to continue")
+                if not self.autoplay:
+                    input("Press enter to continue")
 
             # check match stats and comment
             if self.status is False:
@@ -390,7 +391,8 @@ class Match:
                         runs=last_partnership_runs,
                     )
                     batting_team.partnerships.append(last_partnership)
-                    input("press enter to continue")
+                    if not self.autoplay:
+                        input("press enter to continue")
                     break
 
             # check if 1st innings over
@@ -410,7 +412,8 @@ class Match:
                             Randomize(commentary.commentary_all_out_bad_score),
                             Fore.GREEN,
                         )
-                    input("press enter to continue...")
+                    if not self.autoplay:
+                        input("press enter to continue...")
                     break
 
             # batting second
@@ -432,7 +435,8 @@ class Match:
                             % (batting_team.name, bowling_team.name),
                             Style.BRIGHT,
                         )
-                    input("press enter to continue...")
+                    if not self.autoplay:
+                        input("press enter to continue...")
                     break
                 # check if target achieved chasing
                 if batting_team.total_score >= batting_team.target:
@@ -445,14 +449,14 @@ class Match:
                     )
                     self.status = False
                     self.UpdateLastPartnership()
-                    input("press enter to continue...")
+                    if not self.autoplay: input("press enter to continue...")
                     break
                 # if all out first innings
                 if batting_team.wickets_fell == 10:
                     PrintInColor(
                         Randomize(commentary.commentary_all_out), Fore.LIGHTRED_EX
                     )
-                    input("press enter to continue...")
+                    if not self.autoplay: input("press enter to continue...")
                     break
 
         # check total runs taken in over
@@ -795,15 +799,15 @@ class Match:
         if isHattrick:
             bowler.hattricks += 1
             PrintInColor(Randomize(commentary.commentary_hattrick), bowling_team.color)
-            input("press enter to continue..")
+            if not self.autoplay:   input("press enter to continue..")
         if bowler.wkts == 3:
             PrintInColor("Third wkt for %s !" % bowler.name, bowling_team.color)
-            input("press enter to continue..")
+            if not self.autoplay:   input("press enter to continue..")
         # check if bowler got 5 wkts
         if bowler.wkts == 5:
             PrintInColor("That's 5 Wickets for %s !" % bowler.name, bowling_team.color)
             PrintInColor(Randomize(commentary.commentary_fifer), bowling_team.color)
-            input("press enter to continue..")
+            if not self.autoplay:   input("press enter to continue..")
         # update fall of wicket
         fow_info = Fow(
             wkt=batting_team.wickets_fell,
@@ -848,7 +852,7 @@ class Match:
         self.CurrentMatchStatus()
         # get next batsman
         self.GetNextBatsman()
-        input("press enter to continue")
+        if not self.autoplay:   input("press enter to continue")
         self.DisplayScore()
         self.DisplayProjectedScore()
         return
@@ -1399,24 +1403,31 @@ class Match:
             plr for plr in batting_team.team_array if (plr.status and plr not in pair)
         ]
 
-        next_batsman = input(
-            "Choose next batsman: {0} [Press Enter to auto-select]".format(
-                " / ".join(
-                    [str(x.no) + "." + GetShortName(x.name) for x in remaining_batsmen]
+        if self.autoplay:
+            # when autoplay is enabled, Randomize returns a player object
+            # so assign it directly instead of treating it as a string
+            batsman = Randomize(remaining_batsmen)
+        else:
+            next_batsman = input(
+                "Choose next batsman: {0} [Press Enter to auto-select]".format(
+                    " / ".join(
+                        [str(x.no) + "." + GetShortName(x.name) for x in remaining_batsmen]
+                    )
                 )
             )
-        )
-        batsman = next(
-            (
-                x
-                for x in remaining_batsmen
-                if (
-                    str(next_batsman) == str(x.no)
-                    or next_batsman.lower() in GetShortName(x.name).lower()
-                )
-            ),
-            None,
-        )
+            # normalize the input for safe comparisons
+            nb = str(next_batsman).lower()
+            batsman = next(
+                (
+                    x
+                    for x in remaining_batsmen
+                    if (
+                        str(nb) == str(x.no)
+                        or nb in GetShortName(x.name).lower()
+                    )
+                ),
+                None,
+            )
 
         if batsman is None:
             Error_Exit("No batsman assigned!")
@@ -1628,7 +1639,13 @@ class Match:
         opts = [1, 2]
         msg = "%s your call, Heads or tails?" % (self.team1.captain.name)
         PrintInColor(msg, self.team1.color)
-        call = input("1.Heads 2.Tails\n")
+        
+        print ("Self.autoplay is %s" % str(self.autoplay))
+        if self.autoplay:
+            call = int(Randomize(opts))
+            print("Auto-selected choice: %s" % ("Heads" if call == 1 else "Tails"))
+        else:
+            call = input("1.Heads 2.Tails\n")
         # if invalid, auto-select
         if call == "" or None:
             call = int(Randomize(opts))
@@ -1642,7 +1659,11 @@ class Match:
                 % self.team1.captain.name
             )
             PrintInColor(msg, Style.BRIGHT)
-            call = input("1.Bat 2.Bowl")
+            if self.autoplay:
+                call = int(Randomize(opts))
+                print("Auto-selected choice: %s" % ("Bat" if call == 1 else "Bowl"))
+            else:
+                call = input("1.Bat 2.Bowl")
             # if invalid, auto-select
             if call == "" or None:
                 call = int(Randomize(opts))
@@ -1664,7 +1685,12 @@ class Match:
                 "%s, you have won the toss, do you wanna bat or bowl first?"
                 % self.team2.captain.name
             )
-            call = input("1.Bat 2.Bowl first")
+            
+            if self.autoplay:
+                call = int(Randomize(opts))
+                print("Auto-selected choice: %s" % ("Bat" if call == 1 else "Bowl"))
+            else:
+                call = input("1.Bat 2.Bowl first")
             # if invalid, auto-select
             if call == "" or None:
                 call = int(Randomize(opts))
@@ -1693,11 +1719,15 @@ class Match:
         self.batting_second = batting_second
 
         # do you need DRS?
-        drs_opted = ChooseFromOptions(["y", "n"], "Do you need DRS for this match? ", 5)
+        if self.autoplay:
+            drs_opted = "n"
+        else:
+            drs_opted = ChooseFromOptions(["y", "n"], "Do you need DRS for this match? ", 5)
         if drs_opted == "y":
             PrintInColor("D.R.S opted", Style.BRIGHT)
             self.drs = True
-            input("press enter to continue")
+            if not self.autoplay:
+                input("press enter to continue")
 
         self.status = True
         return
@@ -1952,8 +1982,8 @@ class Match:
                     Randomize(commentary.commentary_milestone) % name,
                     batting_team.color,
                 )
-
-        input("press enter to continue..")
+        if not self.autoplay:
+            input("press enter to continue..")
         return
 
     def UpdateLastPartnership(self):
@@ -2375,7 +2405,8 @@ class Match:
         PrintListFormatted(data_to_print, 0.01, logger)
         print(char * 45)
         logger.info(char * 45)
-        input("press enter to continue..")
+        if not self.autoplay:
+            input("press enter to continue..")
         return
 
     def DisplayPlayingXI(self):
@@ -2526,4 +2557,5 @@ class Match:
         PrintListFormatted(data_to_print, 0.01, logger)
         print("-" * 43)
         logger.info("-" * 43)
-        input("Press Enter to continue..")
+        if not self.autoplay:
+            input("Press Enter to continue..")

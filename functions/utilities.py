@@ -328,4 +328,4 @@ def PlotOversBarGraph(over_runs_dict: dict, over_wkt_history: dict, title: str =
     #if any(over_wkt_history.values()):
     #    PrintInColor("\nWickets fell in over *", Style.BRIGHT)
 
-    input("\nPress enter to continue...")
+    #input("\nPress enter to continue...")

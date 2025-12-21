@@ -54,7 +54,7 @@ class Team:
         }
         self = FillAttributes(self, attrs, kwargs)
 
-    def SummarizeBatting(self):
+    def SummarizeBatting(self, autoplay):
         """
         Summarize the batting performance of the team.
 
@@ -153,10 +153,11 @@ class Team:
         if tail_good_performance:
             PrintInColor("Some terrific fightback from the tail!", Style.BRIGHT)
         # FIXME say about chasing, facing bowlers, etc
-        input()
+        if not autoplay:
+            input()
         return
 
-    def SummarizeBowling(self):
+    def SummarizeBowling(self, autoplay):
         """
         Summarize the bowling performance of the team.
 
@@ -178,7 +179,9 @@ class Team:
         if len(best_wickets_bowlers) > 0:
             msg = ",".join(x.name for x in best_wickets_bowlers)
             PrintInColor("Most wickets taken by %s" % msg, Style.BRIGHT)
-        input()
+        
+        if not autoplay:
+            input()
         return
 
     def GetCurrentRate(self):
