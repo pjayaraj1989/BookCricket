@@ -17,7 +17,7 @@ from colorama import Fore, Style
 import os
 
 
-def GetVenue(venue_data):
+def GetVenue(venue_data, autoplay):
     """
     Get the venue for the match by letting user choose.
 
@@ -34,13 +34,20 @@ def GetVenue(venue_data):
     countries = data['Venues']
 
     # now get venues for each countries
-    country = ChooseFromOptions(list(countries.keys()), "Select Country", 5)
+    if autoplay:
+        country = random.choice(list(countries.keys()))
+    else:
+        country = ChooseFromOptions(list(countries.keys()), "Select Country", 5)
 
     # Let user choose from available venues in the country
     venues = countries[country]['places']
     venue_names = [venue['name'] for venue in venues]
     msg = "Select Stadium"
-    selected_venue_name = ChooseFromOptions(venue_names, msg, 5)
+    
+    if autoplay:
+        selected_venue_name = random.choice(venue_names)
+    else:
+        selected_venue_name = ChooseFromOptions(venue_names, msg, 5)
     
     # Get the selected venue details
     venue = next((v for v in venues if v['name'] == selected_venue_name), None)
@@ -118,7 +125,7 @@ def ReadTeams(json_file):
 
 
 # read data from data files
-def ReadData():
+def ReadData(autoplay):
     """
     Read the data for the match, including teams and venue.
 
@@ -134,17 +141,20 @@ def ReadData():
     leagues = [json_file.lstrip("teams_").strip(".json") for json_file in json_files]
     # welcome text
     PrintInColor(commentary.intro_game, Style.BRIGHT)
-    league = ChooseFromOptions(leagues, "Choose league", 5)
+    if autoplay:
+        league = leagues[random.randint(0, len(leagues)-1)]
+    else:
+        league = ChooseFromOptions(leagues, "Choose league", 5)
     data_file = [json_file for json_file in json_files if league in json_file][0]
     team_data = os.path.join(data_path, data_file)
     teams = ReadTeams(team_data)
     # now read venue data
-    venue = GetVenue(venue_data)
+    venue = GetVenue(venue_data, autoplay)
     return teams, venue
 
 
 # get match info
-def GetMatchInfo(list_of_teams, venue):
+def GetMatchInfo(list_of_teams, venue, autoplay):
     """
     Get the match information, including teams, venue, and match type.
 
@@ -165,7 +175,11 @@ def GetMatchInfo(list_of_teams, venue):
     # select overs
     msg = "Select overs (multiple of 5)"
     PrintInColor(msg, Style.BRIGHT)
-    overs = input()
+    
+    if autoplay:
+        overs = '5'
+    else:
+        overs = input()
 
     # if not multiple of 5 or invalid entry, it selects default (5 overs)
     if (
@@ -184,10 +198,17 @@ def GetMatchInfo(list_of_teams, venue):
     # input teams
     msg = "Select your team"
     PrintInColor(msg, Style.BRIGHT)
-    t1 = ChooseFromOptions(teams, "", 5)
+    if autoplay:
+        t1 = teams[random.randint(0, len(teams)-1)]
+    else:
+        t1 = ChooseFromOptions(teams, "", 5)
     teams.remove(t1)
+    
     msg = "Select opponent"
-    t2 = ChooseFromOptions(teams, "", 5)
+    if autoplay:
+        t2 = teams[random.randint(0, len(teams)-1)]
+    else:
+        t2 = ChooseFromOptions(teams, "", 5)
     print("Selected %s and %s" % (t1, t2))
 
     # find teams from user input
@@ -245,7 +266,9 @@ def GetMatchInfo(list_of_teams, venue):
     PrintInColor(
         "Umpires for todays match are %s and %s" % (umpire[0], umpire[1]), Style.BRIGHT
     )
-    input("press enter to continue..")
+    
+    if not autoplay:
+        input("press enter to continue..")
 
     # set overs to team also
     for t in [match.team1, match.team2]:
@@ -253,5 +276,5 @@ def GetMatchInfo(list_of_teams, venue):
 
     # display squad
     match.DisplayPlayingXI()
-
+    match.autoplay = autoplay
     return match
