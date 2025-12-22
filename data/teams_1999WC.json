@@ -136,7 +136,7 @@
         {"name": "Paul Strang","batting": 7, "bowling":7, "spinner":  1},
         {"name": "Stuart Carlisle","batting": 7, "bowling":6},
         {"name": "Guy Whittall","batting": 6,"bowling": 7, "pacer":1},
-        {"name": "Heath Streak","batting": 6,"captain":1, "bowling":8,"openingbowler":1, "pacer":1},
+        {"name": "Heath Streak","batting": 6, "bowling":8,"openingbowler":1, "pacer":1},
 		{"name": "Eddo Brandes","batting": 7, "bowling":6},
         {"name": "Henry Olonga","batting": 5,"bowling": 8, "pacer":1}
       ],

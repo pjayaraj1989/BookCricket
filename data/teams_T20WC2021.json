@@ -74,9 +74,9 @@
 
 	"WestIndies": {
       "players": [
-        {"name": "Lendl Gayle", "batting": 8, "bowling": 7, "opener1": 1},
+        {"name": "Chris Gayle", "batting": 8, "bowling": 7, "opener1": 1},
         {"name": "Evin Lewis", "batting": 8},
-        {"name": "Chris Gayle", "batting": 8, "bowling": 7, "spinner":1},
+        {"name": "Lendyl Simmons", "batting": 8, "bowling": 7, "spinner":1},
         {"name": "Nicholas Pooran","batting": 8, "keeper":  1},
         {"name": "Shimron Hetmeyer","batting": 8},
         {"name": "Andre Russel","batting": 7,"bowling": 7, "pacer":1},
