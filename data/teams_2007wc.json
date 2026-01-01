@@ -5,14 +5,14 @@
         {"name": "Virender Sehwag", "nickname": "viru", "batting": 8,"bowling": 4,"opener1":  1, "spinner":1},
         {"name": "Gautam Gambhir", "batting": 8, "opener2": 1},
         {"name": "Robin Uthappa", "batting": 8},
-        {"name": "Yousuf Pathan", "batting": 8,"bowling":6, "spinner" : 1},
+        {"name": "Yusuf Pathan", "batting": 8,"bowling":6, "spinner" : 1},
         {"name": "Yuvraj Singh", "nickname": "yuvi", "batting": 8,"bowling": 7,"spinner": 1},
         {"name": "M.S Dhoni", "nickname": "captain cool", "batting": 7, "captain" :1, "keeper":1},
         {"name": "Irfan Pathan", "batting": 7,"bowling": 8,"pacer": 1},
         {"name": "Harbhajan Singh", "nickname": "bhajji", "batting": 6,"bowling": 8,"spinner": 1},
         {"name": "Ajit Agarkar", "batting": 6,"bowling": 9, "pacer":1},
-        {"name": "R.P Singh", "batting": 5, "bowling": 9,"openingbowler": 1, "pacer":1},
-        {"name": "Santhakumaran Sreesanth", "nickname": "Sree", "batting": 5,"bowling": 9, "pacer":1}
+        {"name": "R. P. Singh", "batting": 5, "bowling": 9,"openingbowler": 1, "pacer":1},
+        {"name": "S. Sreesanth", "nickname": "Sree", "batting": 5,"bowling": 9, "pacer":1}
       ],
       "key": "IND",
       "color": "lcyan"
@@ -78,7 +78,7 @@
         {"name": "Imran Nazir","batting": 8,"opener2": 1},
         {"name": "Younis Khan", "batting": 8},
 		{"name": "Shoaib Malik","batting": 8, "bowling":6,"spinner":1},
-        {"name": "Misbah Ul-Haq",  "batting": 8, "captain":1},
+        {"name": "Misbah-ul-Haq",  "batting": 8, "captain":1},
         {"name": "Kamran Akmal","batting": 7,"keeper": 1},
         {"name": "Shahid Afridi", "nickname": "the hard hitter", "batting": 7, "bowling":5, "spinner":1},
         {"name": "Yasir Arafat","batting": 6,"bowling": 7},
@@ -100,9 +100,9 @@
         {"name": "Shaun Pollock","batting": 6,"bowling": 9, "openingbowler":1,"pacer":1},
         {"name": "Albie Morkel","batting": 6,"bowling": 7, "pacer":1},
 		{"name": "Vernon Philander","batting": 7, "bowling":7, "pacer":1},
-		{"name": "Johan vanDerVaath","batting": 5,"bowling": 9, "pacer":1},
+		{"name": "Johan van der Wath","batting": 5,"bowling": 9, "pacer":1},
         {"name": "Makhaya Ntini", "batting": 5, "bowling": 8,"pacer":1},
-        {"name": "Morne Morkel","batting": 5,"bowling": 9, "pacer":1}
+        {"name": "Morné Morkel","batting": 5,"bowling": 9, "pacer":1}
       ],
       "key": "SA",
       "color": "green"
@@ -136,7 +136,7 @@
         {"name": "Dion Ebrahim","batting": 7, "bowling":6,"spinner":1},
         {"name": "Andy Blignaut","batting": 6,"bowling": 7, "pacer":1},
         {"name": "Heath Streak","batting": 6,"captain":1, "bowling":8,"openingbowler":1, "pacer":1},
-		{"name": "Douglas Marillier","batting": 7, "bowling":6},
+		{"name": "Dougie Marillier","batting": 7, "bowling":6},
         {"name": "Henry Olonga","batting": 5,"bowling": 8, "pacer":1},
         {"name": "Douglas Hondo","batting": 5,"bowling": 9, "pacer":1}
       ],
@@ -156,7 +156,7 @@
         {"name": "Tony Suji","batting": 6,"bowling":6, "pacer":1},
 		{"name": "Martin Suji","batting": 7, "bowling":7, "openingbowler":1, "pacer":1},
         {"name": "Peter Ongondo","batting": 5,"bowling": 7, "spinner":1},
-        {"name": "Asif Karim","batting": 5,"bowling": 8,"spinner":1}
+        {"name": "Aasif Karim","batting": 5,"bowling": 8,"spinner":1}
       ],
       "key": "KEN",
       "color": "magenta"
@@ -165,16 +165,16 @@
 	"Bangladesh": {
       "players": [
         {"name": "Tamim Iqbal","batting": 8, "opener1":  1},
-        {"name": "Nazimuddin","batting": 8,"opener2": 1, "bowling":5},
+        {"name": "Mohammed Nazimuddin","batting": 8,"opener2": 1, "bowling":5},
         {"name": "Aftab Ahmed", "batting": 8, "bowling":6,"spinner":1},
 		{"name": "Mohammad Ashraful","batting": 8, "spinner":1,"bowling":6, "captain":1},
-        {"name": "Shakib Al-Hassan",  "batting": 8,"bowling":7, "spinner":1},
+        {"name": "Shakib Al Hasan",  "batting": 8,"bowling":7, "spinner":1},
         {"name": "Alok Kapali","batting": 7,"bowling":5,"spinner":1},
         {"name": "Mushfiqur Rahim","batting": 6,"keeper":1},
         {"name": "Farhad Reza","batting": 6,"bowling":7, "spinner":1},
 		{"name": "Abdur Razzak","batting": 7, "bowling":7, "pacer":1},
         {"name": "Mashrafe Mortaza","batting": 5,"bowling": 7, "pacer":1},
-        {"name": "Syed Razel","batting": 5,"bowling": 8,"openingbowler":1, "pacer":1}
+        {"name": "Syed Rasel","batting": 5,"bowling": 8,"openingbowler":1, "pacer":1}
       ],
       "key": "BAN",
       "color": "grey"
@@ -185,7 +185,7 @@
         {"name": "Vikram Solanki","batting": 8,"opener1":  1},
         {"name": "Matt Prior","batting": 8,"opener2": 1,"keeper":1},
         {"name": "Kevin Pietersen", "batting": 8,"bowling": 6,"spinner": 1},
-        {"name": "Ovais Shah",  "batting": 8},
+        {"name": "Owais Shah",  "batting": 8},
         {"name": "Paul Collingwood","batting": 8,"bowling": 7, "captain":1},
         {"name": "Jeremy Snape","batting": 7,"bowling": 1, "spiner":1},
         {"name": "Luke Wright","batting": 7,"bowling": 7,"spinner": 1 },

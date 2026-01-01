@@ -2,7 +2,7 @@
   "Teams": {
     "KingsXI-Punjab": {
       "players": [
-        {"name": "K.L. Rahul","batting": 9,"opener1": 1,"captain":1, "keeper":1},
+        {"name": "K.L Rahul","batting": 9,"opener1": 1,"captain":1, "keeper":1},
         {"name": "Mayank Agarwal","batting": 7,"opener2":  1},
         {"name": "Chris Gayle", "nickname": "The Universe Boss", "batting": 8,"bowling": 4, "spinner": 1},
         {"name": "Nicholas Pooran","batting": 8},
@@ -11,7 +11,7 @@
         {"name": "Jhye Richardson","batting": 5,"bowling": 8,"pacer": 1},
         {"name": "Murugan Ashwin","batting": 3,"bowling": 7,"spinner": 1},
         {"name": "Riley Meredith","batting": 3,"bowling": 8, "pacer":1},
-        {"name": "Mohammad Shami", "batting": 4,"bowling": 8, "pacer":1, "openingbowler": 1},
+        {"name": "Mohammed Shami", "batting": 4,"bowling": 8, "pacer":1, "openingbowler": 1},
         {"name": "Arshdeep Singh","batting": 3,"bowling": 7, "pacer":1}
       ],
       "key": "KP",
@@ -39,7 +39,7 @@
 	"ChennaiSuperKings": {
       "players": [
         {"name": "Ruturaj Gaikwad", "batting": 7, "opener1": 1},
-        {"name": "Faf duPlessis", "nickname": "Fabulous FaF", "batting": 8, "opener2": 1},
+        {"name": "Faf du Plessis", "nickname": "Fabulous FaF", "batting": 8, "opener2": 1},
         {"name": "Ambati Rayudu", "batting": 8},
         {"name": "Moeen Ali", "batting": 7, "bowling":8, "spinner":1},
         {"name": "M.S. Dhoni",  "nickname": "Captain Cool", "batting": 8, "keeper": 1, "captain":1},
@@ -58,7 +58,7 @@
       "players": [
         {"name": "David Warner", "batting": 9 ,"opener1": 1, "captain":1},
         {"name": "Wriddhiman Saha", "batting": 8, "keeper":1, "opener2":  1},
-        {"name": "Johny Bairstow", "batting": 8},
+        {"name": "Jonny bairstow", "batting": 8},
         {"name": "Manish Pandey", "batting": 8},
         {"name": "Vijay Shankar", "batting": 7,"bowling":7,"pacer":1},
         {"name": "Abdul Samad", "batting": 6,"bowling": 6, "spinner":1},
@@ -66,7 +66,7 @@
         {"name": "Rashid Khan", "batting": 5,"bowling": 10, "spinner":1},
         {"name": "Bhuvneshwar Kumar", "nickname": "Bhuvi", "batting": 5,"bowling": 9, "pacer":1, "openingbowler":1},
         {"name": "Khaleel Ahmed","batting": 3,"bowling": 7, "pacer":1},
-        {"name": "Thangarasu Natarajan","batting": 3,"bowling": 7, "pacer":1}
+        {"name": "T. Natarajan","batting": 3,"bowling": 7, "pacer":1}
       ],
       "key": "SRH",
       "color": "lred"
@@ -84,7 +84,7 @@
         {"name": "Kyle Jamieson", "batting": 5,"bowling": 8, "pacer":1},
         {"name": "Harshal Patel", "batting": 4,"bowling": 8, "pacer":1},
         {"name": "Yuzvendra Chahal", "nickname": "Yuzzi", "batting": 4,"bowling": 9,"spinner":1},
-        {"name": "Mohammad Siraj", "batting": 2,"bowling": 7, "pacer":1, "openingbowler":1}
+        {"name": "Mohammed Siraj", "batting": 2,"bowling": 7, "pacer":1, "openingbowler":1}
       ],
       "key": "RCB",
       "color": "red"
@@ -112,13 +112,13 @@
         {"name": "Shubman Gill", "batting": 8,"opener1": 1},
         {"name": "Nitish Rana", "batting": 8,"opener2": 1,"bowling": 3,"spinner":1},
         {"name": "Rahul Tripathi", "batting": 7},
-        {"name": "Shakib Al-Hasan", "batting": 7, "bowling":7,"spinner":1},
+        {"name": "Shakib Al Hasan", "batting": 7, "bowling":7,"spinner":1},
         {"name": "Eoin Morgan", "batting": 8, "captain":1},
         {"name": "Dinesh Karthik", "batting": 8, "keeper":1},
-        {"name": "Andre Russel", "nickname": "Dre Russ", "batting": 8,"bowling": 7,"pacer":1},
+        {"name": "Andre Russell", "nickname": "Dre Russ", "batting": 8,"bowling": 7,"pacer":1},
         {"name": "Pat Cummins", "nickname": "Patty Cummins", "batting": 6,"bowling": 9,"openingbowler":1, "pacer":1},
         {"name": "Kamlesh Nagarkoti", "batting": 4,"bowling": 7, "pacer":1},
-        {"name": "Varun Chakravathy","batting": 3,"bowling": 8, "spinner":1},
+        {"name": "Varun Chakravarthy","batting": 3,"bowling": 8, "spinner":1},
         {"name": "Prasidh Krishna","batting": 3,"bowling": 8, "pacer":1}
       ],
       "key": "KKR",
@@ -132,7 +132,7 @@
         {"name": "Prithvi Shaw", "batting": 8},
         {"name": "Rishabh Pant", "batting": 8,"keeper": 1, "captain": 1},
         {"name": "Marcus Stoinis", "batting": 8,"bowling": 7},
-        {"name": "Shimron Hetmeyer", "batting": 7},
+        {"name": "Shimron Hetmyer", "batting": 7},
         {"name": "Ravichandran Ashwin", "nickname": "Ash", "batting": 6,"bowling": 8,"spinner": 1},
         {"name": "Tom Curran", "batting": 5,"bowling": 9,"openingbowler": 1, "pacer":1},
         {"name": "Chris Woakes", "batting": 4, "bowling": 8, "pacer":1},

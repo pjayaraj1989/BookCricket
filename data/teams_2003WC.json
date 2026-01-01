@@ -78,7 +78,7 @@
         {"name": "Toufeeq Umer", "batting": 8,"opener2": 1},
         {"name": "Shahid Afridi", "batting": 8, "bowling":6, "spinner":1},
 		{"name": "Mohammad Yousuf", "batting": 8},
-        {"name": "Inzamam Ul-Haq", "batting": 8},
+        {"name": "Inzamam-ul-Haq", "batting": 8},
         {"name": "Rashid Latif", "batting": 7,"keeper": 1},
         {"name": "Younis Khan", "batting": 7, "bowling":5, "spinner":1},
         {"name": "Abdul Razzaq", "batting": 6,"bowling": 7, "pacer":1},
@@ -136,7 +136,7 @@
         {"name": "Dion Ebrahim","batting": 7, "bowling":6,"spinner":1},
         {"name": "Andy Blignaut","batting": 6,"bowling": 7, "pacer":1},
         {"name": "Heath Streak","batting": 6,"captain":1, "bowling":8,"openingbowler":1, "pacer":1},
-		{"name": "Douglas Marillier","batting": 7, "bowling":6},
+		{"name": "Dougie Marillier","batting": 7, "bowling":6},
         {"name": "Henry Olonga","batting": 5,"bowling": 8, "pacer":1},
         {"name": "Douglas Hondo","batting": 5,"bowling": 8, "pacer":1}
       ],
@@ -156,7 +156,7 @@
         {"name": "Tony Suji","batting": 6,"bowling":6, "pacer":1},
 		{"name": "Martin Suji","batting": 7, "bowling":7, "openingbowler":1, "pacer":1},
         {"name": "Peter Ongondo","batting": 5,"bowling": 7, "spinner":1},
-        {"name": "Asif Karim","batting": 5,"bowling": 8,"spinner":1}
+        {"name": "Aasif Karim","batting": 5,"bowling": 8,"spinner":1}
       ],
       "key": "KEN",
       "color": "magenta"
@@ -165,7 +165,7 @@
 	"Bangladesh": {
       "players": [
         {"name": "Hannan Sarkar","batting": 7, "opener1":  1},
-        {"name": "Al Shahariar","batting": 7,"opener2": 1, "bowling":5},
+        {"name": "Al Sahariar","batting": 7,"opener2": 1, "bowling":5},
         {"name": "Mohammad Ashraful", "batting": 7, "bowling":6,"spinner":1},
 		{"name": "Ehsanul Haque","batting": 7, "spinner":1,"bowling":6},
         {"name": "Sanwar Hossain",  "batting": 7,"bowling":7},
@@ -191,7 +191,7 @@
         {"name": "Ashley Giles", "batting": 7,"bowling": 7,"spinner": 1 },
         {"name": "Andrew Flintoff", "nickname": "Freddy", "batting": 6,"bowling": 8, "pacer":1},
         {"name": "Matthew Hoggard", "batting": 6,"bowling": 9, "pacer":1},
-        {"name": "Andrew Caddick", "batting": 5,"bowling": 9,"openingbowler": 1, "pacer":1},
+        {"name": "Andy Caddick", "batting": 5,"bowling": 9,"openingbowler": 1, "pacer":1},
         {"name": "James Anderson", "nickname": "Jimmy", "batting": 5,"bowling": 9, "pacer":1}
       ],
       "key": "ENG",

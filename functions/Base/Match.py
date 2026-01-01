@@ -21,6 +21,7 @@ from functions.utilities import (
     GetSurname,
     CheckForConsecutiveElements,
     ChooseFromOptions,
+    is_name_valid,
 )
 import functions.utilities as utilities
 
@@ -1797,6 +1798,18 @@ class Match:
                         list(range(100)), size=1, replace=False
                     )[0]
         print("Validated teams")
+        
+        # additional validation of player names if autoplay
+        ValidPlayers = True
+        if self.autoplay:
+            print ("Autoplay enabled, validating player names...")
+            for t in [self.team1, self.team2]:
+                for player in t.team_array:
+                    if not is_name_valid(player.name):
+                        print("Invalid player name: %s" % player.name)
+                        ValidPlayers = False
+        if not ValidPlayers:
+            Error_Exit("One or more player names are invalid!")
         return
 
     def GetBallHistory(self):

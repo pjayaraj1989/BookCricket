@@ -77,7 +77,7 @@
         {"name": "Saeed Anwar","batting": 8, "opener1":  1},
         {"name": "Aamer Sohail", "batting": 8, "opener2": 1, "bowling":7, "spinner":1},
 		{"name": "Ijaz Ahmed","batting": 8, "bowling": 5},
-        {"name": "Inzamam Ul-Haq",  "batting": 8},
+        {"name": "Inzamam-ul-Haq",  "batting": 8},
         {"name": "Javed Miandad","batting": 8},
         {"name": "Saleem Malik","batting": 8},
         {"name": "Rashid Latif","batting": 7,"keeper": 1},
@@ -118,7 +118,7 @@
         {"name": "Ottis Gibson", "batting": 8, "bowling":7},
         {"name": "Jimmy Adams", "batting": 8},
         {"name": "Keith Arthurton", "batting": 8, "bowling":7},
-        {"name": "Curtley Ambrose","batting": 7, "bowling":9, "pacer":1},
+        {"name": "Curtly Ambrose","batting": 7, "bowling":9, "pacer":1},
 		{"name": "Ian Bishop","batting": 7, "bowling":8, "pacer":1},
         {"name": "Courtney Walsh","batting": 5,"bowling": 9, "pacer":1, "openingbowler":1}
       ],
@@ -138,7 +138,7 @@
         {"name": "Heath Streak",      "batting": 6, "bowling": 8, "openingbowler":1, "pacer":1},
 		{"name": "Bryan Strang",      "batting": 7, "bowling": 6},
         {"name": "Charlie Lock",      "batting": 5, "bowling": 8, "pacer":1},
-        {"name": "Stephen Peal",      "batting": 5, "bowling": 8, "pacer":1}
+        {"name": "Stephen Peall",      "batting": 5, "bowling": 8, "pacer":1}
       ],
       "key": "ZIM",
       "color": "lred"
@@ -153,7 +153,7 @@
         {"name": "David Tikolo",  "batting": 8,"bowling":7, "pacer":1},
         {"name": "Hitesh Modi","batting": 7,"bowling":5,"spinner":1},
         {"name": "Rajab Ali","batting": 6,"bowling": 7, "spinner":1},
-        {"name": "Asif Karim","batting": 5,"bowling": 8,"spinner":1},
+        {"name": "Aasif Karim","batting": 5,"bowling": 8,"spinner":1},
         {"name": "Tito Odumbe","batting": 6,"bowling":6, "pacer":1},
 		{"name": "Martin Suji","batting": 7, "bowling":7, "openingbowler":1, "pacer":1},
         {"name": "Lameck Onyango","batting": 5,"bowling": 7, "spinner":1}
@@ -172,7 +172,7 @@
         {"name": "Naimur Rahman","batting": 7,"bowling":5,"spinner":1},
         {"name": "Khaled Mashud","batting": 6,"bowling": 7, "keeper":1},
         {"name": "Khaled Mahmud","batting": 6,"bowling":7},
-		{"name": "Enamul Haq","batting": 7, "bowling":7, "pacer":1},
+		{"name": "Athar Ali Khan","batting": 7, "bowling":7, "pacer":1},
         {"name": "Hasibul Hossain","batting": 5,"bowling": 7, "pacer":1},
         {"name": "Manjural Islam","batting": 5,"bowling": 8,"openingbowler":1, "pacer":1}
       ],
@@ -183,13 +183,13 @@
     "England": {
       "players": [
         {"name": "Robin Smith",  "batting": 8, "opener1":  1},
-        {"name": "Mike Atherton","batting": 7, "opener2":  1, "captain":  1},
+        {"name": "Michael Atherton","batting": 7, "opener2":  1, "captain":  1},
         {"name": "Graeme Hick","batting": 8,"spinner": 1, "bowling": 5},
         {"name": "Graham Thorpe","batting": 8},
         {"name": "Neil Fairbrother", "batting": 8,"bowling": 6,"spinner": 1},
         {"name": "Jack Russel","batting": 8, "keeper": 1},
         {"name": "Dermot Reeve","batting": 6,"bowling": 7},
-        {"name": "Dominc Cork","batting": 7,"bowling": 9,"pacer": 1 },
+        {"name": "Dominic Cork","batting": 7,"bowling": 9,"pacer": 1 },
         {"name": "Peter Martin","batting": 6,"bowling": 9, "pacer":1},
         {"name": "Darren Gough","batting": 5,"bowling": 9,"openingbowler": 1, "pacer":1},
         {"name": "Richard Illingworth","batting": 5,"bowling": 7, "spinner":1}
