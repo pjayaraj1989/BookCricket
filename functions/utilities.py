@@ -230,7 +230,8 @@ def Error_Exit(msg):
         print(msg)
     else:
         colorama.init()
-        PrintInColor("Error: %s" % msg, Fore.RED)
+        #PrintInColor("Error: %s" % msg, Fore.RED)
+        print ("Error: %s" % msg)
     input("Press enter to continue..")
     sys.exit(0)
 
@@ -329,3 +330,60 @@ def PlotOversBarGraph(over_runs_dict: dict, over_wkt_history: dict, title: str =
     #    PrintInColor("\nWickets fell in over *", Style.BRIGHT)
 
     #input("\nPress enter to continue...")
+
+
+import requests
+def normalize_name(name):
+    """
+    Normalize name by removing dots and extra spaces.
+    E.g., 'K.L Rahul' -> 'KL Rahul'
+    """
+    # some names have (cricketer) suffix, remove it
+    # handle cases like Jack Russell (cricketer, born 1963)
+    if "(cricketer)" in name:
+        name = name.replace("(cricketer)", "").strip()
+    
+    # some names like de Kock, de Villiers etc, make it deKock, deVilliers for normalization
+    name = name.replace("de ", "de")
+    name = name.replace("van ", "van")
+    
+    
+    # Remove dots after letters (abbreviations)
+    normalized = name.replace('.', '')
+    # Remove extra spaces
+    normalized = ' '.join(normalized.split())
+    return normalized
+
+def is_name_valid(name):
+    #print (f"Checking validity of name: {name}")
+    url = "https://en.wikipedia.org/w/api.php"
+    params = {
+        "action": "query",
+        "list": "search",
+        "srsearch": name,
+        "format": "json"
+    }
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+    
+    normalized_input = normalize_name(name).lower()
+
+    try:
+        response = requests.get(url, params=params, headers=headers, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+    except requests.RequestException as e:
+        print(f"Error occurred while checking name: {e}")
+        return False
+    
+    search_results = data.get("query", {}).get("search", [])
+    for result in search_results:
+        result_title = result.get("title", "")
+        normalized_result = normalize_name(result_title).lower()
+        
+        # Check for exact match after normalization
+        if normalized_input == normalized_result:
+            return True
+    return False

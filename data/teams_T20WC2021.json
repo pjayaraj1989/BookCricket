@@ -10,7 +10,7 @@
         {"name": "Hardik Pandya", "batting": 7, "bowling": 7, "pacer":1},
         {"name": "Ravindra Jadeja", "batting": 7, "bowling": 8,"spinner": 1},
         {"name": "Ravichandran Ashwin", "batting": 4, "bowling": 8,"spinner": 1},
-        {"name": "Mohammad Shami", "batting": 4, "bowling": 7, "pacer":1},
+        {"name": "Mohammed Shami", "batting": 4, "bowling": 7, "pacer":1},
         {"name": "Bhuvneshwar Kumar", "batting": 5, "bowling": 8,"openingbowler": 1, "pacer":1},
         {"name": "Jasprit Bumrah", "batting": 3, "bowling": 9, "pacer":1}
       ],
@@ -39,12 +39,12 @@
 	"SouthAfrica": {
       "players": [
         {"name": "Temba Bavuma","batting": 8, "captain":1, "opener1": 1},
-        {"name": "Quinton deKock","batting": 8,"opener2":  1,"keeper": 1},
+        {"name": "Quinton de Kock","batting": 8,"opener2":  1,"keeper": 1},
         {"name": "Aiden Markram","batting": 7 ,"bowling": 6, "spinner": 1},
-        {"name": "Rassie Van-der-Dussen","batting": 8},
+        {"name": "Rassie van der Dussen","batting": 8},
         {"name": "David Miller","batting": 8 },
         {"name": "Heinrich Klaasen","batting": 7},
-        {"name": "Dwayne Pretorius","batting": 7,"bowling": 8, "pacer":1},
+        {"name": "Dwaine Pretorius","batting": 7,"bowling": 8, "pacer":1},
         {"name": "Anrich Nortje","batting": 7,"bowling": 7, "pacer":1},
         {"name": "Kagiso Rabada","batting": 5,"bowling": 9, "openingbowler":1, "pacer":1},
         {"name": "Tabraiz Shamsi", "batting": 4,"bowling": 8, "spinner":1},
@@ -76,10 +76,10 @@
       "players": [
         {"name": "Chris Gayle", "batting": 8, "bowling": 7, "opener1": 1},
         {"name": "Evin Lewis", "batting": 8},
-        {"name": "Lendyl Simmons", "batting": 8, "bowling": 7, "spinner":1},
+        {"name": "Lendl Simmons", "batting": 8, "bowling": 7, "spinner":1},
         {"name": "Nicholas Pooran","batting": 8, "keeper":  1},
-        {"name": "Shimron Hetmeyer","batting": 8},
-        {"name": "Andre Russel","batting": 7,"bowling": 7, "pacer":1},
+        {"name": "Shimron Hetmyer","batting": 8},
+        {"name": "Andre Russell","batting": 7,"bowling": 7, "pacer":1},
         {"name": "Jason Holder","batting": 7,"bowling": 8, "pacer":1},
         {"name": "Kieron Pollard","batting": 6,"bowling": 8, "pacer":1, "captain": 1},
         {"name": "Roston Chase","batting": 6,"bowling": 7,"spinner":1},
@@ -98,7 +98,7 @@
         {"name": "Avishka Fernando","batting": 8},
         {"name": "Wanindu Hasaranga","batting": 8, "bowling":7, "spinner":1},
         {"name": "Bhanuka Rajapaksa","batting": 7,"bowling": 7},
-        {"name": "Dasun Shanaka","batting": 6,"bowling": 7,"spinner":1},
+        {"name": "Dasun Shanaka","batting": 6,"bowling": 7,"spinner":1, "captain":1},
         {"name": "Chamika Karunaratne","batting": 5,"bowling": 7, "spinner":1},
         {"name": "Dushmantha Chameera","batting": 6,"bowling": 8, "pacer":1, "openingbowler" :  1},
         {"name": "Binura Fernando", "batting": 4,"bowling": 8, "pacer":1},
@@ -111,13 +111,13 @@
 	"Bangladesh": {
       "players": [
         {"name": "Mohammad Naim","batting": 8,"opener1": 1},
-        {"name": "Liton Das","batting": 8,"opener2": 1},
+        {"name": "Litton Das","batting": 8,"opener2": 1},
         {"name": "Soumya Sarkar","batting": 7, "bowling":6, "pacer":1},
-        {"name": "Shakib Al-Hasan","batting": 8,"bowling": 7,"spinner":1},
+        {"name": "Shakib Al Hasan","batting": 8,"bowling": 7,"spinner":1},
         {"name": "Mushfiqur Rahim","batting": 8, "keeper":1},
-        {"name": "Riyad Mahmudullah","batting": 8,"bowling": 5,"spinner":1},
+        {"name": "Mahmudullah","batting": 8,"bowling": 5,"spinner":1},
         {"name": "Mohammad Mithun","batting": 7},
-        {"name": "Mehidy Hasan","batting": 6,"bowling": 7,"spinner":1},
+        {"name": "Mehidy Hasan Miraz","batting": 6,"bowling": 7,"spinner":1},
         {"name": "Mashrafe Mortaza","batting": 6,"bowling": 7, "captain":1, "openingbowler":1, "pacer":1},
         {"name": "Shoriful Islam", "batting": 3,"bowling": 8, "pacer":1},
         {"name": "Mustafizur Rahman","batting": 3,"bowling": 8, "pacer":1}
@@ -174,7 +174,7 @@
         {"name": "Gulbadin Naib","batting": 6,"bowling": 7, "openingbowler":1, "pacer":1},
         {"name": "Rashid Khan","batting": 5,"bowling": 9, "spinner": 1 },
         {"name": "Shapoor Zadran", "batting": 3,"bowling": 7, "pacer":1},
-        {"name": "Mujeeb-Ur Rahman","batting": 3,"bowling": 7, "spinner": 1 }
+        {"name": "Mujeeb Ur Rahman","batting": 3,"bowling": 7, "spinner": 1 }
       ],
       "key": "AFG",
       "color": "lred"
