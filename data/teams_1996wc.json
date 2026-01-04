@@ -187,7 +187,7 @@
         {"name": "Graeme Hick","batting": 8,"spinner": 1, "bowling": 5},
         {"name": "Graham Thorpe","batting": 8},
         {"name": "Neil Fairbrother", "batting": 8,"bowling": 6,"spinner": 1},
-        {"name": "Jack Russel","batting": 8, "keeper": 1},
+        {"name": "Jack Russell","batting": 8, "keeper": 1},
         {"name": "Dermot Reeve","batting": 6,"bowling": 7},
         {"name": "Dominic Cork","batting": 7,"bowling": 9,"pacer": 1 },
         {"name": "Peter Martin","batting": 6,"bowling": 9, "pacer":1},

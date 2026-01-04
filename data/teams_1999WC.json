@@ -172,7 +172,7 @@
         {"name": "Naimur Rahman","batting": 7,"bowling":5,"spinner":1},
         {"name": "Khaled Mashud","batting": 6,"bowling": 7, "keeper":1},
         {"name": "Khaled Mahmud","batting": 6,"bowling":7},
-		{"name": "Enamul Haque","batting": 7, "bowling":7, "pacer":1},
+		{"name": "Athar Ali Khan","batting": 7, "bowling":7, "pacer":1},
         {"name": "Hasibul Hossain","batting": 5,"bowling": 7, "pacer":1},
         {"name": "Manjural Islam","batting": 5,"bowling": 8,"openingbowler":1, "pacer":1}
       ],
