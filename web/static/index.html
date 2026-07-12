@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BookCricket</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>🏏 BookCricket</h1>
+    <div class="header-right">
+      <span id="status" class="status">connecting…</span>
+      <button id="killBtn" class="kill-btn" title="Stop the server">⏻ Stop Server</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="log" class="log" aria-live="polite"></div>
+  </main>
+
+  <footer id="controls" class="controls">
+    <p class="hint">Waiting for the match to start…</p>
+  </footer>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

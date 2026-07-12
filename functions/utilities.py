@@ -7,6 +7,7 @@ import random
 import os
 import pyttsx3
 from math import ceil
+from web.io_bridge import get_channel, GameAborted
 
 
 # function used to fill class attributes based on input arguments
@@ -40,6 +41,10 @@ def ChooseFromOptions(options: list, msg: str, tries: int):
     Returns:
         The selected option.
     """
+    channel = get_channel()
+    if channel is not None:
+        return channel.choose(options, msg)
+
     print(msg)
     option_selected = None
     options_dict = {}
@@ -196,6 +201,11 @@ def PrintInColor(msg: str, color):
     Returns:
         None
     """
+    channel = get_channel()
+    if channel is not None:
+        channel.output(msg, color)
+        return
+
     commentary_enabled = False
     # read commentary_enabled from file if available #FIXME, a bad idea, this should be a global variable!
     if os.path.exists("commentary_enabled.txt"):
@@ -226,6 +236,11 @@ def Error_Exit(msg):
     Returns:
         None
     """
+    channel = get_channel()
+    if channel is not None:
+        channel.output("Error: %s" % msg)
+        raise GameAborted(msg)
+
     if "nt" in os.name:
         print(msg)
     else:
