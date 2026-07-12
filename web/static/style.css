@@ -1,0 +1,179 @@
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0b1f16;
+  color: #e6f2ea;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.4rem;
+  background: #0f2c1e;
+  border-bottom: 1px solid #1e4530;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.status {
+  font-size: 0.8rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: #2a2a2a;
+}
+.status.ok { background: #1c4a2e; color: #7fe3a3; }
+.status.err { background: #4a1c1c; color: #e37f7f; }
+
+.kill-btn {
+  font-size: 0.78rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid #7a2b2b;
+  background: #3a1414;
+  color: #f2b8b8;
+  cursor: pointer;
+}
+.kill-btn:hover { background: #4a1c1c; }
+.kill-btn:disabled { opacity: 0.5; cursor: default; }
+
+main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  overflow: hidden;
+}
+
+.log {
+  width: 100%;
+  max-width: 860px;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: auto;
+  background: #071510;
+  border: 1px solid #1e4530;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.line {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.line.echo {
+  color: #6fbf8f;
+  opacity: 0.85;
+}
+
+.controls {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 1.4rem 1.4rem;
+  background: linear-gradient(to top, #0b1f16 60%, transparent);
+}
+
+.hint {
+  margin: 0;
+  color: #8fae9e;
+  font-size: 0.85rem;
+}
+
+.prompt {
+  margin: 0;
+  font-weight: 600;
+  max-width: 860px;
+  text-align: center;
+}
+
+.choice-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  max-width: 860px;
+}
+
+.choice-btn {
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid #2a6b45;
+  background: #123824;
+  color: #e6f2ea;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.choice-btn:hover { background: #1c4a2e; }
+
+.continue-btn {
+  background: #1c4a2e;
+  border-color: #3a8a5c;
+  font-weight: 600;
+  padding: 0.6rem 1.4rem;
+}
+
+.input-form {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 420px;
+}
+
+.input-form input {
+  flex: 1;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid #2a6b45;
+  background: #071510;
+  color: #e6f2ea;
+  font-size: 0.95rem;
+}
+
+.input-form button {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #2a6b45;
+  background: #123824;
+  color: #e6f2ea;
+  cursor: pointer;
+}
+.input-form button:hover { background: #1c4a2e; }
+
+/* colorama Fore/Style -> CSS (see web/io_bridge.py resolve_color) */
+.c-fore-red, .c-fore-lightred_ex { color: #ff6b6b; }
+.c-fore-green, .c-fore-lightgreen_ex { color: #7fe3a3; }
+.c-fore-yellow, .c-fore-lightyellow_ex { color: #f2d16b; }
+.c-fore-blue, .c-fore-lightblue_ex { color: #7ab8f2; }
+.c-fore-magenta, .c-fore-lightmagenta_ex { color: #e39bf2; }
+.c-fore-cyan, .c-fore-lightcyan_ex { color: #6fe0e0; }
+.c-fore-black, .c-fore-lightblack_ex { color: #9fb3a8; }
+.c-fore-white, .c-fore-lightwhite_ex { color: #ffffff; }
+.c-style-bright { font-weight: 700; }
+.c-style-dim { opacity: 0.65; }
