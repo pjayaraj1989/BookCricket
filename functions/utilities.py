@@ -270,6 +270,15 @@ def PushEvent(kind, data=None):
     channel.event(kind, data)
 
 
+def _over_history_series(team):
+    # over_history/over_wkt_history are only populated for completed overs,
+    # keyed by over index - not necessarily contiguous if called mid-over.
+    return [
+        {"over": _int(over), "score": _int(team.over_history[over]), "wickets": _int(team.over_wkt_history.get(over, 0))}
+        for over in sorted(team.over_history.keys())
+    ]
+
+
 def PushScorecard(match):
     """
     Send a compact, structured snapshot of the live match state to the
@@ -329,6 +338,19 @@ def PushScorecard(match):
         runs_needed = _int(max(batting.target - batting.total_score, 0))
         wickets_in_hand = _int(10 - batting.wickets_fell)
 
+    # Over-by-over "worm" graph data - limited overs only (Test innings can
+    # run to 100+ overs across multiple days, not meaningful to chart the
+    # same way). While chasing, bowling_team is the side that batted first
+    # this match (teams swap batting_team/bowling_team between innings, and
+    # a limited-overs team never bats twice), so its over_history is still
+    # the completed first-innings series, ready to overlay.
+    over_history = None
+    first_innings_over_history = None
+    if not is_test:
+        over_history = _over_history_series(batting)
+        if batting.batting_second:
+            first_innings_over_history = _over_history_series(bowling)
+
     # Once a chase is actually decided (target reached, or the chasing side
     # is all out), "Need 0 more · RRR: 0.00" reads as broken rather than
     # informative - replace the target line with the plain result instead.
@@ -373,6 +395,9 @@ def PushScorecard(match):
         "resultMessage": result_message,
         "runsNeeded": runs_needed,
         "wicketsInHand": wickets_in_hand,
+        "overHistory": over_history,
+        "firstInningsOverHistory": first_innings_over_history,
+        "firstInningsTeam": bowling.name if first_innings_over_history is not None else None,
         "batsmen": batsmen,
         "bowler": bowler_state,
     })

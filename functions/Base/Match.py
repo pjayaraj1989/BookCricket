@@ -2745,7 +2745,9 @@ class Match:
         logger = self.logger
         batting_team, bowling_team = self.batting_team, self.bowling_team
         crr = batting_team.GetCurrentRate()
-        rr = batting_team.GetRequiredRate()
+        # required rate isn't a meaningful concept in a Test chase (see
+        # Team.GetRequiredRate) - don't even bother computing it
+        rr = None if self.is_test else batting_team.GetRequiredRate()
 
         # if match ended, do nothing, just return
         if not self.status:
@@ -2759,7 +2761,7 @@ class Match:
             str(BallsToOvers(batting_team.total_balls)),
         )
         msg += " Current RR: %s" % str(crr)
-        if batting_team.batting_second and self.status:
+        if batting_team.batting_second and self.status and not self.is_test:
             msg += " Required RR: %s\n" % str(rr)
         print(msg)
         logger.info(msg)
@@ -2775,7 +2777,9 @@ class Match:
         logger = self.logger
         batting_team, bowling_team = self.batting_team, self.bowling_team
         crr = batting_team.GetCurrentRate()
-        rr = batting_team.GetRequiredRate()
+        # required rate isn't a meaningful concept in a Test chase (see
+        # Team.GetRequiredRate) - don't even bother computing it
+        rr = None if self.is_test else batting_team.GetRequiredRate()
 
         # if match ended, nothing, just return
         if not self.status:

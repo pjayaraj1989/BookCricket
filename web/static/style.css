@@ -181,6 +181,52 @@ main {
   line-height: 1.5;
 }
 
+.run-rate-graph {
+  flex: 0 0 260px;
+  min-height: 0;
+  overflow-y: auto;
+  background: #0f2c1e;
+  border: 1px solid #1e4530;
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  font-size: 0.8rem;
+}
+
+.run-rate-graph h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6fbf8f;
+}
+
+.run-rate-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.72rem;
+}
+
+.run-rate-legend .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.run-rate-legend .legend-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+#runRateSvg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 /* top-left "highlight" pane: brief pop-ups for toss/wicket/four/six/DRS */
 .event-pane {
   position: fixed;
@@ -295,6 +341,10 @@ main {
   .scorecard {
     flex: 0 0 auto;
     max-height: 38vh;
+  }
+  .run-rate-graph {
+    flex: 0 0 auto;
+    max-height: 30vh;
   }
 }
 
