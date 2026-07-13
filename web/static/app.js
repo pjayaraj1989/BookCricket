@@ -2,6 +2,8 @@ const logEl = document.getElementById("log");
 const controlsEl = document.getElementById("controls");
 const statusEl = document.getElementById("status");
 const killBtn = document.getElementById("killBtn");
+const liveScorecardEl = document.getElementById("liveScorecard");
+const inningsSummariesEl = document.getElementById("inningsSummaries");
 
 const socket = io();
 
@@ -126,5 +128,106 @@ socket.on("server_event", (data) => {
     renderChoose(data.msg, data.options);
   } else if (data.type === "input") {
     renderInput(data.prompt);
+  } else if (data.type === "state") {
+    renderScorecard(data.data);
+  } else if (data.type === "innings") {
+    renderInningsSummary(data.data);
   }
 });
+
+function escapeHtml(s) {
+  const div = document.createElement("div");
+  div.textContent = s === null || s === undefined ? "" : String(s);
+  return div.innerHTML;
+}
+
+function renderScorecard(state) {
+  const parts = [];
+
+  parts.push(
+    '<div class="team-line"><span>' + escapeHtml(state.battingTeam) + "</span>" +
+    '<span class="score">' + state.score + "/" + state.wickets + "</span></div>"
+  );
+  parts.push(
+    '<div class="sub-line">Overs: ' + Number(state.overs).toFixed(1) + "/" + state.totalOvers +
+    "  ·  CRR: " + Number(state.crr).toFixed(2) + "</div>"
+  );
+
+  if (state.target !== null && state.target !== undefined) {
+    const need = Math.max(state.target - state.score, 0);
+    parts.push(
+      '<div class="target-line">Need ' + need + " more vs " + escapeHtml(state.bowlingTeam) +
+      "  ·  RRR: " + Number(state.requiredRunRate).toFixed(2) + "</div>"
+    );
+  }
+
+  parts.push("<h3>Batting</h3><table>");
+  (state.batsmen || []).forEach((b) => {
+    parts.push(
+      "<tr" + (b.onStrike ? ' class="on-strike"' : "") + '><td class="name">' +
+      escapeHtml(b.name) + '</td><td class="num">' + b.runs + " (" + b.balls + ")</td></tr>"
+    );
+  });
+  parts.push("</table>");
+
+  if (state.bowler) {
+    parts.push(
+      "<h3>Bowling</h3><table><tr>" +
+      '<td class="name">' + escapeHtml(state.bowler.name) + '</td><td class="num">' +
+      state.bowler.wickets + "/" + state.bowler.runs + " (" + Number(state.bowler.overs).toFixed(1) +
+      ")</td></tr></table>"
+    );
+  }
+
+  liveScorecardEl.innerHTML = parts.join("");
+}
+
+function renderInningsSummary(innings) {
+  const parts = [];
+  parts.push('<div class="innings-summary">');
+  parts.push(
+    '<div class="team-line"><span>' + escapeHtml(innings.battingTeam) + " innings</span>" +
+    '<span class="score">' + innings.score + "/" + innings.wickets + " (" +
+    Number(innings.overs).toFixed(1) + ")</span></div>"
+  );
+  parts.push('<div class="sub-line">Extras: ' + innings.extras + "</div>");
+
+  parts.push("<h3>Batting</h3><table>");
+  (innings.battingCard || []).forEach((b) => {
+    let name = b.name;
+    if (b.captain) name += " (c)";
+    if (b.keeper) name += " (wk)";
+    parts.push(
+      '<tr><td class="name">' + escapeHtml(name) + "</td>" +
+      '<td class="dismissal">' + escapeHtml(b.dismissal) + "</td>" +
+      '<td class="num">' + b.runs + " (" + b.balls + ")</td></tr>"
+    );
+  });
+  parts.push("</table>");
+
+  parts.push("<h3>Bowling</h3><table>");
+  (innings.bowlingCard || []).forEach((bw) => {
+    parts.push(
+      '<tr><td class="name">' + escapeHtml(bw.name) + '</td><td class="num">' +
+      Number(bw.overs).toFixed(1) + "-" + bw.maidens + "-" + bw.runs + "-" + bw.wickets +
+      " (" + Number(bw.economy).toFixed(2) + ")</td></tr>"
+    );
+  });
+  parts.push("</table>");
+
+  if ((innings.fow || []).length) {
+    parts.push("<h3>Fall of Wickets</h3><div class=\"fow-line\">");
+    parts.push(
+      innings.fow
+        .map((f) => f.runs + "/" + f.wicket + " " + escapeHtml(f.player) + " (" + Number(f.overs).toFixed(1) + ")")
+        .join(", ")
+    );
+    parts.push("</div>");
+  }
+
+  parts.push("</div>");
+
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = parts.join("");
+  inningsSummariesEl.appendChild(wrapper.firstElementChild);
+}

@@ -246,6 +246,10 @@ class Match:
             self.DisplayProjectedScore()
             # rotate strike after an over
             RotateStrike(pair)
+
+        # innings just finished: send the web UI's full innings summary
+        # (batting/bowling cards, fall of wickets); no-op outside web mode
+        utilities.PushInningsScorecard(self)
         return
 
     def PlayOver(self, over):
@@ -498,6 +502,9 @@ class Match:
         #nrr = batting_team.GetCurrentRate()
         batting_team.over_history[over] = batting_team.total_score
         batting_team.over_wkt_history[over] = total_wickets_in_over
+
+        # refresh the web UI's side-pane scorecard; no-op outside web mode
+        utilities.PushScorecard(self)
         return
 
     def Ball(self, run):
