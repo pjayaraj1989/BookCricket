@@ -285,29 +285,43 @@ def PushScorecard(match):
             "wickets": _int(bowler.wkts),
         }
 
+    is_test = bool(getattr(match, "is_test", False))
     channel.state({
         "battingTeam": batting.name,
         "bowlingTeam": bowling.name,
         "score": _int(batting.total_score),
         "wickets": _int(batting.wickets_fell),
         "overs": _float(BallsToOvers(batting.total_balls)),
-        "totalOvers": _int(match.overs),
+        # match.overs is None for a Test match (no fixed innings length)
+        "totalOvers": _int(match.overs) if match.overs else None,
+        "isTest": is_test,
+        "day": _int(match.day) if is_test else None,
+        "maxDays": _int(match.max_days) if is_test else None,
         "crr": _float(batting.GetCurrentRate()),
         "target": _int(batting.target) if batting.batting_second else None,
-        "requiredRunRate": _float(batting.GetRequiredRate()) if batting.batting_second else None,
+        # GetRequiredRate() is intentionally a no-op (returns 0.0) for Test -
+        # send None rather than a misleading "0.00" rate
+        "requiredRunRate": (
+            _float(batting.GetRequiredRate()) if batting.batting_second and not is_test else None
+        ),
         "batsmen": batsmen,
         "bowler": bowler_state,
     })
 
 
-def PushInningsScorecard(match):
+def PushInningsScorecard(match, summary):
     """
     Send the full batting card, bowling card, and fall-of-wickets for the
     innings that just finished, for the side-pane's end-of-innings summary.
-    No-op in console mode (no channel set).
+    No-op in console mode (no channel set). A pure serializer of the
+    InningsSummary Match.BuildInningsSummary() already built (and, for Test
+    matches, also stored in Team.innings_history) - all fields on it are
+    already native int/float/str/bool/list/dict, so no further casting
+    is needed here.
 
     Args:
         match: The Match object, called once an innings has just finished.
+        summary: The InningsSummary snapshot for that innings.
 
     Returns:
         None
@@ -316,59 +330,53 @@ def PushInningsScorecard(match):
     if channel is None:
         return
 
-    batting = match.batting_team
-    bowling = match.bowling_team
-
-    batting_card = []
-    for p in batting.team_array:
-        if p.status is True:
-            dismissal = "not out" if p.onfield else "DNB"
-        else:
-            dismissal = p.dismissal
-        batting_card.append({
-            "name": p.name,
-            "captain": bool(p.attr.iscaptain),
-            "keeper": bool(p.attr.iskeeper),
-            "dismissal": dismissal,
-            "runs": _int(p.runs),
-            "balls": _int(p.balls),
-        })
-
-    bowling_card = []
-    for bowler in bowling.bowlers:
-        if bowler.balls_bowled == 0:
-            continue
-        overs = _float(BallsToOvers(bowler.balls_bowled))
-        economy = round(_int(bowler.runs_given) / overs, 2) if overs > 0 else 0.0
-        bowling_card.append({
-            "name": bowler.name,
-            "overs": overs,
-            "maidens": _int(bowler.maidens),
-            "runs": _int(bowler.runs_given),
-            "wickets": _int(bowler.wkts),
-            "economy": _float(economy),
-        })
-
-    fow = [
-        {
-            "wicket": _int(f.wkt),
-            "runs": _int(f.runs),
-            "player": f.player_dismissed.name,
-            "overs": _float(BallsToOvers(f.total_balls)),
-        }
-        for f in batting.fow
-    ]
-
     channel.innings({
-        "battingTeam": batting.name,
-        "bowlingTeam": bowling.name,
-        "score": _int(batting.total_score),
-        "wickets": _int(batting.wickets_fell),
-        "overs": _float(BallsToOvers(batting.total_balls)),
-        "extras": _int(batting.extras),
-        "battingCard": batting_card,
-        "bowlingCard": bowling_card,
-        "fow": fow,
+        "battingTeam": summary.batting_team,
+        "bowlingTeam": summary.bowling_team,
+        "score": summary.score,
+        "wickets": summary.wickets,
+        "overs": summary.overs,
+        "extras": summary.extras,
+        "declared": summary.declared,
+        "battingCard": summary.batting_card,
+        "bowlingCard": summary.bowling_card,
+        "fow": summary.fow,
+        "inProgress": False,
+    })
+
+
+def PushLiveInningsScorecard(match):
+    """
+    Push a full (batting/bowling card + fall-of-wickets) scorecard snapshot
+    of the innings CURRENTLY IN PROGRESS - the "every 5 overs / every
+    session" mid-innings refresh, as opposed to PushInningsScorecard's
+    once-per-completed-innings push. No-op in console mode (the console
+    already shows the full scorecard every over via DisplayScore/
+    DisplayBowlingStats).
+
+    Args:
+        match: The Match object, called mid-innings.
+
+    Returns:
+        None
+    """
+    channel = get_channel()
+    if channel is None:
+        return
+
+    summary = match.BuildInningsSummary()
+    channel.innings({
+        "battingTeam": summary.batting_team,
+        "bowlingTeam": summary.bowling_team,
+        "score": summary.score,
+        "wickets": summary.wickets,
+        "overs": summary.overs,
+        "extras": summary.extras,
+        "declared": summary.declared,
+        "battingCard": summary.batting_card,
+        "bowlingCard": summary.bowling_card,
+        "fow": summary.fow,
+        "inProgress": True,
     })
 
 

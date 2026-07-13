@@ -164,6 +164,17 @@ main {
   padding-right: 0.5rem;
 }
 
+.live-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #ff8080;
+  border: 1px solid #7a2b2b;
+  border-radius: 4px;
+  padding: 0.05rem 0.35rem;
+  vertical-align: middle;
+  letter-spacing: 0.04em;
+}
+
 .fow-line {
   color: #8fae9e;
   font-size: 0.8rem;

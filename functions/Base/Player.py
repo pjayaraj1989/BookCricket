@@ -51,6 +51,47 @@ class Player:
         }
         self = FillAttributes(self, attrs, kwargs)
 
+    def ResetBattingInnings(self):
+        """
+        Reset this player's batting figures for a new innings, keeping
+        identity/rating fields (name, no, attr, nickname) untouched.
+
+        Returns:
+            None
+        """
+        self.runs = 0
+        self.balls = 0
+        self.dismissal = " "
+        self.status = True
+        self.onfield = False
+        self.onstrike = False
+        self.fifty = 0
+        self.hundred = 0
+        self.doubles = 0
+        self.threes = 0
+        self.fours = 0
+        self.sixes = 0
+        self.singles = 0
+        self.dots = 0
+        self.strikerate = 0.0
+
+    def ResetBowlingInnings(self):
+        """
+        Reset this player's bowling figures for a new innings, keeping
+        identity/rating fields (name, no, attr, nickname, max_overs) untouched.
+
+        Returns:
+            None
+        """
+        self.wkts = 0
+        self.balls_bowled = 0
+        self.runs_given = 0
+        self.maidens = 0
+        self.eco = 0.0
+        self.ball_history = []
+        self.wickets_taken = []
+        self.spell_over = False
+
     def GetMomStat(self):
         """
         Get the Man of the Match statistics for the player.

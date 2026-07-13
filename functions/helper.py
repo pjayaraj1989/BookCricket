@@ -47,6 +47,36 @@ class Innings:
         self = FillAttributes(self, attrs, kwargs)
 
 
+class InningsSummary:
+    def __init__(self, **kwargs):
+        """
+        Initialize an InningsSummary object with the given attributes.
+
+        A plain-value snapshot of a completed innings (batting/bowling cards,
+        fall of wickets), taken before Team/Player accumulator fields are
+        reset for the next innings a team bats. Used for Test-match multi-
+        innings scorecards, player-of-the-match aggregation, and the web UI.
+
+        Args:
+            **kwargs: Keyword arguments to set the attributes of the InningsSummary object.
+        """
+        attrs = {
+            "innings_no": 0,
+            "batting_team": " ",  # full team name, matches the web UI's existing field naming
+            "bowling_team": " ",
+            "score": 0,
+            "wickets": 0,
+            "balls": 0,
+            "overs": 0.0,
+            "extras": 0,
+            "declared": False,
+            "batting_card": [],
+            "bowling_card": [],
+            "fow": [],
+        }
+        self = FillAttributes(self, attrs, kwargs)
+
+
 class Fow:
     def __init__(self, **kwargs):
         """

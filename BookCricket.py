@@ -14,13 +14,20 @@ from functions.Initiate import *
 # Define commentary_enabled as a global variable
 commentary_enabled = False
 
-def run_game(autoplay=False, overs=None):
+def run_game(autoplay=False, overs=None, format_override=None, fast=False):
     """
     Play interactive rounds of BookCricket until the player chooses to stop.
 
     Reusable by both the CLI entrypoint below and the web app (web/app.py),
     which drives the same input()/print() calls over a websocket instead of
     a terminal.
+
+    Args:
+        format_override: "test" forces a Test match under autoplay, which
+            can't otherwise reach the interactive format menu.
+        fast: skip PlayOver's per-ball sleep even under autoplay (dev/test
+            use only - a real Test match's day budget makes that sleep add
+            up to many minutes otherwise).
     """
     while True:
         # opt for commentary
@@ -33,7 +40,7 @@ def run_game(autoplay=False, overs=None):
         else:   commentary_enabled = False
 
         teams, venue = ReadData(autoplay)
-        match = GetMatchInfo(teams, venue, autoplay, overs)
+        match = GetMatchInfo(teams, venue, autoplay, overs, format_override, fast)
         match.commentary_enabled = commentary_enabled
         match.PlayMatch(ScriptPath)
         while True:
@@ -56,12 +63,20 @@ def run_game(autoplay=False, overs=None):
 
 if __name__ == "__main__":
     overs = None
+    format_override = None
+    fast = False
     # check if an argument is passed for autoplay
+    # usage: BookCricket.py autoplay <overs> [test] [fast]
     if len(sys.argv) > 2 and sys.argv[1] == 'autoplay':
         autoplay = True
         overs = sys.argv[2]
+        extra_args = [a.lower() for a in sys.argv[3:]]
+        if 'test' in extra_args:
+            format_override = 'test'
+        if 'fast' in extra_args:
+            fast = True
     else:
         autoplay = False
-    run_game(autoplay, overs)
+    run_game(autoplay, overs, format_override, fast)
     if autoplay:
         sys.exit()
