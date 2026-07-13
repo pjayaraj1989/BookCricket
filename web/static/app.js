@@ -158,13 +158,27 @@ function renderScorecard(state) {
     '<div class="sub-line">' + oversLine + "  ·  CRR: " + Number(state.crr).toFixed(2) + "</div>"
   );
 
-  if (state.target !== null && state.target !== undefined) {
+  if (state.resultMessage) {
+    parts.push('<div class="target-line">' + escapeHtml(state.resultMessage) + "</div>");
+  } else if (state.target !== null && state.target !== undefined) {
     const need = Math.max(state.target - state.score, 0);
     let targetLine = "Need " + need + " more vs " + escapeHtml(state.bowlingTeam);
+    if (state.wicketsInHand !== null && state.wicketsInHand !== undefined) {
+      targetLine += "  ·  " + state.wicketsInHand + " wkt" + (state.wicketsInHand === 1 ? "" : "s") + " in hand";
+    }
     if (state.requiredRunRate !== null && state.requiredRunRate !== undefined) {
       targetLine += "  ·  RRR: " + Number(state.requiredRunRate).toFixed(2);
     }
     parts.push('<div class="target-line">' + targetLine + "</div>");
+  } else if (state.leadTrail) {
+    let leadLine;
+    if (state.leadTrail.team) {
+      leadLine = escapeHtml(state.leadTrail.team) + " leads by " + state.leadTrail.diff +
+        (state.leadTrail.diff === 1 ? " run" : " runs");
+    } else {
+      leadLine = "Scores level";
+    }
+    parts.push('<div class="target-line">' + leadLine + "</div>");
   }
 
   parts.push("<h3>Batting</h3><table>");

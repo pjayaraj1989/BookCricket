@@ -188,6 +188,32 @@ class Match:
         batting_team.target = target
         self.declare_eligible = not chase
 
+    def _ShowLeadOrTrail(self, batting_team, bowling_team):
+        """
+        After a completed non-chase Test innings, announce how much the
+        team that just batted leads or trails by, based on runs scored so
+        far by each side across all their completed innings. No-op if the
+        opponent hasn't batted yet (nothing to compare against) - not
+        called at all after the final chase innings, where the target
+        already conveys the same thing.
+
+        Returns:
+            None
+        """
+        if not bowling_team.innings_history:
+            return
+        batting_total = sum(inn.score for inn in batting_team.innings_history)
+        bowling_total = sum(inn.score for inn in bowling_team.innings_history)
+        diff = batting_total - bowling_total
+        if diff > 0:
+            msg = "%s lead by %s run%s." % (batting_team.name, str(diff), "" if diff == 1 else "s")
+        elif diff < 0:
+            msg = "%s trail by %s run%s." % (batting_team.name, str(-diff), "" if diff == -1 else "s")
+        else:
+            msg = "Scores are level between %s and %s." % (batting_team.name, bowling_team.name)
+        PrintInColor(msg, Style.BRIGHT)
+        self.logger.info(msg)
+
     def _FinalizeIfDrawn(self):
         """
         If the match was drawn (ran out of match days mid-innings),
@@ -309,42 +335,57 @@ class Match:
         self.Play()
         if self._FinalizeIfDrawn():
             return
+        self._ShowLeadOrTrail(team_b, team_a)
 
         a_inn1 = team_a.innings_history[-1]
         b_inn1 = team_b.innings_history[-1]
 
-        follow_on_available = (a_inn1.score - b_inn1.score) >= self.follow_on_margin
+        # follow-on can be enforced by whichever team is actually leading
+        # after both first innings - not necessarily team_a (whoever batted
+        # chronologically first), which is a distinct thing from who's ahead
+        if a_inn1.score >= b_inn1.score:
+            lead_team, trail_team = team_a, team_b
+            lead_inn1, trail_inn1 = a_inn1, b_inn1
+        else:
+            lead_team, trail_team = team_b, team_a
+            lead_inn1, trail_inn1 = b_inn1, a_inn1
+
+        follow_on_available = (lead_inn1.score - trail_inn1.score) >= self.follow_on_margin
         enforce_follow_on = False
         if follow_on_available:
-            enforce_follow_on = self._DecideFollowOn(team_a, team_b, a_inn1, b_inn1)
+            enforce_follow_on = self._DecideFollowOn(lead_team, trail_team, lead_inn1, trail_inn1)
 
         if enforce_follow_on:
-            # B bats again immediately
-            self._SetupTestInnings(team_b, team_a, chase=False)
+            # trailing team bats again immediately
+            self._SetupTestInnings(trail_team, lead_team, chase=False)
             self.Play()
             if self._FinalizeIfDrawn():
                 return
-            b_inn2 = team_b.innings_history[-1]
-            b_combined = b_inn1.score + b_inn2.score
-            if b_combined <= a_inn1.score:
-                # A wins by an innings, never bats again
-                margin = a_inn1.score - b_combined
+            self._ShowLeadOrTrail(trail_team, lead_team)
+            trail_inn2 = trail_team.innings_history[-1]
+            trail_combined = trail_inn1.score + trail_inn2.score
+            if trail_combined <= lead_inn1.score:
+                # leading team wins by an innings, never bats again
+                margin = lead_inn1.score - trail_combined
                 self._FinalizeTestResult(
-                    winner=team_a, loser=team_b, kind="innings", margin=margin
+                    winner=lead_team, loser=trail_team, kind="innings", margin=margin
                 )
                 return
-            # A must bat a 4th, chase innings
-            target = b_combined - a_inn1.score + 1
-            self._SetupTestInnings(team_a, team_b, chase=True, target=target)
+            # leading team must bat a 4th, chase innings
+            target = trail_combined - lead_inn1.score + 1
+            self._SetupTestInnings(lead_team, trail_team, chase=True, target=target)
             self.Play()
-            self._FinalizeChase(chasing=team_a, defending=team_b, target=target)
+            self._FinalizeChase(chasing=lead_team, defending=trail_team, target=target)
             return
 
-        # normal order: A bats innings 2 (not a chase - sets up a target)
+        # normal order (no follow-on): team_a always bats innings 2 next
+        # regardless of who's ahead - follow-on is the only thing that
+        # changes the natural batting order
         self._SetupTestInnings(team_a, team_b, chase=False)
         self.Play()
         if self._FinalizeIfDrawn():
             return
+        self._ShowLeadOrTrail(team_a, team_b)
         a_inn2 = team_a.innings_history[-1]
         target = (a_inn1.score + a_inn2.score) - b_inn1.score + 1
 
@@ -364,7 +405,13 @@ class Match:
         batting_team = self.batting_team
         bowling_team = self.bowling_team
         logger = self.logger
-        pair = batting_team.opening_pair
+        # a new list, not a reference to opening_pair itself: GetNextBatsman
+        # mutates this pair in place (pair[ind] = ...) as wickets fall, and
+        # that mutation must never bleed back into Team.opening_pair - a
+        # pre-existing aliasing bug that was harmless when a team only ever
+        # batted once, but corrupted the record of who the real openers are
+        # once a team can bat a second time in a Test match
+        pair = list(batting_team.opening_pair)
 
         # reset accumulators for this innings. For limited-overs matches this
         # is a no-op in effect (each team only ever calls it once, and fields
@@ -546,13 +593,9 @@ class Match:
         if not self.is_test:
             self.DisplayProjectedScore()
 
-        # push a full (batting/bowling/fall-of-wickets) scorecard snapshot
-        # to the web UI's side pane every 5 overs, so a long innings isn't
-        # only shown its full card once at the very end; no-op in console
-        # mode / outside web play
-        completed_overs = int(BallsToOvers(self.batting_team.total_balls))
-        if completed_overs > 0 and completed_overs % 5 == 0:
-            utilities.PushLiveInningsScorecard(self)
+        # the full (batting/bowling/fall-of-wickets) scorecard snapshot is
+        # already pushed to the web UI's side pane after every ball (see the
+        # per-ball loop in PlayOver), so no additional push is needed here
 
         # rotate strike after an over
         RotateStrike(pair)
@@ -847,6 +890,8 @@ class Match:
                         "%s extras in this over!" % str(over_arr.count(5)), Style.BRIGHT
                     )
                 total_runs_in_over += 1
+                utilities.PushScorecard(self)
+                utilities.PushLiveInningsScorecard(self)
                 if self.status is False:
                     break
 
@@ -856,6 +901,8 @@ class Match:
                 ball += 1
                 if run != -1:
                     total_runs_in_over += run
+                utilities.PushScorecard(self)
+                utilities.PushLiveInningsScorecard(self)
                 if self.status is False:
                     break
 
@@ -1449,8 +1496,9 @@ class Match:
         
         # plot the graph (not meaningful for a Test innings that can run
         # to 100+ overs across multiple days)
-        if not self.is_test:
-            utilities.PlotOversBarGraph(batting_team.over_history, batting_team.over_wkt_history, "RR Graph")
+        # temporarily disabled
+        # if not self.is_test:
+        #     utilities.PlotOversBarGraph(batting_team.over_history, batting_team.over_wkt_history, "RR Graph")
         return
 
     def GenerateRun(self, over, player_on_strike):
@@ -1468,16 +1516,21 @@ class Match:
         bowler = self.bowling_team.current_bowler
         overs = self.overs
         venue = self.venue
-        prob = venue.run_prob_t20
 
-        # if ODI (or Test, as a starting-point approximation - real Test
-        # scoring is slower than ODI/T20 but this is a balance pass for
-        # another day, not a correctness concern), override the prob
-        if overs == 50 or self.is_test:
-            prob = venue.run_prob
-
-        # run array
+        # run array: [-1(wkt), 0, 1, 2, 3, 4, 5, 6]
         run_array = [-1, 0, 1, 2, 3, 4, 5, 6]
+
+        # Test batting: watchful and risk-averse - mostly dots and singles
+        # (occupying the crease), fours only once in a while, sixes very
+        # rare, and even rarer to get out than to hit a six
+        prob_test = [0.025, 0.40, 0.32, 0.09, 0.02, 0.10, 0.015, 0.03]
+
+        prob = venue.run_prob_t20
+        if self.is_test:
+            prob = prob_test
+        elif overs == 50:
+            # if ODI, override the prob
+            prob = venue.run_prob
 
         # death over situation
         prob_death = [0.2, 0.2, 0, 0, 0, 0.2, 0.2, 0.2]
