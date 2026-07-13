@@ -251,6 +251,137 @@ def Error_Exit(msg):
     sys.exit(0)
 
 
+def PushScorecard(match):
+    """
+    Send a compact, structured snapshot of the live match state to the
+    browser's side-pane scorecard. No-op in console mode (no channel set).
+
+    Args:
+        match: The Match object, called once an over has just finished.
+
+    Returns:
+        None
+    """
+    channel = get_channel()
+    if channel is None:
+        return
+
+    batting = match.batting_team
+    bowling = match.bowling_team
+
+    batsmen = [
+        {"name": p.name, "runs": _int(p.runs), "balls": _int(p.balls), "onStrike": bool(p.onstrike)}
+        for p in (batting.current_pair or [])
+    ]
+
+    bowler = bowling.current_bowler
+    bowler_state = None
+    if bowler is not None:
+        bowler_state = {
+            "name": bowler.name,
+            "overs": _float(BallsToOvers(bowler.balls_bowled)),
+            "maidens": _int(bowler.maidens),
+            "runs": _int(bowler.runs_given),
+            "wickets": _int(bowler.wkts),
+        }
+
+    channel.state({
+        "battingTeam": batting.name,
+        "bowlingTeam": bowling.name,
+        "score": _int(batting.total_score),
+        "wickets": _int(batting.wickets_fell),
+        "overs": _float(BallsToOvers(batting.total_balls)),
+        "totalOvers": _int(match.overs),
+        "crr": _float(batting.GetCurrentRate()),
+        "target": _int(batting.target) if batting.batting_second else None,
+        "requiredRunRate": _float(batting.GetRequiredRate()) if batting.batting_second else None,
+        "batsmen": batsmen,
+        "bowler": bowler_state,
+    })
+
+
+def PushInningsScorecard(match):
+    """
+    Send the full batting card, bowling card, and fall-of-wickets for the
+    innings that just finished, for the side-pane's end-of-innings summary.
+    No-op in console mode (no channel set).
+
+    Args:
+        match: The Match object, called once an innings has just finished.
+
+    Returns:
+        None
+    """
+    channel = get_channel()
+    if channel is None:
+        return
+
+    batting = match.batting_team
+    bowling = match.bowling_team
+
+    batting_card = []
+    for p in batting.team_array:
+        if p.status is True:
+            dismissal = "not out" if p.onfield else "DNB"
+        else:
+            dismissal = p.dismissal
+        batting_card.append({
+            "name": p.name,
+            "captain": bool(p.attr.iscaptain),
+            "keeper": bool(p.attr.iskeeper),
+            "dismissal": dismissal,
+            "runs": _int(p.runs),
+            "balls": _int(p.balls),
+        })
+
+    bowling_card = []
+    for bowler in bowling.bowlers:
+        if bowler.balls_bowled == 0:
+            continue
+        overs = _float(BallsToOvers(bowler.balls_bowled))
+        economy = round(_int(bowler.runs_given) / overs, 2) if overs > 0 else 0.0
+        bowling_card.append({
+            "name": bowler.name,
+            "overs": overs,
+            "maidens": _int(bowler.maidens),
+            "runs": _int(bowler.runs_given),
+            "wickets": _int(bowler.wkts),
+            "economy": _float(economy),
+        })
+
+    fow = [
+        {
+            "wicket": _int(f.wkt),
+            "runs": _int(f.runs),
+            "player": f.player_dismissed.name,
+            "overs": _float(BallsToOvers(f.total_balls)),
+        }
+        for f in batting.fow
+    ]
+
+    channel.innings({
+        "battingTeam": batting.name,
+        "bowlingTeam": bowling.name,
+        "score": _int(batting.total_score),
+        "wickets": _int(batting.wickets_fell),
+        "overs": _float(BallsToOvers(batting.total_balls)),
+        "extras": _int(batting.extras),
+        "battingCard": batting_card,
+        "bowlingCard": bowling_card,
+        "fow": fow,
+    })
+
+
+def _int(value):
+    # values sourced from run generation (numpy.random.choice) can end up as
+    # numpy.int64, which the SocketIO/Flask JSON encoder can't serialize.
+    return int(value)
+
+
+def _float(value):
+    return float(value)
+
+
 # balls to overs
 def BallsToOvers(balls: int):
     """

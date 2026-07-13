@@ -31,6 +31,16 @@ class WebChannel:
     def output(self, text, color=None):
         self._emit("server_event", {"type": "output", "text": strip_ansi(text), "color": resolve_color(color)})
 
+    def state(self, data):
+        # structured snapshot for the side-pane scorecard, distinct from the
+        # scrolling commentary log; not a request/response, fire-and-forget.
+        self._emit("server_event", {"type": "state", "data": data})
+
+    def innings(self, data):
+        # full batting/bowling card + fall of wickets, sent once an innings
+        # has just finished.
+        self._emit("server_event", {"type": "innings", "data": data})
+
     def write(self, text, color, end):
         """Console print() calls a line at a time (default end="\\n"), but some
         (e.g. PlotOversBarGraph's ASCII bar chart in functions/utilities.py)
