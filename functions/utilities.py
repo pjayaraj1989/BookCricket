@@ -251,6 +251,25 @@ def Error_Exit(msg):
     sys.exit(0)
 
 
+def PushEvent(kind, data=None):
+    """
+    Fire a short-lived highlight to the web UI's top-left event pane (toss,
+    wicket, four, six, DRS). No-op in console mode (no channel set).
+
+    Args:
+        kind: A short string identifying the event ("toss", "wicket", "four",
+            "six", "drs_pending", "drs_result").
+        data: Optional dict of extra fields for the frontend to render.
+
+    Returns:
+        None
+    """
+    channel = get_channel()
+    if channel is None:
+        return
+    channel.event(kind, data)
+
+
 def PushScorecard(match):
     """
     Send a compact, structured snapshot of the live match state to the

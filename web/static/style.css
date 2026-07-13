@@ -181,6 +181,113 @@ main {
   line-height: 1.5;
 }
 
+/* top-left "highlight" pane: brief pop-ups for toss/wicket/four/six/DRS */
+.event-pane {
+  position: fixed;
+  top: 4.6rem;
+  left: 1rem;
+  width: 84px;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f2c1e;
+  border: 1px solid #2a6b45;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transform: scale(0.85);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 50;
+}
+
+.event-pane.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.event-pane .event-emoji {
+  font-size: 2.6rem;
+  line-height: 1;
+  animation: event-pop 0.4s ease;
+}
+
+.event-pane .event-digit {
+  font-size: 2.6rem;
+  font-weight: 800;
+  font-family: "SF Mono", Menlo, Consolas, monospace;
+  animation: event-pop 0.4s ease;
+}
+
+.event-pane .event-digit.four { color: #7fe3a3; }
+.event-pane .event-digit.six { color: #f2d16b; }
+
+@keyframes event-pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.event-pane .event-coin {
+  font-size: 2.6rem;
+  animation: event-flip 1.4s ease-in-out;
+}
+
+@keyframes event-flip {
+  0% { transform: rotateY(0deg); }
+  50% { transform: rotateY(900deg); }
+  100% { transform: rotateY(1080deg); }
+}
+
+.event-pane .event-stumps {
+  animation: event-pop 0.4s ease;
+}
+
+.drs-lights {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.drs-lights .drs-bulb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  opacity: 0.25;
+}
+
+.drs-lights .drs-bulb.red { background: #ff5050; }
+.drs-lights .drs-bulb.green { background: #4ade80; }
+
+.drs-lights.blinking .drs-bulb {
+  animation: drs-blink 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes drs-blink {
+  from { opacity: 0.2; }
+  to { opacity: 1; }
+}
+
+.drs-lights.decided .drs-bulb {
+  transition: opacity 0.2s ease, box-shadow 0.2s ease;
+}
+
+.drs-lights.decided.out .drs-bulb.red {
+  opacity: 1;
+  box-shadow: 0 0 12px 2px #ff5050;
+}
+.drs-lights.decided.out .drs-bulb.green {
+  opacity: 0.2;
+}
+
+.drs-lights.decided.not-out .drs-bulb.green {
+  opacity: 1;
+  box-shadow: 0 0 12px 2px #4ade80;
+}
+.drs-lights.decided.not-out .drs-bulb.red {
+  opacity: 0.2;
+}
+
 @media (max-width: 800px) {
   main {
     flex-direction: column;
