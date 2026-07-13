@@ -5,6 +5,9 @@ const killBtn = document.getElementById("killBtn");
 const liveScorecardEl = document.getElementById("liveScorecard");
 const inningsSummariesEl = document.getElementById("inningsSummaries");
 const eventPaneEl = document.getElementById("eventPane");
+const runRateGraphEl = document.getElementById("runRateGraph");
+const runRateLegendEl = document.getElementById("runRateLegend");
+const runRateSvgEl = document.getElementById("runRateSvg");
 
 const socket = io();
 
@@ -203,6 +206,92 @@ function renderScorecard(state) {
   }
 
   liveScorecardEl.innerHTML = parts.join("");
+  renderRunRateGraph(state);
+}
+
+const RUN_RATE_COLOR_CURRENT = "#7fe3a3";
+const RUN_RATE_COLOR_FIRST_INNINGS = "#f2d16b";
+
+function buildWormPath(series, maxOver, maxScore, width, height) {
+  if (!series.length) return { line: "", dots: [] };
+  const x = (over) => (over / maxOver) * width;
+  const y = (score) => height - (score / maxScore) * height;
+  const points = [{ x: x(0), y: y(0) }].concat(
+    series.map((pt) => ({ x: x(pt.over + 1), y: y(pt.score) }))
+  );
+  const line = points.map((p) => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" ");
+  const dots = series
+    .filter((pt) => pt.wickets > 0)
+    .map((pt) => ({ x: x(pt.over + 1), y: y(pt.score) }));
+  return { line, dots };
+}
+
+function renderRunRateGraph(state) {
+  if (state.isTest || !state.overHistory || !state.overHistory.length) {
+    runRateGraphEl.style.display = "none";
+    return;
+  }
+  runRateGraphEl.style.display = "";
+
+  const width = 260;
+  const height = 150;
+  const maxOver = state.totalOvers || Math.max(...state.overHistory.map((p) => p.over + 1));
+  const allSeries = state.firstInningsOverHistory
+    ? state.overHistory.concat(state.firstInningsOverHistory)
+    : state.overHistory;
+  const maxScore = Math.max(10, ...allSeries.map((p) => p.score)) * 1.1;
+
+  const current = buildWormPath(state.overHistory, maxOver, maxScore, width, height);
+  const parts = [];
+
+  // gridlines
+  for (let i = 1; i < 4; i++) {
+    const gy = (height / 4) * i;
+    parts.push(
+      '<line x1="0" y1="' + gy.toFixed(1) + '" x2="' + width + '" y2="' + gy.toFixed(1) +
+      '" stroke="#1e4530" stroke-width="1"/>'
+    );
+  }
+
+  if (state.firstInningsOverHistory) {
+    const first = buildWormPath(state.firstInningsOverHistory, maxOver, maxScore, width, height);
+    parts.push(
+      '<polyline points="' + first.line + '" fill="none" stroke="' + RUN_RATE_COLOR_FIRST_INNINGS +
+      '" stroke-width="2" opacity="0.85"/>'
+    );
+    first.dots.forEach((d) => {
+      parts.push(
+        '<circle cx="' + d.x.toFixed(1) + '" cy="' + d.y.toFixed(1) + '" r="2.5" fill="' +
+        RUN_RATE_COLOR_FIRST_INNINGS + '"/>'
+      );
+    });
+  }
+
+  parts.push(
+    '<polyline points="' + current.line + '" fill="none" stroke="' + RUN_RATE_COLOR_CURRENT +
+    '" stroke-width="2.5"/>'
+  );
+  current.dots.forEach((d) => {
+    parts.push(
+      '<circle cx="' + d.x.toFixed(1) + '" cy="' + d.y.toFixed(1) + '" r="2.5" fill="' +
+      RUN_RATE_COLOR_CURRENT + '"/>'
+    );
+  });
+
+  runRateSvgEl.setAttribute("viewBox", "0 0 " + width + " " + height);
+  runRateSvgEl.innerHTML = parts.join("");
+
+  const legendParts = [
+    '<div class="legend-item"><span class="legend-swatch" style="background:' + RUN_RATE_COLOR_CURRENT +
+    '"></span>' + escapeHtml(state.battingTeam) + "</div>",
+  ];
+  if (state.firstInningsOverHistory) {
+    legendParts.push(
+      '<div class="legend-item"><span class="legend-swatch" style="background:' +
+      RUN_RATE_COLOR_FIRST_INNINGS + '"></span>' + escapeHtml(state.firstInningsTeam) + "</div>"
+    );
+  }
+  runRateLegendEl.innerHTML = legendParts.join("");
 }
 
 // the innings-summary block currently being refreshed in place (every 5
