@@ -286,6 +286,52 @@ def PushScorecard(match):
         }
 
     is_test = bool(getattr(match, "is_test", False))
+
+    # Lead/trail, Test only, and only outside of a run-chase (a chase already
+    # shows its own target/runs-needed line below, so a separate lead/trail
+    # line would be redundant there).
+    lead_trail = None
+    if is_test and not batting.batting_second:
+        batting_total = sum(inn.score for inn in batting.innings_history) + batting.total_score
+        bowling_total = sum(inn.score for inn in bowling.innings_history)
+        if batting.innings_history or bowling.innings_history:
+            diff = batting_total - bowling_total
+            if diff > 0:
+                lead_trail = {"team": batting.name, "diff": _int(diff)}
+            elif diff < 0:
+                lead_trail = {"team": bowling.name, "diff": _int(-diff)}
+            else:
+                lead_trail = {"team": None, "diff": 0}
+
+    # Runs and wickets still needed to win, Test 4th-innings chase only.
+    runs_needed = None
+    wickets_in_hand = None
+    if is_test and batting.batting_second:
+        runs_needed = _int(max(batting.target - batting.total_score, 0))
+        wickets_in_hand = _int(10 - batting.wickets_fell)
+
+    # Once a chase is actually decided (target reached, or the chasing side
+    # is all out), "Need 0 more · RRR: 0.00" reads as broken rather than
+    # informative - replace the target line with the plain result instead.
+    # A finer-grained "won by an innings"/draw/no-result message still comes
+    # later from CalculateResult()/_FinalizeChase() once the innings fully
+    # unwinds; this is just the immediate, ball-by-ball chase outcome.
+    result_message = None
+    if batting.batting_second and batting.target:
+        if batting.total_score >= batting.target:
+            wkts_left = _int(10 - batting.wickets_fell)
+            result_message = "%s won by %s wicket%s" % (
+                batting.name, str(wkts_left), "" if wkts_left == 1 else "s"
+            )
+        elif batting.wickets_fell == 10:
+            margin = batting.target - 1 - batting.total_score
+            if margin == 0:
+                result_message = "Match Tied"
+            else:
+                result_message = "%s won by %s run%s" % (
+                    bowling.name, str(margin), "" if margin == 1 else "s"
+                )
+
     channel.state({
         "battingTeam": batting.name,
         "bowlingTeam": bowling.name,
@@ -304,6 +350,10 @@ def PushScorecard(match):
         "requiredRunRate": (
             _float(batting.GetRequiredRate()) if batting.batting_second and not is_test else None
         ),
+        "leadTrail": lead_trail,
+        "resultMessage": result_message,
+        "runsNeeded": runs_needed,
+        "wicketsInHand": wickets_in_hand,
         "batsmen": batsmen,
         "bowler": bowler_state,
     })
@@ -348,11 +398,10 @@ def PushInningsScorecard(match, summary):
 def PushLiveInningsScorecard(match):
     """
     Push a full (batting/bowling card + fall-of-wickets) scorecard snapshot
-    of the innings CURRENTLY IN PROGRESS - the "every 5 overs / every
-    session" mid-innings refresh, as opposed to PushInningsScorecard's
-    once-per-completed-innings push. No-op in console mode (the console
-    already shows the full scorecard every over via DisplayScore/
-    DisplayBowlingStats).
+    of the innings CURRENTLY IN PROGRESS - called after every ball, as
+    opposed to PushInningsScorecard's once-per-completed-innings push.
+    No-op in console mode (the console already shows the full scorecard
+    every over via DisplayScore/DisplayBowlingStats).
 
     Args:
         match: The Match object, called mid-innings.
