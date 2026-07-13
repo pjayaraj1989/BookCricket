@@ -1096,6 +1096,7 @@ class Match:
 
         # appropriate commentary for 4s and 6s
         if run == 4:
+            utilities.PushEvent("four")
             # check if this is after a wicket?
             if batting_team.ball_history != []:
                 if "Wkt" in str(batting_team.ball_history[-1]) or "RO" in str(
@@ -1135,6 +1136,7 @@ class Match:
 
         # six
         elif run == 6:
+            utilities.PushEvent("six")
             # check if this is after a wicket?
             if batting_team.ball_history != []:
                 if "Wkt" in str(batting_team.ball_history[-1]) or "RO" in str(
@@ -1291,6 +1293,7 @@ class Match:
         # add player dismissed to the list of wickets for the bowler
         bowler.wickets_taken.append(player_dismissed)
 
+        utilities.PushEvent("wicket")
         PrintInColor("Thats OUT !", Fore.RED)
         print(
             "%s %s %s (%s) SR: %s"
@@ -1703,9 +1706,11 @@ class Match:
                     Fore.LIGHTGREEN_EX,
                 )
                 PrintInColor("Decision pending...", Style.BRIGHT)
+                utilities.PushEvent("drs_pending")
                 time.sleep(5)
                 result = random.choice([True, False])
                 impact_outside_bat_involved = random.choice([True, False])
+                utilities.PushEvent("drs_result", {"out": not result})
                 # if not out
                 if result:
                     # if edged or pitching outside
@@ -2276,6 +2281,7 @@ class Match:
             call = int(Randomize(opts))
             print("Invalid choice, auto-selected")
         coin = int(Randomize(opts))
+        utilities.PushEvent("toss")
 
         # check if call == coin selected
         if coin == call:

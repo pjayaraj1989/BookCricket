@@ -4,6 +4,7 @@ const statusEl = document.getElementById("status");
 const killBtn = document.getElementById("killBtn");
 const liveScorecardEl = document.getElementById("liveScorecard");
 const inningsSummariesEl = document.getElementById("inningsSummaries");
+const eventPaneEl = document.getElementById("eventPane");
 
 const socket = io();
 
@@ -135,6 +136,8 @@ socket.on("server_event", (data) => {
     renderScorecard(data.data);
   } else if (data.type === "innings") {
     renderInningsSummary(data.data);
+  } else if (data.type === "event") {
+    renderEvent(data.kind, data.data);
   }
 });
 
@@ -269,5 +272,57 @@ function renderInningsSummary(innings) {
   if (!innings.inProgress) {
     // innings is genuinely done - lock this block in as permanent history
     currentLiveInningsBlockEl = null;
+  }
+}
+
+// simplified inline stumps icon - no external image assets
+const STUMPS_SVG =
+  '<svg width="52" height="52" viewBox="0 0 60 60">' +
+  '<line x1="14" y1="14" x2="14" y2="52" stroke="#e6f2ea" stroke-width="5" stroke-linecap="round"/>' +
+  '<line x1="30" y1="9" x2="30" y2="52" stroke="#e6f2ea" stroke-width="5" stroke-linecap="round"/>' +
+  '<line x1="46" y1="14" x2="46" y2="52" stroke="#e6f2ea" stroke-width="5" stroke-linecap="round"/>' +
+  '<line x1="14" y1="14" x2="30" y2="9" stroke="#f2d16b" stroke-width="4" stroke-linecap="round"/>' +
+  '<line x1="30" y1="9" x2="46" y2="14" stroke="#f2d16b" stroke-width="4" stroke-linecap="round"/>' +
+  "</svg>";
+
+let eventHideTimer = null;
+
+function showEventPane(innerHtml, holdMs) {
+  if (eventHideTimer) {
+    clearTimeout(eventHideTimer);
+    eventHideTimer = null;
+  }
+  eventPaneEl.innerHTML = innerHtml;
+  // drop and re-add "visible" so the pop/flip animations restart even if
+  // the pane is already showing a previous event
+  eventPaneEl.classList.remove("visible");
+  void eventPaneEl.offsetWidth; // force reflow
+  eventPaneEl.classList.add("visible");
+  if (holdMs) {
+    eventHideTimer = setTimeout(() => eventPaneEl.classList.remove("visible"), holdMs);
+  }
+}
+
+function renderEvent(kind, data) {
+  if (kind === "toss") {
+    showEventPane('<span class="event-coin">🪙</span>', 2500);
+  } else if (kind === "wicket") {
+    showEventPane('<span class="event-stumps">' + STUMPS_SVG + "</span>", 2500);
+  } else if (kind === "four") {
+    showEventPane('<span class="event-digit four">4!</span>', 1500);
+  } else if (kind === "six") {
+    showEventPane('<span class="event-digit six">6!</span>', 1500);
+  } else if (kind === "drs_pending") {
+    showEventPane(
+      '<div class="drs-lights blinking"><span class="drs-bulb red"></span><span class="drs-bulb green"></span></div>',
+      0
+    );
+  } else if (kind === "drs_result") {
+    const out = !!(data && data.out);
+    showEventPane(
+      '<div class="drs-lights decided ' + (out ? "out" : "not-out") + '">' +
+        '<span class="drs-bulb red"></span><span class="drs-bulb green"></span></div>',
+      3000
+    );
   }
 }

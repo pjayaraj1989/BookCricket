@@ -41,6 +41,12 @@ class WebChannel:
         # has just finished.
         self._emit("server_event", {"type": "innings", "data": data})
 
+    def event(self, kind, data=None):
+        # a short-lived highlight for the top-left event pane (toss/wicket/
+        # four/six/DRS) - fire-and-forget, distinct from the scrolling log
+        # and the structured scorecard state.
+        self._emit("server_event", {"type": "event", "kind": kind, "data": data or {}})
+
     def write(self, text, color, end):
         """Console print() calls a line at a time (default end="\\n"), but some
         (e.g. PlotOversBarGraph's ASCII bar chart in functions/utilities.py)
