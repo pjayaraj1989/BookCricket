@@ -384,6 +384,8 @@ def PushScorecard(match):
         "isTest": is_test,
         "day": _int(match.day) if is_test else None,
         "maxDays": _int(match.max_days) if is_test else None,
+        "session": _int(match.session) if is_test else None,
+        "sessionsPerDay": _int(match.sessions_per_day) if is_test else None,
         "crr": _float(batting.GetCurrentRate()),
         "target": _int(batting.target) if batting.batting_second else None,
         # GetRequiredRate() is intentionally a no-op (returns 0.0) for Test -
@@ -400,6 +402,123 @@ def PushScorecard(match):
         "firstInningsTeam": bowling.name if first_innings_over_history is not None else None,
         "batsmen": batsmen,
         "bowler": bowler_state,
+    })
+
+
+def _test_team_totals(team, opponent):
+    # aggregate each player's runs/balls and wickets/runs-given across up
+    # to 2 completed innings_history entries - same approach as
+    # Match.FindPlayerOfTheMatchTest, reused here for the highlights card.
+    # A team's own bowling figures for an innings get attached to the
+    # OPPONENT's innings_history entry (BuildInningsSummary snapshots
+    # bowling_card from self.bowling_team, and Play() appends the whole
+    # summary to self.batting_team.innings_history) - so team's own
+    # bowlers are read off opponent.innings_history, not team's own.
+    bat_totals = {}
+    for inn in team.innings_history:
+        for b in inn.batting_card:
+            entry = bat_totals.setdefault(b["name"], {"runs": 0, "balls": 0})
+            entry["runs"] += b["runs"]
+            entry["balls"] += b["balls"]
+
+    bowl_totals = {}
+    for inn in opponent.innings_history:
+        for bw in inn.bowling_card:
+            entry = bowl_totals.setdefault(bw["name"], {"wickets": 0, "runs": 0})
+            entry["wickets"] += bw["wickets"]
+            entry["runs"] += bw["runs"]
+
+    return bat_totals, bowl_totals
+
+
+def PushMatchHighlights(match):
+    """
+    Send a persistent post-match summary (result, top scorers/wicket-takers,
+    player of the match) to the web UI once the match is over. No-op in
+    console mode (no channel set).
+
+    Args:
+        match: The Match object, called once PlayMatch() has finished.
+
+    Returns:
+        None
+    """
+    channel = get_channel()
+    if channel is None:
+        return
+
+    result = match.result
+    if result is None:
+        return
+
+    is_test = bool(getattr(match, "is_test", False))
+
+    teams = []
+    top_batters = []
+    top_bowlers = []
+    teams_pair = (match.team1, match.team2)
+    for team in teams_pair:
+        opponent = match.team2 if team is match.team1 else match.team1
+        if is_test:
+            if not team.innings_history:
+                teams.append({"name": team.name, "scoreLines": ["did not bat"]})
+                continue
+            teams.append({
+                "name": team.name,
+                "scoreLines": [
+                    "%s/%s%s (%s)" % (
+                        _int(inn.score), _int(inn.wickets),
+                        "d" if inn.declared else "", _float(inn.overs),
+                    )
+                    for inn in team.innings_history
+                ],
+            })
+            bat_totals, bowl_totals = _test_team_totals(team, opponent)
+            top_batters.extend(
+                {"name": name, "team": team.name, "runs": _int(v["runs"]), "balls": _int(v["balls"])}
+                for name, v in bat_totals.items()
+            )
+            top_bowlers.extend(
+                {"name": name, "team": team.name, "wickets": _int(v["wickets"]), "runs": _int(v["runs"])}
+                for name, v in bowl_totals.items()
+            )
+        else:
+            teams.append({
+                "name": team.name,
+                "scoreLines": [
+                    "%s/%s (%s)" % (
+                        _int(team.total_score), _int(team.wickets_fell),
+                        _float(BallsToOvers(team.total_balls)),
+                    )
+                ],
+            })
+            top_batters.extend(
+                {"name": p.name, "team": team.name, "runs": _int(p.runs), "balls": _int(p.balls)}
+                for p in team.team_array
+            )
+            top_bowlers.extend(
+                {"name": p.name, "team": team.name, "wickets": _int(p.wkts), "runs": _int(p.runs_given)}
+                for p in team.team_array
+                if p.balls_bowled > 0
+            )
+
+    top_batters.sort(key=lambda b: b["runs"], reverse=True)
+    top_bowlers.sort(key=lambda b: (-b["wickets"], b["runs"]))
+
+    player_of_match = None
+    if is_test:
+        if result.mom_name:
+            player_of_match = {"name": result.mom_name, "stat": result.mom_stat}
+    elif result.mom is not None:
+        player_of_match = {"name": result.mom.name, "stat": result.mom.GetMomStat()}
+
+    channel.highlights({
+        "isTest": is_test,
+        "resultStr": result.result_str,
+        "teams": teams,
+        "topBatters": top_batters[:3],
+        "topBowlers": top_bowlers[:3],
+        "playerOfMatch": player_of_match,
     })
 
 

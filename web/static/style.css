@@ -158,6 +158,49 @@ main {
   border-top: 2px solid #1e4530;
 }
 
+.match-highlights {
+  margin: 1.2rem 0;
+  padding: 1rem 1.2rem;
+  background: #0f2c1e;
+  border: 1px solid #2a6b45;
+  border-radius: 10px;
+}
+
+.match-highlights h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  color: #7fe3a3;
+}
+
+.match-highlights .result-line {
+  font-weight: 700;
+  margin-bottom: 0.7rem;
+}
+
+.match-highlights .team-score-line {
+  margin: 0.15rem 0;
+}
+
+.match-highlights h4 {
+  margin: 0.8rem 0 0.3rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6fbf8f;
+}
+
+.match-highlights .mom-line {
+  margin-top: 0.7rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid #1e4530;
+  color: #f2d16b;
+}
+
+.match-highlights ul {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
 .innings-summary td.dismissal {
   color: #6b8a7a;
   font-size: 0.68rem;
