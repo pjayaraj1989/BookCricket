@@ -154,13 +154,16 @@ def ReadData(autoplay):
 
 
 # get match info
-def GetMatchInfo(list_of_teams, venue, autoplay, overs):
+def GetMatchInfo(list_of_teams, venue, autoplay, overs, format_override=None, fast=False):
     """
     Get the match information, including teams, venue, and match type.
 
     Args:
         list_of_teams: A list of Team objects.
         venue: A Venue object.
+        format_override: optional, used by autoplay/CLI to force "Test"
+            since autoplay can't reach the interactive format menu.
+        fast: skip PlayOver's per-ball sleep (dev/test use only).
 
     Returns:
         A Match object with the match details.
@@ -172,28 +175,45 @@ def GetMatchInfo(list_of_teams, venue, autoplay, overs):
     # get list of teams
     teams = [team.key for team in list_of_teams]
 
-    # select overs
-    msg = "Select overs (multiple of 5)"
+    # select match format
+    msg = "Select match format"
     PrintInColor(msg, Style.BRIGHT)
-    
     if autoplay:
-        overs = overs
+        match_format = format_override or "Limited overs"
     else:
-        overs = input()
+        match_format = ChooseFromOptions(["Limited overs", "Test match"], msg, 5)
 
-    # if not multiple of 5 or invalid entry, it selects default (5 overs)
-    if (
-        (not overs.isdigit())
-        or (int(overs) % 5 != 0)
-        or (int(overs) > 50)
-        or (int(overs) <= 0)
-    ):
-        overs = 5
-        print("Invalid entry, default %s overs selected" % overs)
+    is_test = match_format in ("Test match", "test", "Test")
 
-    overs = int(overs)
-    # max overs allotted for each bowler
-    bowler_max_overs = overs / 5
+    if is_test:
+        # no fixed innings length in a Test match - overs is genuinely
+        # unbounded (see Match.py's day/session model), and bowlers aren't
+        # capped either (999 overs never realistically binds)
+        overs = None
+        bowler_max_overs = 999
+    else:
+        # select overs
+        msg = "Select overs (multiple of 5)"
+        PrintInColor(msg, Style.BRIGHT)
+
+        if autoplay:
+            overs = overs
+        else:
+            overs = input()
+
+        # if not multiple of 5 or invalid entry, it selects default (5 overs)
+        if (
+            (not overs.isdigit())
+            or (int(overs) % 5 != 0)
+            or (int(overs) > 50)
+            or (int(overs) <= 0)
+        ):
+            overs = 5
+            print("Invalid entry, default %s overs selected" % overs)
+
+        overs = int(overs)
+        # max overs allotted for each bowler
+        bowler_max_overs = overs / 5
 
     # input teams
     msg = "Select your team"
@@ -218,14 +238,16 @@ def GetMatchInfo(list_of_teams, venue, autoplay, overs):
         if t.key == t2:
             team2 = t
 
-    match_type = str(overs) + " overs"
-
-    if overs == 50:
-        match_type = "ODI"
-    elif overs == 20:
-        match_type = "T20"
-    elif overs == 5:
-        match_type = "Exhibition"
+    if is_test:
+        match_type = "Test"
+    else:
+        match_type = str(overs) + " overs"
+        if overs == 50:
+            match_type = "ODI"
+        elif overs == 20:
+            match_type = "T20"
+        elif overs == 5:
+            match_type = "Exhibition"
 
     # initialize match with teams, overs
     match = Match(
@@ -237,6 +259,7 @@ def GetMatchInfo(list_of_teams, venue, autoplay, overs):
         bowler_max_overs=bowler_max_overs,
         umpire=umpire[0],
         result=None,
+        fast=fast,
     )
 
     match_descriptions = [

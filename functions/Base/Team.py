@@ -51,8 +51,60 @@ class Team:
             "crr" : 0.0,  # current run rate
             "over_history": {}, # this is a dict with overs as keys and total score at the end of each over as a value
             "over_wkt_history": {}, # this is a dict with overs as keys and wickets fell in that over as a value
+            "innings_history": [],  # list of InningsSummary, one per completed innings this team has batted (Test matches only)
+            "declared": False,  # True if the current/most-recent innings ended by declaration
         }
         self = FillAttributes(self, attrs, kwargs)
+
+    def StartBattingInnings(self):
+        """
+        Reset this team's batting figures for a new innings and mark the
+        opening pair on strike. Called at the top of every innings (Match.Play);
+        a no-op in effect for limited-overs matches since it only ever runs
+        once per team there and fields already start at their __init__ defaults.
+
+        Returns:
+            None
+        """
+        self.total_score = 0
+        self.wickets_fell = 0
+        self.total_balls = 0
+        self.extras = 0
+        self.off_the_mark = False
+        self.fours = 0
+        self.sixes = 0
+        self.fifty_up = False
+        self.hundred_up = False
+        self.two_hundred_up = False
+        self.three_hundred_up = False
+        self.fow = []
+        self.partnerships = []
+        self.ball_history = []
+        self.over_history = {}
+        self.over_wkt_history = {}
+        self.drs_chances = 2
+        self.declared = False
+        self.crr = 0.0
+
+        for p in self.team_array:
+            p.ResetBattingInnings()
+
+        self.opening_pair[0].onstrike, self.opening_pair[1].onstrike = True, False
+        self.opening_pair[0].onfield, self.opening_pair[1].onfield = True, True
+
+    def StartBowlingInnings(self):
+        """
+        Reset this team's bowling figures for a new innings (the opposing
+        team's next innings). Called at the top of every innings (Match.Play)
+        for the bowling side; a no-op in effect for limited-overs matches.
+
+        Returns:
+            None
+        """
+        self.last_bowler = None
+        self.current_bowler = None
+        for p in self.team_array:
+            p.ResetBowlingInnings()
 
     def SummarizeBatting(self, autoplay):
         """
@@ -64,7 +116,7 @@ class Team:
         # find what happened in the top order
         # check if it was a good score
         total_runs = self.total_score
-        total_overs = self.total_overs
+        total_overs = BallsToOvers(self.total_balls)
         wkts = self.wickets_fell
         # say if this was a good total
         msg = "Thats the end of the innings, and %s has scored %s off %s overs.." % (
@@ -206,6 +258,11 @@ class Team:
             float: The required run rate.
         """
         nrr = 0.0
+        # Test matches have no fixed innings length, so "required rate" isn't
+        # a meaningful concept (overs remaining depends on days left, not a
+        # clean over count) - skip rather than invent Test-chase semantics.
+        if not self.total_overs:
+            return nrr
         # if chasing, calc net nrr
         balls_remaining = self.total_overs * 6 - self.total_balls
         if balls_remaining > 0:

@@ -8,7 +8,7 @@ from numpy.random import choice
 from data.commentary import commentary
 from data.resources import resources
 from functions.Pair import RotateStrike, PairFaceBall, BatsmanOut
-from functions.helper import Partnership, Fow, Result
+from functions.helper import Partnership, Fow, Result, InningsSummary
 from functions.utilities import (
     FillAttributes,
     PrintInColor,
@@ -55,8 +55,20 @@ class Match:
             "batting_second": None,
             "won": False,
             "autoplay": False,
+            "fast": False,  # skip PlayOver's per-ball sleep even outside autoplay; dev/test use only
             "batting_team": None,
             "bowling_team": None,
+            # Test-match fields (all unused/no-op for limited-overs formats)
+            "is_test": False,
+            "day": 1,
+            "max_days": 5,
+            "session": 1,  # 1-3, within the current day
+            "sessions_per_day": 3,
+            "overs_per_session": 30,
+            "overs_bowled_this_session": 0,
+            "match_drawn": False,
+            "declare_eligible": False,
+            "follow_on_margin": 200,
         }
         self = FillAttributes(self, attrs, kwargs)
 
@@ -103,6 +115,25 @@ class Match:
         self.status = True
         self.batting_team, self.bowling_team = self.team1, self.team2
 
+        if self.match_type == "Test":
+            self.is_test = True
+            self._PlayTestMatch()
+        else:
+            self._PlayLimitedOversMatch()
+
+        # close log handler
+        handler.close()
+        return
+
+    def _PlayLimitedOversMatch(self):
+        """
+        The original fixed-length, 2-innings-total sequence (Exhibition/
+        T20/ODI/custom overs) - unchanged behavior, just extracted out of
+        PlayMatch so Test can use a different orchestration.
+
+        Returns:
+            None
+        """
         # play 1st innings
         self.Play()
 
@@ -141,9 +172,186 @@ class Match:
 
         self.MatchSummary()
         self.FindPlayerOfTheMatch()
+        return
 
-        # close log handler
-        handler.close()
+    def _SetupTestInnings(self, batting_team, bowling_team, chase, target=0):
+        """
+        Point Match at the next Test innings and set its chase/target
+        framing. Per-innings stat resets happen inside Play() itself
+        (Team.StartBattingInnings/StartBowlingInnings), not here.
+
+        Returns:
+            None
+        """
+        self.batting_team, self.bowling_team = batting_team, bowling_team
+        batting_team.batting_second = chase
+        batting_team.target = target
+        self.declare_eligible = not chase
+
+    def _FinalizeIfDrawn(self):
+        """
+        If the match was drawn (ran out of match days mid-innings),
+        finalize the draw result/summary.
+
+        Returns:
+            bool: True if the match was drawn (caller should stop), else False.
+        """
+        if not self.match_drawn:
+            return False
+        self.status = False
+        self.result = Result(
+            team1=self.team1, team2=self.team2, winner=None, result_str="Match Drawn"
+        )
+        self.MatchSummaryTest()
+        self.FindPlayerOfTheMatchTest()
+        return True
+
+    def _DecideFollowOn(self, team_a, team_b, a_inn1, b_inn1):
+        """
+        Ask (or, in autoplay, decide) whether team_a's captain enforces the
+        follow-on against team_b, who trailed by at least follow_on_margin
+        after the first innings each.
+
+        Returns:
+            bool
+        """
+        lead = a_inn1.score - b_inn1.score
+        msg = (
+            "%s lead by %s runs after the first innings. Enforce the follow-on on %s?"
+            % (team_a.name, str(lead), team_b.name)
+        )
+        PrintInColor(msg, Style.BRIGHT)
+        if self.autoplay:
+            # simple default: enforce whenever there are enough days left to
+            # realistically bowl the opposition out twice
+            enforce = (self.max_days - self.day) >= 2
+            print(
+                "Auto-selected choice: %s"
+                % ("Enforce follow-on" if enforce else "Bat again")
+            )
+            return enforce
+        return ChooseFromOptions(["y", "n"], "Enforce follow-on?", 5) == "y"
+
+    def _FinalizeTestResult(self, winner, loser, kind, margin):
+        """
+        Build self.result for a decisive (non-draw) Test outcome and run
+        the Test-specific summary/player-of-the-match.
+
+        Args:
+            kind: "innings" | "runs" | "wickets"
+
+        Returns:
+            None
+        """
+        self.status = False
+        result = Result(team1=self.team1, team2=self.team2, winner=winner)
+        if kind == "innings":
+            result.result_str = "%s won by an innings and %s runs" % (
+                winner.name,
+                str(margin),
+            )
+        elif kind == "runs":
+            char = "run" if margin == 1 else "runs"
+            result.result_str = "%s won by %s %s" % (winner.name, str(margin), char)
+        else:  # "wickets"
+            char = "wicket" if margin == 1 else "wickets"
+            result.result_str = "%s won by %s %s" % (winner.name, str(margin), char)
+        self.result = result
+        self.MatchSummaryTest()
+        self.FindPlayerOfTheMatchTest()
+
+    def _FinalizeChase(self, chasing, defending, target):
+        """
+        Resolve the result of a Test's final (target-chasing) innings.
+
+        Returns:
+            None
+        """
+        if self.match_drawn:
+            self._FinalizeIfDrawn()
+            return
+        if chasing.total_score >= target:
+            margin = 10 - chasing.wickets_fell
+            self._FinalizeTestResult(
+                winner=chasing, loser=defending, kind="wickets", margin=margin
+            )
+        elif chasing.wickets_fell == 10:
+            margin = target - 1 - chasing.total_score
+            self._FinalizeTestResult(
+                winner=defending, loser=chasing, kind="runs", margin=margin
+            )
+        else:
+            # days ran out mid-chase without the batting side being bowled
+            # out - survived to a draw, not a bowling-side win
+            self.match_drawn = True
+            self._FinalizeIfDrawn()
+
+    def _PlayTestMatch(self):
+        """
+        Orchestrate a full Test match: up to 4 innings (2 per team), with a
+        follow-on option and draw handling. Toss()/ValidateMatchTeams()
+        already ran; self.team1 bats first, self.team2 bats second (per
+        the existing Toss()/PlayMatch reassignment convention).
+
+        Returns:
+            None
+        """
+        team_a, team_b = self.team1, self.team2
+
+        # innings 1: A bats
+        self._SetupTestInnings(team_a, team_b, chase=False)
+        self.Play()
+        if self._FinalizeIfDrawn():
+            return
+
+        # innings 1: B bats
+        self._SetupTestInnings(team_b, team_a, chase=False)
+        self.Play()
+        if self._FinalizeIfDrawn():
+            return
+
+        a_inn1 = team_a.innings_history[-1]
+        b_inn1 = team_b.innings_history[-1]
+
+        follow_on_available = (a_inn1.score - b_inn1.score) >= self.follow_on_margin
+        enforce_follow_on = False
+        if follow_on_available:
+            enforce_follow_on = self._DecideFollowOn(team_a, team_b, a_inn1, b_inn1)
+
+        if enforce_follow_on:
+            # B bats again immediately
+            self._SetupTestInnings(team_b, team_a, chase=False)
+            self.Play()
+            if self._FinalizeIfDrawn():
+                return
+            b_inn2 = team_b.innings_history[-1]
+            b_combined = b_inn1.score + b_inn2.score
+            if b_combined <= a_inn1.score:
+                # A wins by an innings, never bats again
+                margin = a_inn1.score - b_combined
+                self._FinalizeTestResult(
+                    winner=team_a, loser=team_b, kind="innings", margin=margin
+                )
+                return
+            # A must bat a 4th, chase innings
+            target = b_combined - a_inn1.score + 1
+            self._SetupTestInnings(team_a, team_b, chase=True, target=target)
+            self.Play()
+            self._FinalizeChase(chasing=team_a, defending=team_b, target=target)
+            return
+
+        # normal order: A bats innings 2 (not a chase - sets up a target)
+        self._SetupTestInnings(team_a, team_b, chase=False)
+        self.Play()
+        if self._FinalizeIfDrawn():
+            return
+        a_inn2 = team_a.innings_history[-1]
+        target = (a_inn1.score + a_inn2.score) - b_inn1.score + 1
+
+        # B bats innings 2, chasing
+        self._SetupTestInnings(team_b, team_a, chase=True, target=target)
+        self.Play()
+        self._FinalizeChase(chasing=team_b, defending=team_a, target=target)
         return
 
     def Play(self):
@@ -154,29 +362,62 @@ class Match:
             None
         """
         batting_team = self.batting_team
-        overs = self.overs
+        bowling_team = self.bowling_team
         logger = self.logger
         pair = batting_team.opening_pair
 
-        comment = ""
+        # reset accumulators for this innings. For limited-overs matches this
+        # is a no-op in effect (each team only ever calls it once, and fields
+        # already start at their __init__ defaults) - it's what lets a team
+        # bat a *second* time in a Test match without old figures bleeding in.
+        batting_team.StartBattingInnings()
+        bowling_team.StartBowlingInnings()
+
+        if batting_team.batting_second is True:
+            msg = "Target for %s: %s" % (batting_team.name, str(batting_team.target))
+            if self.overs:
+                msg += " from %s overs" % str(self.overs)
+            PrintInColor(msg, batting_team.color)
+            logger.info(msg)
+            # required run rate isn't a meaningful concept for a Test chase
+            # (see Team.GetRequiredRate) - skip the line entirely there
+            if not self.is_test:
+                reqd_rr = batting_team.GetRequiredRate()
+                msg = "Reqd. run rate: %s" % (str(reqd_rr))
+                print(msg)
+                logger.info(msg)
+
+        if self.is_test:
+            self._PlayTestInningsOvers(pair)
+        else:
+            self._PlayLimitedOversInnings(pair)
+
+        # innings just finished: snapshot it (Test's multi-innings history)
+        # and send the web UI's full innings summary; the push is a no-op
+        # outside web mode
+        summary = self.BuildInningsSummary()
+        if self.is_test:
+            batting_team.innings_history.append(summary)
+        utilities.PushInningsScorecard(self, summary)
+        return
+
+    def _PlayLimitedOversInnings(self, pair):
+        """
+        Play a fixed-length (Exhibition/T20/ODI/custom) innings, over by
+        over, for exactly self.overs overs. Unmodified extraction of the
+        original Play() loop body - Test matches never call this.
+
+        Returns:
+            None
+        """
+        batting_team = self.batting_team
+        overs = self.overs
+
         over_interrupt = 0
         if batting_team.batting_second is True:
             # in case of rainy, interrupt match intermittently
             if self.venue.weather == "rainy":
                 over_interrupt = random.choice(list(range(15, 50)))
-
-            msg = "Target for %s: %s from %s overs" % (
-                batting_team.name,
-                str(batting_team.target),
-                str(overs),
-            )
-            PrintInColor(msg, batting_team.color)
-            logger.info(msg)
-            # check if required rate
-            reqd_rr = batting_team.GetRequiredRate()
-            msg = "Reqd. run rate: %s" % (str(reqd_rr))
-            print(msg)
-            logger.info(msg)
 
         # now run for each over
         for over in range(0, overs):
@@ -227,30 +468,263 @@ class Match:
             if self.batting_team.wickets_fell == 10:
                 break
             self.PlayOver(over)
-            # update the over_history after each over
-            #batting_team.over_history[over] = batting_team.total_score
-            
+
             # if match ended
             if self.status is False:
                 break
 
-            # show batting stats
-            for p in pair:
-                msg = "%s %s (%s)" % (GetShortName(p.name), str(p.runs), str(p.balls))
-                print(msg)
-                logger.info(msg)
-
-            self.ShowHighlights()
-            self.DisplayBowlingStats()
-            self.DisplayScore()
-            self.DisplayProjectedScore()
-            # rotate strike after an over
-            RotateStrike(pair)
-
-        # innings just finished: send the web UI's full innings summary
-        # (batting/bowling cards, fall of wickets); no-op outside web mode
-        utilities.PushInningsScorecard(self)
+            self._PostOverDisplay(pair)
         return
+
+    def _PlayTestInningsOvers(self, pair):
+        """
+        Play an open-ended Test innings: continues until all-out, declared,
+        or the match runs out of days - never a fixed overs count.
+
+        Returns:
+            None
+        """
+        batting_team = self.batting_team
+        over = 0
+        while True:
+            if self._AdvanceSessionIfNeeded():
+                break
+            if self.status is False:
+                break
+            if batting_team.wickets_fell == 10:
+                break
+            if self._ShouldDeclare(over):
+                batting_team.declared = True
+                PrintInColor(
+                    "%s have declared their innings at %s/%s (%s overs)!"
+                    % (
+                        batting_team.name,
+                        str(batting_team.total_score),
+                        str(batting_team.wickets_fell),
+                        str(BallsToOvers(batting_team.total_balls)),
+                    ),
+                    Style.BRIGHT,
+                )
+                break
+
+            if over > 1 and over % 20 == 0:
+                self.CurrentMatchStatus()
+
+            self.batting_team.current_pair = pair
+            self.PlayOver(over)
+            self.overs_bowled_this_session += 1
+
+            if self.status is False:
+                break
+
+            self._PostOverDisplay(pair)
+            over += 1
+        return
+
+    def _PostOverDisplay(self, pair):
+        """
+        Shared per-over display/bookkeeping used by both the limited-overs
+        and Test over-loops: current batsmen figures, highlights, bowling/
+        batting scorecards, projected score (limited-overs only), strike
+        rotation.
+
+        Returns:
+            None
+        """
+        logger = self.logger
+        for p in pair:
+            msg = "%s %s (%s)" % (GetShortName(p.name), str(p.runs), str(p.balls))
+            print(msg)
+            logger.info(msg)
+
+        self.ShowHighlights()
+        self.DisplayBowlingStats()
+        self.DisplayScore()
+        # extrapolating a "projected final score" from self.overs is a
+        # limited-overs-only concept - meaningless (and would crash on
+        # self.overs being None) for a Test innings
+        if not self.is_test:
+            self.DisplayProjectedScore()
+
+        # push a full (batting/bowling/fall-of-wickets) scorecard snapshot
+        # to the web UI's side pane every 5 overs, so a long innings isn't
+        # only shown its full card once at the very end; no-op in console
+        # mode / outside web play
+        completed_overs = int(BallsToOvers(self.batting_team.total_balls))
+        if completed_overs > 0 and completed_overs % 5 == 0:
+            utilities.PushLiveInningsScorecard(self)
+
+        # rotate strike after an over
+        RotateStrike(pair)
+
+    def _AdvanceSessionIfNeeded(self):
+        """
+        Advance to the next session (morning/lunch/afternoon/tea/evening,
+        3 sessions of overs_per_session overs each) if the current session's
+        over budget is used up; rolls over to the next day after the 3rd
+        session, and ends the match in a draw if all match days are
+        exhausted. Checked at the top of every over in a Test innings,
+        never mid-over. Pushes a full scorecard snapshot to the web UI at
+        every session break.
+
+        Returns:
+            bool: True if the current innings (and match) should stop now.
+        """
+        if self.overs_bowled_this_session < self.overs_per_session:
+            return False
+
+        self.overs_bowled_this_session = 0
+        utilities.PushLiveInningsScorecard(self)
+
+        if self.session < self.sessions_per_day:
+            # session break (lunch/tea), same day continues
+            interval = "Lunch" if self.session == 1 else "Tea"
+            self.session += 1
+            PrintInColor(
+                "%s break! End of session %s, Day %s."
+                % (interval, str(self.session - 1), str(self.day)),
+                Style.BRIGHT,
+            )
+            if not self.autoplay:
+                input("press enter to continue..")
+            return False
+
+        # 3rd session of the day just finished - stumps, roll over to the
+        # next day
+        PrintInColor("Stumps! End of Day %s." % str(self.day), Style.BRIGHT)
+        self.session = 1
+        self.day += 1
+        if self.day > self.max_days:
+            PrintInColor(
+                "That's the end of the 5th day - the match ends in a draw.",
+                Style.BRIGHT,
+            )
+            self.match_drawn = True
+            self.status = False
+            return True
+        if not self.autoplay:
+            input("press enter to continue..")
+        return False
+
+    def _ShouldDeclare(self, over):
+        """
+        Decide whether the batting captain declares this Test innings
+        closed. Only offered for non-chase innings (self.declare_eligible),
+        and only once the innings has reached a plausible declaring point.
+
+        Returns:
+            bool
+        """
+        if not self.declare_eligible or self.batting_team.wickets_fell >= 10:
+            return False
+        bt = self.batting_team
+        if bt.total_score < 300:
+            return False
+        if self.autoplay:
+            return self._AutoplayDeclareHeuristic(over)
+        return (
+            ChooseFromOptions(
+                ["y", "n"],
+                "Declare %s's innings at %s/%s (%s overs)?"
+                % (
+                    bt.name,
+                    str(bt.total_score),
+                    str(bt.wickets_fell),
+                    str(BallsToOvers(bt.total_balls)),
+                ),
+                5,
+            )
+            == "y"
+        )
+
+    def _AutoplayDeclareHeuristic(self, over):
+        """
+        NOTE: a simple simulation heuristic for autoplay, not real
+        Test-match tactics - just plausible enough to occasionally trigger.
+
+        Returns:
+            bool
+        """
+        bt = self.batting_team
+        if bt.wickets_fell >= 7 and over >= 80:
+            return True
+        if bt.total_score >= 350 and bt.wickets_fell >= 5:
+            return True
+        if (self.max_days - self.day) <= 1 and bt.wickets_fell >= 6 and bt.total_score >= 200:
+            return True
+        return False
+
+    def BuildInningsSummary(self):
+        """
+        Snapshot the still-live batting/bowling figures into an
+        InningsSummary, before Team.StartBattingInnings/StartBowlingInnings
+        reset anything for the next innings. Used for Test-match multi-
+        innings history and the web UI's innings-scorecard push.
+
+        Returns:
+            InningsSummary
+        """
+        batting = self.batting_team
+        bowling = self.bowling_team
+
+        batting_card = []
+        for p in batting.team_array:
+            if p.status is True:
+                dismissal = "not out" if p.onfield else "DNB"
+            else:
+                dismissal = p.dismissal
+            batting_card.append(
+                {
+                    "name": p.name,
+                    "captain": bool(p.attr.iscaptain),
+                    "keeper": bool(p.attr.iskeeper),
+                    "dismissal": dismissal,
+                    "runs": int(p.runs),
+                    "balls": int(p.balls),
+                }
+            )
+
+        bowling_card = []
+        for bowler in bowling.bowlers:
+            if bowler.balls_bowled == 0:
+                continue
+            overs = float(BallsToOvers(bowler.balls_bowled))
+            economy = round(int(bowler.runs_given) / overs, 2) if overs > 0 else 0.0
+            bowling_card.append(
+                {
+                    "name": bowler.name,
+                    "overs": overs,
+                    "maidens": int(bowler.maidens),
+                    "runs": int(bowler.runs_given),
+                    "wickets": int(bowler.wkts),
+                    "economy": float(economy),
+                }
+            )
+
+        fow = [
+            {
+                "wicket": int(f.wkt),
+                "runs": int(f.runs),
+                "player": f.player_dismissed.name,
+                "overs": float(BallsToOvers(f.total_balls)),
+            }
+            for f in batting.fow
+        ]
+
+        return InningsSummary(
+            innings_no=len(batting.innings_history) + 1,
+            batting_team=batting.name,
+            bowling_team=bowling.name,
+            score=int(batting.total_score),
+            wickets=int(batting.wickets_fell),
+            balls=int(batting.total_balls),
+            overs=float(BallsToOvers(batting.total_balls)),
+            extras=int(batting.extras),
+            declared=bool(batting.declared),
+            batting_card=batting_card,
+            bowling_card=bowling_card,
+            fow=fow,
+        )
 
     def PlayOver(self, over):
         """
@@ -311,7 +785,7 @@ class Match:
                     Randomize(commentary.commentary_dramatic_over), Style.BRIGHT
                 )
 
-            if over == overs - 1 and ball == 6:
+            if overs and over == overs - 1 and ball == 6:
                 if batting_team.batting_second:
                     PrintInColor(
                         Randomize(commentary.commentary_last_ball_match), Style.BRIGHT
@@ -331,7 +805,8 @@ class Match:
                 Style.BRIGHT,
             )
             if self.autoplay:
-                time.sleep(1)
+                if not self.fast:
+                    time.sleep(1)
             else:
                 input("press enter to continue..")
 
@@ -384,7 +859,7 @@ class Match:
                 if self.status is False:
                     break
 
-            if batting_team.total_balls == (self.overs * 6):
+            if self.overs and batting_team.total_balls == (self.overs * 6):
                 PrintInColor("End of innings", Fore.LIGHTCYAN_EX)
                 # update last partnership
                 if batting_team.wickets_fell > 0:
@@ -407,23 +882,26 @@ class Match:
                     PrintInColor(
                         Randomize(commentary.commentary_all_out), Fore.LIGHTRED_EX
                     )
-                    if (self.overs * 6) / batting_team.total_score <= 1.2:
-                        PrintInColor(
-                            Randomize(commentary.commentary_all_out_good_score),
-                            Fore.GREEN,
-                        )
-                    elif 0.0 <= batting_team.GetCurrentRate() >= 1.42:
-                        PrintInColor(
-                            Randomize(commentary.commentary_all_out_bad_score),
-                            Fore.GREEN,
-                        )
+                    # "bowled out in under 1.2x the innings overs" framing
+                    # only makes sense for a fixed-length innings
+                    if self.overs:
+                        if (self.overs * 6) / batting_team.total_score <= 1.2:
+                            PrintInColor(
+                                Randomize(commentary.commentary_all_out_good_score),
+                                Fore.GREEN,
+                            )
+                        elif 0.0 <= batting_team.GetCurrentRate() >= 1.42:
+                            PrintInColor(
+                                Randomize(commentary.commentary_all_out_bad_score),
+                                Fore.GREEN,
+                            )
                     if not self.autoplay:
                         input("press enter to continue...")
                     break
 
             # batting second
             elif batting_team.batting_second:
-                if batting_team.total_balls >= (self.overs * 6):
+                if self.overs and batting_team.total_balls >= (self.overs * 6):
                     # update last partnership
                     self.UpdateLastPartnership()
                     self.status = False
@@ -862,7 +1340,8 @@ class Match:
         self.GetNextBatsman()
         if not self.autoplay:   input("press enter to continue")
         self.DisplayScore()
-        self.DisplayProjectedScore()
+        if not self.is_test:
+            self.DisplayProjectedScore()
         return
 
     def DisplayScore(self):
@@ -968,8 +1447,10 @@ class Match:
         print(ch * 45)
         logger.info(ch * 45)
         
-        # plot the graph
-        utilities.PlotOversBarGraph(batting_team.over_history, batting_team.over_wkt_history, "RR Graph")
+        # plot the graph (not meaningful for a Test innings that can run
+        # to 100+ overs across multiple days)
+        if not self.is_test:
+            utilities.PlotOversBarGraph(batting_team.over_history, batting_team.over_wkt_history, "RR Graph")
         return
 
     def GenerateRun(self, over, player_on_strike):
@@ -989,8 +1470,10 @@ class Match:
         venue = self.venue
         prob = venue.run_prob_t20
 
-        # if ODI, override the prob
-        if overs == 50:
+        # if ODI (or Test, as a starting-point approximation - real Test
+        # scoring is slower than ODI/T20 but this is a balance pass for
+        # another day, not a correctness concern), override the prob
+        if overs == 50 or self.is_test:
             prob = venue.run_prob
 
         # run array
@@ -1000,13 +1483,16 @@ class Match:
         prob_death = [0.2, 0.2, 0, 0, 0, 0.2, 0.2, 0.2]
 
         # in the death overs, increase prob of boundaries and wickets
-        if over == overs - 1:
+        # (no fixed "last over" concept in a Test innings)
+        if overs and over == overs - 1:
             prob = prob_death
 
         if batting_team.batting_second:
-            # if required rate is too much, try to go big!
+            # if required rate is too much, try to go big! (meaningless
+            # without a fixed overs count, so Test's chase skips this)
             if (
-                batting_team.total_balls > 0
+                overs
+                and batting_team.total_balls > 0
                 and batting_team.GetRequiredRate() - batting_team.GetCurrentRate()
                 >= 2.0
                 and over <= overs - 2
@@ -1070,16 +1556,18 @@ class Match:
                 self.ShowHighlights()
                 PrintInColor("Match won!!", Fore.LIGHTGREEN_EX)
                 self.status = False
-            elif towin <= 20 or over == overs - 1:
+            elif towin <= 20 or (overs and over == overs - 1):
                 self.ShowHighlights()
                 if towin == 1:
                     PrintInColor("Match tied!", Fore.LIGHTGREEN_EX)
-                else:
+                elif overs:
                     PrintInColor(
                         "To win: %s from %s"
                         % (str(towin), str(overs * 6 - batting_team.total_balls)),
                         Style.BRIGHT,
                     )
+                else:
+                    PrintInColor("To win: %s" % str(towin), Style.BRIGHT)
         return
 
     def MatchAbandon(self):
@@ -1620,6 +2108,82 @@ class Match:
         PrintInColor(msg, Style.BRIGHT)
         self.logger.info(msg)
 
+    def FindPlayerOfTheMatchTest(self):
+        """
+        Simplified Test player-of-the-match: aggregates each player's
+        batting/bowling figures across their (up to 2) innings_history
+        entries, then picks a standout from the winning team. Silently
+        skips (no MOM) for a draw or if the winning team never got to bat -
+        both real possibilities in a Test match.
+
+        Returns:
+            None
+        """
+        if self.result is None or self.result.winner is None:
+            return
+        winner = self.result.winner
+        loser = self.team2 if winner is self.team1 else self.team1
+
+        if not winner.innings_history:
+            return
+
+        bat_totals = {}
+        for inn in winner.innings_history:
+            for b in inn.batting_card:
+                entry = bat_totals.setdefault(
+                    b["name"], {"runs": 0, "balls": 0}
+                )
+                entry["runs"] += b["runs"]
+                entry["balls"] += b["balls"]
+
+        bowl_totals = {}
+        for inn in winner.innings_history:
+            for bw in inn.bowling_card:
+                entry = bowl_totals.setdefault(
+                    bw["name"], {"wickets": 0, "runs": 0}
+                )
+                entry["wickets"] += bw["wickets"]
+                entry["runs"] += bw["runs"]
+
+        if not bat_totals and not bowl_totals:
+            return
+
+        best_batsman_name, best_batsman = (
+            max(bat_totals.items(), key=lambda kv: kv[1]["runs"])
+            if bat_totals
+            else (None, None)
+        )
+        best_bowler_name, best_bowler = (
+            max(bowl_totals.items(), key=lambda kv: (kv[1]["wickets"], -kv[1]["runs"]))
+            if bowl_totals
+            else (None, None)
+        )
+
+        # weight bowler vs batsman, echoing the limited-overs heuristic
+        mom_is_bowler = 1
+        mom_is_batsman = 1
+        if best_bowler and best_bowler["wickets"] >= 5:
+            mom_is_bowler += 1
+        loser_bowled_out = loser.innings_history and all(
+            inn.wickets == 10 for inn in loser.innings_history
+        )
+        if loser_bowled_out and best_bowler and best_bowler["wickets"] >= 3:
+            mom_is_bowler += 1
+
+        if best_batsman_name and (not best_bowler_name or mom_is_batsman >= mom_is_bowler):
+            name, stat = best_batsman_name, "scored %s runs in the match" % str(
+                best_batsman["runs"]
+            )
+        else:
+            name, stat = best_bowler_name, "took %s wickets for %s runs in the match" % (
+                str(best_bowler["wickets"]),
+                str(best_bowler["runs"]),
+            )
+
+        msg = "Player of the match: %s (%s)" % (name, stat)
+        PrintInColor(msg, Style.BRIGHT)
+        self.logger.info(msg)
+
     def Toss(self):
         """
         Perform the toss to decide which team bats first.
@@ -1789,10 +2353,9 @@ class Match:
                 % (",".join([p.name for p in common_players]))
             )
 
-        # make first batsman on strike
-        for t in [self.team1, self.team2]:
-            t.opening_pair[0].onstrike, t.opening_pair[1].onstrike = True, False
-            t.opening_pair[0].onfield, t.opening_pair[1].onfield = True, True
+        # note: opener onstrike/onfield assignment now happens in
+        # Team.StartBattingInnings(), called at the top of every innings
+        # (needed so a team's *second* Test innings also starts clean)
 
         # check if players have numbers, else assign randomly
         # using np instead of random.choice so that there are no duplicates
@@ -2197,7 +2760,7 @@ class Match:
             str(BallsToOvers(batting_team.total_balls)),
         )
         msg += " Current Rate: %s" % str(crr)
-        if batting_team.batting_second:
+        if batting_team.batting_second and not self.is_test:
             msg += " Required Rate: %s\n" % str(rr)
 
         print(msg)
@@ -2291,8 +2854,10 @@ class Match:
                     Style.BRIGHT,
                 )
 
-        # if chasing
-        else:
+        # if chasing (required-run-rate framing doesn't fit a Test chase,
+        # where GetRequiredRate() is intentionally a no-op - skip rather
+        # than show misleading "gettable"/"gone case" commentary there)
+        elif not self.is_test:
             # gettable
             if crr >= rr:
                 PrintInColor(
@@ -2577,5 +3142,61 @@ class Match:
         PrintListFormatted(data_to_print, 0.01, logger)
         print("-" * 43)
         logger.info("-" * 43)
+        if not self.autoplay:
+            input("Press Enter to continue..")
+
+    def MatchSummaryTest(self):
+        """
+        Print the Test match summary: one score line per team, joined with
+        " & " when a team batted twice, sourced from innings_history since
+        live Team fields only reflect whichever innings was played last.
+        Tolerates a team having 0 or 1 completed innings (a draw can mean
+        the second team never batted at all).
+
+        Returns:
+            None
+        """
+        logger = self.logger
+        ch = "-"
+        result = self.result
+
+        msg = "%s Test Match Summary %s" % (ch * 10, ch * 10)
+        print(msg)
+        logger.info(msg)
+
+        msg = "%s vs %s, at %s" % (result.team1.name, result.team2.name, self.venue.name)
+        print(msg)
+        logger.info(msg)
+
+        print(ch * 45)
+        logger.info(ch * 45)
+
+        msg = result.result_str
+        PrintInColor(msg, Style.BRIGHT)
+        logger.info(msg)
+
+        print(ch * 45)
+        logger.info(ch * 45)
+
+        for team in [self.team1, self.team2]:
+            if not team.innings_history:
+                msg = "%s: did not bat" % team.name
+            else:
+                lines = [
+                    "%s/%s%s (%s)"
+                    % (
+                        str(inn.score),
+                        str(inn.wickets),
+                        "d" if inn.declared else "",
+                        str(inn.overs),
+                    )
+                    for inn in team.innings_history
+                ]
+                msg = "%s: %s" % (team.name, " & ".join(lines))
+            print(msg)
+            logger.info(msg)
+
+        print(ch * 45)
+        logger.info(ch * 45)
         if not self.autoplay:
             input("Press Enter to continue..")

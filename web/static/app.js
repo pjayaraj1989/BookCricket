@@ -46,8 +46,11 @@ function submit(value, echoText) {
 }
 
 function looksLikeContinuePrompt(prompt) {
-  const p = prompt.toLowerCase();
-  return p.includes("continue") || p.includes("press enter") || p.includes("press any key");
+  // startsWith, not includes: prompts like "Pick next bowler: ... [Press
+  // Enter to auto-select]" also mention "press enter" as a fallback hint
+  // but need a real text field, not a bare Continue button.
+  const p = prompt.trim().toLowerCase();
+  return p.startsWith("continue") || p.startsWith("press enter") || p.startsWith("press any key");
 }
 
 function renderChoose(msg, options) {
@@ -148,17 +151,20 @@ function renderScorecard(state) {
     '<div class="team-line"><span>' + escapeHtml(state.battingTeam) + "</span>" +
     '<span class="score">' + state.score + "/" + state.wickets + "</span></div>"
   );
+  const oversLine = state.isTest
+    ? "Day " + state.day + "/" + state.maxDays + "  ·  Overs: " + Number(state.overs).toFixed(1)
+    : "Overs: " + Number(state.overs).toFixed(1) + "/" + state.totalOvers;
   parts.push(
-    '<div class="sub-line">Overs: ' + Number(state.overs).toFixed(1) + "/" + state.totalOvers +
-    "  ·  CRR: " + Number(state.crr).toFixed(2) + "</div>"
+    '<div class="sub-line">' + oversLine + "  ·  CRR: " + Number(state.crr).toFixed(2) + "</div>"
   );
 
   if (state.target !== null && state.target !== undefined) {
     const need = Math.max(state.target - state.score, 0);
-    parts.push(
-      '<div class="target-line">Need ' + need + " more vs " + escapeHtml(state.bowlingTeam) +
-      "  ·  RRR: " + Number(state.requiredRunRate).toFixed(2) + "</div>"
-    );
+    let targetLine = "Need " + need + " more vs " + escapeHtml(state.bowlingTeam);
+    if (state.requiredRunRate !== null && state.requiredRunRate !== undefined) {
+      targetLine += "  ·  RRR: " + Number(state.requiredRunRate).toFixed(2);
+    }
+    parts.push('<div class="target-line">' + targetLine + "</div>");
   }
 
   parts.push("<h3>Batting</h3><table>");
@@ -182,13 +188,19 @@ function renderScorecard(state) {
   liveScorecardEl.innerHTML = parts.join("");
 }
 
-function renderInningsSummary(innings) {
+// the innings-summary block currently being refreshed in place (every 5
+// overs / every session, inProgress: true); cleared once that innings'
+// final (inProgress: false) push locks it in as permanent history, so the
+// next innings starts a fresh block instead of continuing to update this one
+let currentLiveInningsBlockEl = null;
+
+function buildInningsCardHtml(innings) {
   const parts = [];
-  parts.push('<div class="innings-summary">');
   parts.push(
-    '<div class="team-line"><span>' + escapeHtml(innings.battingTeam) + " innings</span>" +
-    '<span class="score">' + innings.score + "/" + innings.wickets + " (" +
-    Number(innings.overs).toFixed(1) + ")</span></div>"
+    '<div class="team-line"><span>' + escapeHtml(innings.battingTeam) + " innings" +
+    (innings.inProgress ? ' <span class="live-badge">LIVE</span>' : "") + "</span>" +
+    '<span class="score">' + innings.score + "/" + innings.wickets + (innings.declared ? "d" : "") +
+    " (" + Number(innings.overs).toFixed(1) + ")</span></div>"
   );
   parts.push('<div class="sub-line">Extras: ' + innings.extras + "</div>");
 
@@ -225,9 +237,23 @@ function renderInningsSummary(innings) {
     parts.push("</div>");
   }
 
-  parts.push("</div>");
+  return parts.join("");
+}
 
-  const wrapper = document.createElement("div");
-  wrapper.innerHTML = parts.join("");
-  inningsSummariesEl.appendChild(wrapper.firstElementChild);
+function renderInningsSummary(innings) {
+  if (currentLiveInningsBlockEl) {
+    // refresh the block already showing this in-progress innings
+    currentLiveInningsBlockEl.innerHTML = buildInningsCardHtml(innings);
+  } else {
+    const wrapper = document.createElement("div");
+    wrapper.className = "innings-summary";
+    wrapper.innerHTML = buildInningsCardHtml(innings);
+    inningsSummariesEl.appendChild(wrapper);
+    currentLiveInningsBlockEl = wrapper;
+  }
+
+  if (!innings.inProgress) {
+    // innings is genuinely done - lock this block in as permanent history
+    currentLiveInningsBlockEl = null;
+  }
 }
