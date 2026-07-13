@@ -1,0 +1,38 @@
+name: Nightly Test Match
+
+on:
+    schedule:
+        # 02:00 UTC nightly
+        - cron: "0 2 * * *"
+    workflow_dispatch:
+
+jobs:
+  run-test-match:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Run a Test match
+        run: |
+          cd $GITHUB_WORKSPACE
+          chmod +x ./ci/scripts/run.sh
+          # teams/venue are picked at random by ReadData()/GetVenue() under
+          # autoplay; "test" forces the Test-match format, "fast" skips
+          # PlayOver's per-ball sleep so a full (up to 5-day) match finishes
+          # in CI in a reasonable time. The overs value is ignored for Test
+          # matches (Match.overs is unbounded) but still required positionally.
+          ./ci/scripts/run.sh $GITHUB_WORKSPACE 20 test fast
+          ls -la $GITHUB_WORKSPACE/logs/
+
+      - name: Upload log file
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-test-match-log
+          path: logs/**
