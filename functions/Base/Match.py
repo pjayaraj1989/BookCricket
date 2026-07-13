@@ -121,6 +121,11 @@ class Match:
         else:
             self._PlayLimitedOversMatch()
 
+        # once the result/summary/player-of-the-match are all finalized,
+        # send a persistent highlights card to the web UI; no-op in
+        # console mode
+        utilities.PushMatchHighlights(self)
+
         # close log handler
         handler.close()
         return
@@ -1523,10 +1528,12 @@ class Match:
         # run array: [-1(wkt), 0, 1, 2, 3, 4, 5, 6]
         run_array = [-1, 0, 1, 2, 3, 4, 5, 6]
 
-        # Test batting: watchful and risk-averse - mostly dots and singles
-        # (occupying the crease), fours only once in a while, sixes very
-        # rare, and even rarer to get out than to hit a six
-        prob_test = [0.025, 0.40, 0.32, 0.09, 0.02, 0.10, 0.015, 0.03]
+        # Test batting: watchful and risk-averse - mostly dots, singles and
+        # twos (occupying the crease, rotating strike), and even rarer to
+        # get out than to find a boundary. This is the neutral baseline for
+        # an average batter against an average bowler - the batter/bowler
+        # skill matchup below adjusts it further either way.
+        prob_test = [0.025, 0.40, 0.40, 0.15, 0.01, 0.0, 0.015, 0.0]
 
         prob = venue.run_prob_t20
         if self.is_test:
@@ -2194,8 +2201,13 @@ class Match:
                 entry["runs"] += b["runs"]
                 entry["balls"] += b["balls"]
 
+        # a team's own bowling figures for an innings get attached to the
+        # OPPONENT's innings_history entry (BuildInningsSummary snapshots
+        # bowling_card from self.bowling_team, and Play() appends the whole
+        # summary to self.batting_team.innings_history) - so the winner's
+        # own bowlers are on the loser's innings_history, not the winner's.
         bowl_totals = {}
-        for inn in winner.innings_history:
+        for inn in loser.innings_history:
             for bw in inn.bowling_card:
                 entry = bowl_totals.setdefault(
                     bw["name"], {"wickets": 0, "runs": 0}
@@ -2238,6 +2250,8 @@ class Match:
                 str(best_bowler["runs"]),
             )
 
+        self.result.mom_name = name
+        self.result.mom_stat = stat
         msg = "Player of the match: %s (%s)" % (name, stat)
         PrintInColor(msg, Style.BRIGHT)
         self.logger.info(msg)
@@ -2416,16 +2430,21 @@ class Match:
         # Team.StartBattingInnings(), called at the top of every innings
         # (needed so a team's *second* Test innings also starts clean)
 
-        # check if players have numbers, else assign randomly
-        # using np instead of random.choice so that there are no duplicates
+        # check if players have numbers, else assign randomly - drawn from
+        # a shrinking per-team pool (excluding numbers already set in the
+        # data) so two players on the same team can never end up with the
+        # same number. size=1 draws on their own (as this used to do, one
+        # per player) can't prevent duplicates across separate calls, no
+        # matter the replace setting.
         import numpy as np
 
         for t in [self.team1, self.team2]:
+            used_numbers = {p.no for p in t.team_array if p.no is not None}
+            available_numbers = [n for n in range(100) if n not in used_numbers]
             for player in t.team_array:
                 if player.no is None:
-                    player.no = np.random.choice(
-                        list(range(100)), size=1, replace=False
-                    )[0]
+                    player.no = np.random.choice(available_numbers)
+                    available_numbers.remove(player.no)
         print("Validated teams")
         
         # additional validation of player names if autoplay

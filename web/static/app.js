@@ -141,6 +141,8 @@ socket.on("server_event", (data) => {
     renderInningsSummary(data.data);
   } else if (data.type === "event") {
     renderEvent(data.kind, data.data);
+  } else if (data.type === "highlights") {
+    renderMatchHighlights(data.data);
   }
 });
 
@@ -158,7 +160,8 @@ function renderScorecard(state) {
     '<span class="score">' + state.score + "/" + state.wickets + "</span></div>"
   );
   const oversLine = state.isTest
-    ? "Day " + state.day + "/" + state.maxDays + "  ·  Overs: " + Number(state.overs).toFixed(1)
+    ? "Day " + state.day + "/" + state.maxDays + "  ·  Session " + state.session + "/" + state.sessionsPerDay +
+      "  ·  Overs: " + Number(state.overs).toFixed(1)
     : "Overs: " + Number(state.overs).toFixed(1) + "/" + state.totalOvers;
   parts.push(
     '<div class="sub-line">' + oversLine + "  ·  CRR: " + Number(state.crr).toFixed(2) + "</div>"
@@ -414,4 +417,53 @@ function renderEvent(kind, data) {
       3000
     );
   }
+}
+
+function renderMatchHighlights(highlights) {
+  const parts = [];
+  parts.push("<h2>🏆 Match Highlights</h2>");
+  parts.push('<div class="result-line">' + escapeHtml(highlights.resultStr) + "</div>");
+
+  (highlights.teams || []).forEach((t) => {
+    parts.push(
+      '<div class="team-score-line"><strong>' + escapeHtml(t.name) + "</strong>: " +
+      t.scoreLines.map(escapeHtml).join(" &amp; ") + "</div>"
+    );
+  });
+
+  if ((highlights.topBatters || []).length) {
+    parts.push("<h4>Top Scorers</h4><ul>");
+    highlights.topBatters.forEach((b) => {
+      parts.push(
+        "<li>" + escapeHtml(b.name) + " (" + escapeHtml(b.team) + ") - " +
+        b.runs + " (" + b.balls + ")</li>"
+      );
+    });
+    parts.push("</ul>");
+  }
+
+  if ((highlights.topBowlers || []).length) {
+    parts.push("<h4>Top Wicket-Takers</h4><ul>");
+    highlights.topBowlers.forEach((b) => {
+      parts.push(
+        "<li>" + escapeHtml(b.name) + " (" + escapeHtml(b.team) + ") - " +
+        b.wickets + "/" + b.runs + "</li>"
+      );
+    });
+    parts.push("</ul>");
+  }
+
+  if (highlights.playerOfMatch) {
+    parts.push(
+      '<div class="mom-line">Player of the Match: <strong>' +
+      escapeHtml(highlights.playerOfMatch.name) + "</strong> (" +
+      escapeHtml(highlights.playerOfMatch.stat) + ")</div>"
+    );
+  }
+
+  const card = document.createElement("div");
+  card.className = "match-highlights";
+  card.innerHTML = parts.join("");
+  logEl.appendChild(card);
+  logEl.scrollTop = logEl.scrollHeight;
 }

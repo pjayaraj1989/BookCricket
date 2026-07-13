@@ -129,6 +129,12 @@ class Result:
             "most_wkts": None,
             "best_eco": None,
             "mom": None,
+            # Test's player-of-the-match is aggregated across up to 2
+            # innings_history entries per player, not a single live Player
+            # object (unlike "mom" above, used by limited-overs matches) -
+            # set by FindPlayerOfTheMatchTest, read by PushMatchHighlights.
+            "mom_name": None,
+            "mom_stat": None,
             "result_str": " ",
         }
         self = FillAttributes(self, attrs, kwargs)

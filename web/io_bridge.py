@@ -47,6 +47,11 @@ class WebChannel:
         # and the structured scorecard state.
         self._emit("server_event", {"type": "event", "kind": kind, "data": data or {}})
 
+    def highlights(self, data):
+        # a persistent post-match summary card (result, top scorers/
+        # wicket-takers, player of the match), sent once the match is over.
+        self._emit("server_event", {"type": "highlights", "data": data})
+
     def write(self, text, color, end):
         """Console print() calls a line at a time (default end="\\n"), but some
         (e.g. PlotOversBarGraph's ASCII bar chart in functions/utilities.py)
