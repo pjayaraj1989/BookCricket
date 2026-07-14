@@ -270,6 +270,37 @@ main {
   display: block;
 }
 
+/* full-screen intro cover, shown once on load */
+.intro-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #03100a;
+  cursor: pointer;
+  transition: opacity 0.8s ease;
+}
+
+.intro-splash img {
+  width: min(94vw, 940px);
+  max-height: 94vh;
+  object-fit: contain;
+  animation: intro-zoom 4s ease forwards;
+}
+
+.intro-splash.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes intro-zoom {
+  from { transform: scale(0.95); opacity: 0; }
+  15% { opacity: 1; }
+  to { transform: scale(1.02); opacity: 1; }
+}
+
 /* top-left "highlight" pane: brief pop-ups for toss/wicket/four/six/DRS */
 .event-pane {
   position: fixed;
