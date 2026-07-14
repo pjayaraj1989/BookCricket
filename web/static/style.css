@@ -438,6 +438,14 @@ main {
   color: #7fe3a3;
 }
 
+.event-achievement-badge {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #f2d16b;
+  text-shadow: 0 0 10px rgba(242, 209, 107, 0.35);
+  animation: event-pop 0.4s ease;
+}
+
 .drs-lights {
   display: flex;
   gap: 0.5rem;
