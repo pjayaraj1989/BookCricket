@@ -418,6 +418,8 @@ class Match:
         # once a team can bat a second time in a Test match
         pair = list(batting_team.opening_pair)
 
+        utilities.PushEvent("openers", {"names": [p.name for p in pair]})
+
         # reset accumulators for this innings. For limited-overs matches this
         # is a no-op in effect (each team only ever calls it once, and fields
         # already start at their __init__ defaults) - it's what lets a team
@@ -792,6 +794,7 @@ class Match:
         # get bowler
         bowler = self.AssignBowler()
 
+        utilities.PushEvent("new_bowler", {"name": bowler.name, "opening": over == 0})
         msg = "New bowler is %s" % (bowler.name)
         PrintInColor(msg, bowling_team.color)
         msg = "New bowler: %s %s/%s (%s)" % (
@@ -1922,6 +1925,7 @@ class Match:
             pair[ind] = self.AssignBatsman(pair)
 
             pair[ind].onstrike = True
+            utilities.PushEvent("new_batsman", {"name": pair[ind].name})
             PrintInColor("New Batsman: %s" % pair[ind].name, batting_team.color)
             # check if he is captain
             if pair[ind].attr.iscaptain:
