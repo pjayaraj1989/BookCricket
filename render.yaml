@@ -1,0 +1,21 @@
+# Render.com blueprint: deploy BookCricket's web UI as a public site.
+# In the Render dashboard choose "New +" -> "Blueprint", point it at this
+# repo, and it builds/deploys from this file on every push.
+services:
+  - type: web
+    name: bookcricket
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # one worker (sessions live in that process's memory); generous thread
+    # pool because every connected browser holds a thread for its websocket
+    # plus one for its game engine; timeout 0 so gunicorn doesn't kill
+    # long-lived connections
+    startCommand: gunicorn -w 1 --threads 100 --timeout 0 -b 0.0.0.0:$PORT web.app:app
+    envVars:
+      - key: PUBLIC
+        value: "1"
+      - key: MAX_SESSIONS
+        value: "20"
+      - key: PYTHON_VERSION
+        value: "3.12.6"

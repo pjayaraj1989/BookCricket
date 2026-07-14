@@ -38,6 +38,17 @@ app = Flask(__name__, static_folder=STATIC_DIR, static_url_path="")
 app.config["SECRET_KEY"] = os.urandom(24)
 socketio = SocketIO(app, async_mode="threading")
 
+# public mode: set PUBLIC=1 (done in render.yaml; RENDER is set automatically
+# on render.com) to disable the shutdown endpoint/button - on a shared server
+# a visitor must not be able to kill the game for everyone else.
+IS_PUBLIC = (
+    os.environ.get("PUBLIC", "").lower() in ("1", "true", "yes")
+    or os.environ.get("RENDER") is not None
+)
+# each browser tab runs its own game thread; cap them so a public instance
+# can't be trivially exhausted by opening tabs
+MAX_SESSIONS = int(os.environ.get("MAX_SESSIONS", 20))
+
 _channels = {}
 _channels_lock = threading.Lock()
 
@@ -92,6 +103,9 @@ def shutdown():
     # local process, and Werkzeug's dev server offers no clean programmatic
     # stop in recent versions. Delay briefly so this response actually
     # reaches the browser before the process disappears.
+    if IS_PUBLIC:
+        return {"status": "disabled"}, 403
+
     def _stop():
         time.sleep(0.3)
         os._exit(0)
@@ -122,7 +136,15 @@ def handle_connect():
     sid = request.sid
     channel = WebChannel(lambda event, data: socketio.emit(event, data, to=sid))
     with _channels_lock:
+        if len(_channels) >= MAX_SESSIONS:
+            channel.output(
+                "Server is full (%d matches in progress). Try again later."
+                % MAX_SESSIONS,
+                "fore-lightred_ex",
+            )
+            return False  # reject the connection
         _channels[sid] = channel
+    socketio.emit("server_config", {"allowShutdown": not IS_PUBLIC}, to=sid)
     thread = threading.Thread(target=_play, args=(sid, channel), daemon=True)
     thread.start()
 

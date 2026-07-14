@@ -117,6 +117,12 @@ socket.on("connect", () => {
   statusEl.className = "status ok";
 });
 
+// the stop-server button only makes sense when you own the server (local
+// play); on a public deployment the server says so and the button stays away
+socket.on("server_config", (config) => {
+  killBtn.style.display = config && config.allowShutdown ? "" : "none";
+});
+
 socket.on("disconnect", () => {
   statusEl.textContent = "disconnected";
   statusEl.className = "status err";
