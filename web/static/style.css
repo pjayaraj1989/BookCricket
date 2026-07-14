@@ -333,6 +333,65 @@ main {
   animation: event-pop 0.4s ease;
 }
 
+/* incoming-batsman card: pane grows to fit the pic + name */
+.event-pane.player {
+  width: auto;
+  height: auto;
+  min-width: 110px;
+  padding: 0.6rem 0.8rem;
+}
+
+.event-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  animation: event-pop 0.4s ease;
+}
+
+.event-player-pic,
+.event-player-fallback {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 2px solid #2a6b45;
+}
+
+.event-player-pic {
+  object-fit: cover;
+  background: #1e4530;
+}
+
+.event-player-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1e4530;
+  color: #e6f2ea;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.event-player-name {
+  max-width: 140px;
+  font-size: 0.8rem;
+  color: #e6f2ea;
+  text-align: center;
+}
+
+.event-openers {
+  display: flex;
+  gap: 1.2rem;
+}
+
+.event-player-role {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #7fe3a3;
+}
+
 .drs-lights {
   display: flex;
   gap: 0.5rem;

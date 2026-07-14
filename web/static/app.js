@@ -377,22 +377,86 @@ const STUMPS_SVG =
   '<line x1="30" y1="9" x2="46" y2="14" stroke="#f2d16b" stroke-width="4" stroke-linecap="round"/>' +
   "</svg>";
 
-let eventHideTimer = null;
+// Events can arrive back-to-back with no user interaction in between (the
+// openers card followed instantly by the opening bowler's card at innings
+// start), so queue them: each pop-up gets its full hold time instead of the
+// last writer clobbering the ones before it.
+const eventQueue = [];
+let eventTimer = null;
 
-function showEventPane(innerHtml, holdMs) {
-  if (eventHideTimer) {
-    clearTimeout(eventHideTimer);
-    eventHideTimer = null;
+function showEventPane(content, holdMs, paneClass) {
+  eventQueue.push({ content: content, holdMs: holdMs, paneClass: paneClass });
+  if (!eventTimer) drainEventQueue();
+}
+
+function drainEventQueue() {
+  const item = eventQueue.shift();
+  if (!item) return;
+
+  if (typeof item.content === "string") {
+    eventPaneEl.innerHTML = item.content;
+  } else {
+    eventPaneEl.innerHTML = "";
+    eventPaneEl.appendChild(item.content);
   }
-  eventPaneEl.innerHTML = innerHtml;
-  // drop and re-add "visible" so the pop/flip animations restart even if
-  // the pane is already showing a previous event
-  eventPaneEl.classList.remove("visible");
+  // rebuild the class list from scratch (dropping "visible") so the pop/flip
+  // animations restart even if the pane is already showing a previous event
+  eventPaneEl.className = "event-pane" + (item.paneClass ? " " + item.paneClass : "");
   void eventPaneEl.offsetWidth; // force reflow
   eventPaneEl.classList.add("visible");
-  if (holdMs) {
-    eventHideTimer = setTimeout(() => eventPaneEl.classList.remove("visible"), holdMs);
+
+  if (item.holdMs) {
+    eventTimer = setTimeout(() => {
+      eventTimer = null;
+      if (eventQueue.length) {
+        drainEventQueue();
+      } else {
+        eventPaneEl.classList.remove("visible");
+      }
+    }, item.holdMs);
   }
+  // holdMs of 0 (drs_pending) keeps the pane up, with no timer, until the
+  // next event arrives and replaces it immediately
+}
+
+function buildPlayerCard(name, role) {
+  const initials = name
+    .split(/\s+/)
+    .map((w) => w[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  const card = document.createElement("div");
+  card.className = "event-player";
+
+  const img = document.createElement("img");
+  img.className = "event-player-pic";
+  img.alt = name;
+  // server resolves the raw name to resources/players/pics/<slug>.<ext>;
+  // a 404 (no pic saved for this player) swaps in the initials avatar
+  img.src = "players/pics/" + encodeURIComponent(name);
+  img.addEventListener("error", () => {
+    const fallback = document.createElement("span");
+    fallback.className = "event-player-fallback";
+    fallback.textContent = initials || "🏏";
+    img.replaceWith(fallback);
+  });
+
+  const label = document.createElement("div");
+  label.className = "event-player-name";
+  label.textContent = name;
+
+  card.appendChild(img);
+  card.appendChild(label);
+  if (role) {
+    const roleEl = document.createElement("div");
+    roleEl.className = "event-player-role";
+    roleEl.textContent = role;
+    card.appendChild(roleEl);
+  }
+  return card;
 }
 
 function renderEvent(kind, data) {
@@ -404,6 +468,19 @@ function renderEvent(kind, data) {
     showEventPane('<span class="event-digit four">4!</span>', 1500);
   } else if (kind === "six") {
     showEventPane('<span class="event-digit six">6!</span>', 1500);
+  } else if (kind === "new_batsman" || kind === "new_bowler") {
+    const name = data && data.name ? String(data.name) : "";
+    let role = "New batsman";
+    if (kind === "new_bowler") role = data && data.opening ? "Opening bowler" : "New bowler";
+    if (name) showEventPane(buildPlayerCard(name, role), 3000, "player");
+  } else if (kind === "openers") {
+    const names = ((data && data.names) || []).map(String).filter(Boolean);
+    if (names.length) {
+      const row = document.createElement("div");
+      row.className = "event-openers";
+      names.forEach((n) => row.appendChild(buildPlayerCard(n, "Opener")));
+      showEventPane(row, 4000, "player");
+    }
   } else if (kind === "drs_pending") {
     showEventPane(
       '<div class="drs-lights blinking"><span class="drs-bulb red"></span><span class="drs-bulb green"></span></div>',

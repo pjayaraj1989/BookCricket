@@ -5,6 +5,7 @@
 # input()/print()/PrintInColor()/ChooseFromOptions() calls are transparently
 # redirected to that thread's WebChannel by web/io_bridge.py.
 import os
+import re
 import sys
 import threading
 import time
@@ -19,10 +20,15 @@ install_web_io()
 
 import BookCricket  # noqa: E402
 
-from flask import Flask, request, send_from_directory  # noqa: E402
+from flask import Flask, abort, request, send_from_directory  # noqa: E402
 from flask_socketio import SocketIO  # noqa: E402
 
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+PLAYER_PICS_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "resources", "players", "pics",
+)
+PLAYER_PIC_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp")
 
 app = Flask(__name__, static_folder=STATIC_DIR, static_url_path="")
 app.config["SECRET_KEY"] = os.urandom(24)
@@ -35,6 +41,21 @@ _channels_lock = threading.Lock()
 @app.route("/")
 def index():
     return send_from_directory(STATIC_DIR, "index.html")
+
+
+@app.route("/players/pics/<path:player_name>")
+def player_pic(player_name):
+    # The browser asks for the raw player name ("Virat Kohli"); resolve it to
+    # a file in resources/players/pics by slug (virat_kohli.png/.jpg/...), so
+    # the filename convention lives in exactly one place. 404 means "no pic" -
+    # the frontend falls back to an initials avatar.
+    slug = re.sub(r"[^a-z0-9]+", "_", player_name.lower()).strip("_")
+    if not slug:
+        abort(404)
+    for ext in PLAYER_PIC_EXTENSIONS:
+        if os.path.isfile(os.path.join(PLAYER_PICS_DIR, slug + ext)):
+            return send_from_directory(PLAYER_PICS_DIR, slug + ext)
+    abort(404)
 
 
 @app.route("/shutdown", methods=["POST"])
