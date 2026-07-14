@@ -10,7 +10,7 @@ from functions.helper import Venue
 from functions.Base.Player import Player
 from functions.Base.Match import Match
 from functions.Base.Team import Team
-from functions.utilities import ChooseFromOptions, PrintInColor, Randomize, Error_Exit
+from functions.utilities import ChooseFromOptions, PrintInColor, Randomize, Error_Exit, PushEvent
 import random
 from numpy.random import choice
 from colorama import Fore, Style
@@ -53,6 +53,7 @@ def GetVenue(venue_data, autoplay):
     venue = next((v for v in venues if v['name'] == selected_venue_name), None)
     
     PrintInColor("Selected Stadium: %s" % venue['name'], Style.BRIGHT)
+    PushEvent("venue_selected", {"name": venue['name']})
     venue_obj = Venue(name=venue['name'], run_prob=venue['run_prob'])
 
     # populate run_prob_t20
@@ -238,6 +239,8 @@ def GetMatchInfo(list_of_teams, venue, autoplay, overs, format_override=None, fa
         if t.key == t2:
             team2 = t
 
+    PushEvent("teams_selected", {"names": [team1.name, team2.name]})
+
     if is_test:
         match_type = "Test"
     else:
@@ -289,6 +292,7 @@ def GetMatchInfo(list_of_teams, venue, autoplay, overs, format_override=None, fa
     PrintInColor(
         "Umpires for todays match are %s and %s" % (umpire[0], umpire[1]), Style.BRIGHT
     )
+    PushEvent("umpires", {"names": [umpire[0], umpire[1]]})
     
     if not autoplay:
         input("press enter to continue..")

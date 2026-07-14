@@ -377,6 +377,63 @@ const STUMPS_SVG =
   '<line x1="30" y1="9" x2="46" y2="14" stroke="#f2d16b" stroke-width="4" stroke-linecap="round"/>' +
   "</svg>";
 
+function buildFlagCard(teamName) {
+  const card = document.createElement("div");
+  card.className = "event-player";
+
+  const img = document.createElement("img");
+  img.className = "event-flag-pic";
+  img.alt = teamName;
+  // server resolves the raw team name to resources/teams/flags/<slug>.<ext>
+  img.src = "teams/flags/" + encodeURIComponent(teamName);
+  img.addEventListener("error", () => {
+    const fallback = document.createElement("span");
+    fallback.className = "event-flag-fallback";
+    fallback.textContent = teamName.slice(0, 3).toUpperCase();
+    img.replaceWith(fallback);
+  });
+
+  const label = document.createElement("div");
+  label.className = "event-player-name";
+  label.textContent = teamName;
+
+  card.appendChild(img);
+  card.appendChild(label);
+  return card;
+}
+
+// caption + image fetched from srcPath (misc/<kind>, venues/<name>, ...),
+// with an emoji stand-in when no image has been saved there
+function buildMiscCard(srcPath, fallbackEmoji, caption, subtitle) {
+  const card = document.createElement("div");
+  card.className = "event-player";
+
+  const img = document.createElement("img");
+  img.className = "event-misc-pic";
+  img.alt = caption;
+  img.src = srcPath;
+  img.addEventListener("error", () => {
+    const fallback = document.createElement("span");
+    fallback.className = "event-misc-fallback";
+    fallback.textContent = fallbackEmoji;
+    img.replaceWith(fallback);
+  });
+  card.appendChild(img);
+
+  const label = document.createElement("div");
+  label.className = "event-player-name";
+  label.textContent = caption;
+  card.appendChild(label);
+
+  if (subtitle) {
+    const sub = document.createElement("div");
+    sub.className = "event-player-role";
+    sub.textContent = subtitle;
+    card.appendChild(sub);
+  }
+  return card;
+}
+
 // Events can arrive back-to-back with no user interaction in between (the
 // openers card followed instantly by the opening bowler's card at innings
 // start), so queue them: each pop-up gets its full hold time instead of the
@@ -419,7 +476,7 @@ function drainEventQueue() {
   // next event arrives and replaces it immediately
 }
 
-function buildPlayerCard(name, role) {
+function buildPlayerCard(name, role, srcPath) {
   const initials = name
     .split(/\s+/)
     .map((w) => w[0])
@@ -434,9 +491,10 @@ function buildPlayerCard(name, role) {
   const img = document.createElement("img");
   img.className = "event-player-pic";
   img.alt = name;
-  // server resolves the raw name to resources/players/pics/<slug>.<ext>;
-  // a 404 (no pic saved for this player) swaps in the initials avatar
-  img.src = "players/pics/" + encodeURIComponent(name);
+  // server resolves the raw name to a <slug>.<ext> file under the resource
+  // dir (players/pics by default, umpires/ for umpire cards); a 404 (no pic
+  // saved for this person) swaps in the initials avatar
+  img.src = (srcPath || "players/pics/") + encodeURIComponent(name);
   img.addEventListener("error", () => {
     const fallback = document.createElement("span");
     fallback.className = "event-player-fallback";
@@ -480,6 +538,56 @@ function renderEvent(kind, data) {
       row.className = "event-openers";
       names.forEach((n) => row.appendChild(buildPlayerCard(n, "Opener")));
       showEventPane(row, 4000, "player");
+    }
+  } else if (kind === "teams_selected") {
+    const names = ((data && data.names) || []).map(String).filter(Boolean);
+    if (names.length) {
+      const row = document.createElement("div");
+      row.className = "event-openers";
+      names.forEach((n, i) => {
+        if (i > 0) {
+          const vs = document.createElement("span");
+          vs.className = "event-vs";
+          vs.textContent = "vs";
+          row.appendChild(vs);
+        }
+        row.appendChild(buildFlagCard(n));
+      });
+      showEventPane(row, 4000, "player");
+    }
+  } else if (kind === "session_break") {
+    const isLunch = data && data.interval === "Lunch";
+    showEventPane(
+      isLunch
+        ? buildMiscCard("misc/lunch", "🍽️", "Lunch break")
+        : buildMiscCard("misc/tea", "☕", "Tea break"),
+      3500,
+      "player"
+    );
+  } else if (kind === "innings_over") {
+    const sub = data && data.team ? data.team + " " + data.score + "/" + data.wickets : "";
+    showEventPane(buildMiscCard("misc/innings_over", "🏏", "Innings over", sub), 3500, "player");
+  } else if (kind === "victory") {
+    const caption = data && data.result ? String(data.result) : "Victory!";
+    showEventPane(buildMiscCard("misc/victory", "🏆", caption), 5000, "player");
+  } else if (kind === "runout") {
+    showEventPane(buildMiscCard("misc/runout", "🏃", "Run out!"), 2500, "player");
+  } else if (kind === "umpires") {
+    const names = ((data && data.names) || []).map(String).filter(Boolean);
+    if (names.length) {
+      const row = document.createElement("div");
+      row.className = "event-openers";
+      names.forEach((n) => row.appendChild(buildPlayerCard(n, "Umpire", "umpires/")));
+      showEventPane(row, 4000, "player");
+    }
+  } else if (kind === "venue_selected") {
+    const name = data && data.name ? String(data.name) : "";
+    if (name) {
+      showEventPane(
+        buildMiscCard("venues/" + encodeURIComponent(name), "🏟️", name),
+        4000,
+        "player"
+      );
     }
   } else if (kind === "drs_pending") {
     showEventPane(
