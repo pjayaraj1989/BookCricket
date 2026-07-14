@@ -381,7 +381,53 @@ main {
 
 .event-openers {
   display: flex;
+  align-items: center;
   gap: 1.2rem;
+}
+
+.event-vs {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #f2d16b;
+}
+
+.event-flag-pic,
+.event-flag-fallback {
+  width: 84px;
+  height: 56px;
+  border-radius: 6px;
+  border: 2px solid #2a6b45;
+}
+
+.event-flag-pic {
+  object-fit: cover;
+  background: #1e4530;
+}
+
+.event-flag-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1e4530;
+  color: #e6f2ea;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.event-misc-pic {
+  max-width: 150px;
+  max-height: 95px;
+  border-radius: 8px;
+  border: 2px solid #2a6b45;
+  object-fit: cover;
+  background: #1e4530;
+}
+
+.event-misc-fallback {
+  font-size: 2.6rem;
+  line-height: 1;
 }
 
 .event-player-role {

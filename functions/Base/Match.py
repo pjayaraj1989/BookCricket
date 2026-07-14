@@ -121,6 +121,15 @@ class Match:
         else:
             self._PlayLimitedOversMatch()
 
+        # pop the victory card when someone actually won (skip draws/ties -
+        # no one to celebrate there)
+        result = getattr(self, "result", None)
+        if result is not None and getattr(result, "winner", None) is not None:
+            utilities.PushEvent(
+                "victory",
+                {"team": result.winner.name, "result": result.result_str},
+            )
+
         # once the result/summary/player-of-the-match are all finalized,
         # send a persistent highlights card to the web UI; no-op in
         # console mode
@@ -446,6 +455,19 @@ class Match:
         else:
             self._PlayLimitedOversInnings(pair)
 
+        # innings ended with the match still alive (not a completed chase or
+        # a day-5 draw): pop the "innings over" card. When the innings ends
+        # the match, the victory card that follows says it better.
+        if self.status:
+            utilities.PushEvent(
+                "innings_over",
+                {
+                    "team": batting_team.name,
+                    "score": int(batting_team.total_score),
+                    "wickets": int(batting_team.wickets_fell),
+                },
+            )
+
         # innings just finished: snapshot it (Test's multi-innings history)
         # and send the web UI's full innings summary; the push is a no-op
         # outside web mode
@@ -629,6 +651,7 @@ class Match:
         if self.session < self.sessions_per_day:
             # session break (lunch/tea), same day continues
             interval = "Lunch" if self.session == 1 else "Tea"
+            utilities.PushEvent("session_break", {"interval": interval})
             self.session += 1
             PrintInColor(
                 "%s break! End of session %s, Day %s."
@@ -1301,7 +1324,7 @@ class Match:
         # add player dismissed to the list of wickets for the bowler
         bowler.wickets_taken.append(player_dismissed)
 
-        utilities.PushEvent("wicket")
+        utilities.PushEvent("runout" if "runout" in dismissal else "wicket")
         PrintInColor("Thats OUT !", Fore.RED)
         print(
             "%s %s %s (%s) SR: %s"

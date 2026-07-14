@@ -24,11 +24,15 @@ from flask import Flask, abort, request, send_from_directory  # noqa: E402
 from flask_socketio import SocketIO  # noqa: E402
 
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
-PLAYER_PICS_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-    "resources", "players", "pics",
+RESOURCES_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "resources"
 )
-PLAYER_PIC_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp")
+PLAYER_PICS_DIR = os.path.join(RESOURCES_DIR, "players", "pics")
+TEAM_FLAGS_DIR = os.path.join(RESOURCES_DIR, "teams", "flags")
+MISC_PICS_DIR = os.path.join(RESOURCES_DIR, "misc")
+VENUE_PICS_DIR = os.path.join(RESOURCES_DIR, "venues")
+UMPIRE_PICS_DIR = os.path.join(RESOURCES_DIR, "umpires")
+PIC_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp")
 
 app = Flask(__name__, static_folder=STATIC_DIR, static_url_path="")
 app.config["SECRET_KEY"] = os.urandom(24)
@@ -43,19 +47,43 @@ def index():
     return send_from_directory(STATIC_DIR, "index.html")
 
 
-@app.route("/players/pics/<path:player_name>")
-def player_pic(player_name):
-    # The browser asks for the raw player name ("Virat Kohli"); resolve it to
-    # a file in resources/players/pics by slug (virat_kohli.png/.jpg/...), so
-    # the filename convention lives in exactly one place. 404 means "no pic" -
-    # the frontend falls back to an initials avatar.
-    slug = re.sub(r"[^a-z0-9]+", "_", player_name.lower()).strip("_")
+def _serve_pic(directory, name):
+    # The browser asks for a raw name ("Virat Kohli", "NewZealand", "lunch");
+    # resolve it to a file by slug (virat_kohli.png/.jpg/...), so the filename
+    # convention lives in exactly one place. 404 means "no pic saved" - the
+    # frontend falls back to an initials avatar or an emoji.
+    slug = re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
     if not slug:
         abort(404)
-    for ext in PLAYER_PIC_EXTENSIONS:
-        if os.path.isfile(os.path.join(PLAYER_PICS_DIR, slug + ext)):
-            return send_from_directory(PLAYER_PICS_DIR, slug + ext)
+    for ext in PIC_EXTENSIONS:
+        if os.path.isfile(os.path.join(directory, slug + ext)):
+            return send_from_directory(directory, slug + ext)
     abort(404)
+
+
+@app.route("/players/pics/<path:player_name>")
+def player_pic(player_name):
+    return _serve_pic(PLAYER_PICS_DIR, player_name)
+
+
+@app.route("/teams/flags/<path:team_name>")
+def team_flag(team_name):
+    return _serve_pic(TEAM_FLAGS_DIR, team_name)
+
+
+@app.route("/misc/<path:kind>")
+def misc_pic(kind):
+    return _serve_pic(MISC_PICS_DIR, kind)
+
+
+@app.route("/venues/<path:venue_name>")
+def venue_pic(venue_name):
+    return _serve_pic(VENUE_PICS_DIR, venue_name)
+
+
+@app.route("/umpires/<path:umpire_name>")
+def umpire_pic(umpire_name):
+    return _serve_pic(UMPIRE_PICS_DIR, umpire_name)
 
 
 @app.route("/shutdown", methods=["POST"])
