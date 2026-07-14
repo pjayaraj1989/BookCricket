@@ -30,14 +30,8 @@ def run_game(autoplay=False, overs=None, format_override=None, fast=False):
             up to many minutes otherwise).
     """
     while True:
-        # opt for commentary
-        if autoplay:
-            commentary_enabled = 'n'
-        else:
-            commentary_enabled = input("Enable commentary? y/n")
-        # make this a global variable
-        if commentary_enabled.lower() == 'y':   commentary_enabled = True
-        else:   commentary_enabled = False
+        # commentary (text-to-speech) prompt removed for now - always off
+        commentary_enabled = False
 
         teams, venue = ReadData(autoplay)
         match = GetMatchInfo(teams, venue, autoplay, overs, format_override, fast)

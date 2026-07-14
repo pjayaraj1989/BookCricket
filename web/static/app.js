@@ -11,6 +11,21 @@ const runRateSvgEl = document.getElementById("runRateSvg");
 
 const socket = io();
 
+// intro splash: prefer a user-supplied cover (resources/misc/intro.png/jpg/
+// ...), fall back to the built-in vector art; fades out on its own or on click
+const introEl = document.getElementById("introSplash");
+if (introEl) {
+  const coverImg = introEl.querySelector("img");
+  coverImg.addEventListener("error", () => { coverImg.src = "cover.svg"; }, { once: true });
+  coverImg.src = "misc/intro";
+  const dismissIntro = () => {
+    introEl.classList.add("hide");
+    setTimeout(() => introEl.remove(), 800);
+  };
+  introEl.addEventListener("click", dismissIntro);
+  setTimeout(dismissIntro, 3500);
+}
+
 killBtn.addEventListener("click", () => {
   if (!confirm("Stop the BookCricket server? This ends the game for anyone connected.")) return;
   killBtn.disabled = true;
