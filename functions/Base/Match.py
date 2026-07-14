@@ -1372,6 +1372,10 @@ class Match:
             if not self.autoplay:   input("press enter to continue..")
         # check if bowler got 5 wkts
         if bowler.wkts == 5:
+            utilities.PushEvent(
+                "achievement",
+                {"name": bowler.name, "type": "bowling", "text": "5 wickets!"},
+            )
             PrintInColor("That's 5 Wickets for %s !" % bowler.name, bowling_team.color)
             PrintInColor(Randomize(commentary.commentary_fifer), bowling_team.color)
             if not self.autoplay:   input("press enter to continue..")
@@ -2604,6 +2608,9 @@ class Match:
             # first fifty
             if p.runs >= 50 and p.fifty == 0:
                 p.fifty += 1
+                utilities.PushEvent(
+                    "achievement", {"name": p.name, "type": "batting", "text": "50!"}
+                )
                 msg = "50 for %s!" % name
                 PrintInColor(msg, batting_team.color)
                 logger.info(msg)
@@ -2634,6 +2641,9 @@ class Match:
                 # after first fifty is done
                 p.hundred += 1
                 p.fifty += 1
+                utilities.PushEvent(
+                    "achievement", {"name": p.name, "type": "batting", "text": "100!"}
+                )
                 msg = "100 for %s!" % name
                 PrintInColor(msg, batting_team.color)
                 logger.info(msg)
@@ -2654,6 +2664,9 @@ class Match:
             elif p.runs >= 200 and (p.hundred == 1):
                 # after first fifty is done
                 p.hundred += 1
+                utilities.PushEvent(
+                    "achievement", {"name": p.name, "type": "batting", "text": "200!"}
+                )
                 msg = "200 for %s! What a superman!" % name
                 PrintInColor(msg, batting_team.color)
                 logger.info(msg)
@@ -2744,9 +2757,19 @@ class Match:
                 GetShortName(bowler.name),
             )
             keeper.stumpings += 1
+            if keeper.stumpings == 5:
+                utilities.PushEvent(
+                    "achievement",
+                    {"name": keeper.name, "type": "fielding", "text": "5 stumpings!"},
+                )
 
         elif dismissal == "c":
             fielder.catches += 1
+            if fielder.catches == 5:
+                utilities.PushEvent(
+                    "achievement",
+                    {"name": fielder.name, "type": "fielding", "text": "5 catches!"},
+                )
             # check if catcher is the bowler
             if fielder == bowler:
                 dismissal_str = "c&b %s" % (GetShortName(bowler.name))

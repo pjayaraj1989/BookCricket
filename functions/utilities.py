@@ -260,7 +260,7 @@ def PushEvent(kind, data=None):
         kind: A short string identifying the event ("toss", "wicket", "four",
             "six", "drs_pending", "drs_result", "new_batsman", "new_bowler",
             "openers", "teams_selected", "session_break", "innings_over",
-            "victory", "runout", "venue_selected", "umpires").
+            "victory", "runout", "venue_selected", "umpires", "achievement").
         data: Optional dict of extra fields for the frontend to render.
 
     Returns:

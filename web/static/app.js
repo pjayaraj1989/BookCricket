@@ -578,6 +578,20 @@ function renderEvent(kind, data) {
     showEventPane(buildMiscCard("misc/victory", "🏆", caption), 5000, "player");
   } else if (kind === "runout") {
     showEventPane(buildMiscCard("misc/runout", "🏃", "Run out!"), 2500, "player");
+  } else if (kind === "achievement") {
+    const name = data && data.name ? String(data.name) : "";
+    const text = data && data.text ? String(data.text) : "";
+    // no dedicated cricket-ball emoji exists, baseball is the stand-in
+    const emoji = { batting: "🏏", bowling: "⚾", fielding: "🧤" }[data && data.type] || "🌟";
+    if (name && text) {
+      const card = buildPlayerCard(name);
+      const badge = document.createElement("div");
+      badge.className = "event-achievement-badge";
+      badge.textContent = emoji + " " + text;
+      // badge sits between the photo and the name
+      card.insertBefore(badge, card.lastChild);
+      showEventPane(card, 4000, "player");
+    }
   } else if (kind === "umpires") {
     const names = ((data && data.names) || []).map(String).filter(Boolean);
     if (names.length) {
