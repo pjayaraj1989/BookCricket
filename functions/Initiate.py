@@ -126,12 +126,17 @@ def ReadTeams(json_file):
 
 
 # read data from data files
-def ReadData(autoplay):
+def ReadData(autoplay, format_override=None):
     """
     Read the data for the match, including teams and venue.
 
+    Asks for the league first and the match format right after, because a
+    league can ship separate Test squads in a teams_<league>_test.json
+    file - when Test match is chosen and that file exists, it is loaded
+    instead of the regular teams_<league>.json.
+
     Returns:
-        A tuple containing a list of Team objects and a Venue object.
+        A tuple (teams, venue, match_format).
     """
     # input teams to play    # now get the json files available
     json_files = [
@@ -139,23 +144,48 @@ def ReadData(autoplay):
         for f in os.listdir(data_path)
         if (f.startswith("teams_") and f.endswith(".json"))
     ]
-    leagues = [json_file.lstrip("teams_").strip(".json") for json_file in json_files]
+    # test rosters (teams_<league>_test.json) are format variants of their
+    # base league, not leagues of their own
+    base_files = [f for f in json_files if not f.endswith("_test.json")]
+    leagues = [f[len("teams_"):-len(".json")] for f in base_files]
     # welcome text
     PrintInColor(commentary.intro_game, Style.BRIGHT)
     if autoplay:
         league = leagues[random.randint(0, len(leagues)-1)]
     else:
         league = ChooseFromOptions(leagues, "Choose league", 5)
-    data_file = [json_file for json_file in json_files if league in json_file][0]
+
+    # select match format here (not later), so Test can load its own rosters
+    msg = "Select match format"
+    PrintInColor(msg, Style.BRIGHT)
+    if autoplay:
+        match_format = (
+            "Test match" if format_override in ("test", "Test", "Test match")
+            else "Limited overs"
+        )
+    else:
+        match_format = ChooseFromOptions(["Limited overs", "Test match"], msg, 5)
+
+    data_file = "teams_%s.json" % league
+    if match_format == "Test match":
+        test_file = "teams_%s_test.json" % league
+        if os.path.exists(os.path.join(data_path, test_file)):
+            data_file = test_file
+        else:
+            PrintInColor(
+                "No separate Test squads for %s, using the regular rosters."
+                % league,
+                Style.BRIGHT,
+            )
     team_data = os.path.join(data_path, data_file)
     teams = ReadTeams(team_data)
     # now read venue data
     venue = GetVenue(venue_data, autoplay)
-    return teams, venue
+    return teams, venue, match_format
 
 
 # get match info
-def GetMatchInfo(list_of_teams, venue, autoplay, overs, format_override=None, fast=False):
+def GetMatchInfo(list_of_teams, venue, autoplay, overs, format_override=None, fast=False, match_format=None):
     """
     Get the match information, including teams, venue, and match type.
 
@@ -165,6 +195,9 @@ def GetMatchInfo(list_of_teams, venue, autoplay, overs, format_override=None, fa
         format_override: optional, used by autoplay/CLI to force "Test"
             since autoplay can't reach the interactive format menu.
         fast: skip PlayOver's per-ball sleep (dev/test use only).
+        match_format: normally already chosen by ReadData (alongside the
+            league, so Test can load its own rosters); asked here only when
+            a direct caller didn't provide it.
 
     Returns:
         A Match object with the match details.
@@ -176,13 +209,14 @@ def GetMatchInfo(list_of_teams, venue, autoplay, overs, format_override=None, fa
     # get list of teams
     teams = [team.key for team in list_of_teams]
 
-    # select match format
-    msg = "Select match format"
-    PrintInColor(msg, Style.BRIGHT)
-    if autoplay:
-        match_format = format_override or "Limited overs"
-    else:
-        match_format = ChooseFromOptions(["Limited overs", "Test match"], msg, 5)
+    # select match format, unless ReadData already did
+    if match_format is None:
+        msg = "Select match format"
+        PrintInColor(msg, Style.BRIGHT)
+        if autoplay:
+            match_format = format_override or "Limited overs"
+        else:
+            match_format = ChooseFromOptions(["Limited overs", "Test match"], msg, 5)
 
     is_test = match_format in ("Test match", "test", "Test")
 
@@ -289,6 +323,7 @@ def GetMatchInfo(list_of_teams, venue, autoplay, overs, format_override=None, fa
         ),
         Style.BRIGHT,
     )
+    PushEvent("commentators", {"names": list(commentator)})
     PrintInColor(
         "Umpires for todays match are %s and %s" % (umpire[0], umpire[1]), Style.BRIGHT
     )

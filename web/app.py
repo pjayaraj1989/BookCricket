@@ -32,6 +32,7 @@ TEAM_FLAGS_DIR = os.path.join(RESOURCES_DIR, "teams", "flags")
 MISC_PICS_DIR = os.path.join(RESOURCES_DIR, "misc")
 VENUE_PICS_DIR = os.path.join(RESOURCES_DIR, "venues")
 UMPIRE_PICS_DIR = os.path.join(RESOURCES_DIR, "umpires")
+COMMENTATOR_PICS_DIR = os.path.join(RESOURCES_DIR, "commentators")
 PIC_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp")
 
 app = Flask(__name__, static_folder=STATIC_DIR, static_url_path="")
@@ -95,6 +96,11 @@ def venue_pic(venue_name):
 @app.route("/umpires/<path:umpire_name>")
 def umpire_pic(umpire_name):
     return _serve_pic(UMPIRE_PICS_DIR, umpire_name)
+
+
+@app.route("/commentators/<path:commentator_name>")
+def commentator_pic(commentator_name):
+    return _serve_pic(COMMENTATOR_PICS_DIR, commentator_name)
 
 
 @app.route("/shutdown", methods=["POST"])

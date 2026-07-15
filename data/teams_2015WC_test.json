@@ -1,0 +1,39 @@
+{
+  "Teams": {
+    "India": {
+      "players": [
+        {"name": "Yashasvi Jaiswal", "batting": 9, "opener1": 1},
+        {"name": "K.L Rahul", "batting": 8, "opener2": 1},
+        {"name": "Sai Sudharsan", "batting": 7},
+        {"name": "Shubman Gill", "batting": 9, "captain": 1},
+        {"name": "Rishabh Pant", "batting": 8, "keeper": 1},
+        {"name": "Ravindra Jadeja", "batting": 7, "bowling": 8, "spinner": 1},
+        {"name": "Nitish Kumar Reddy", "batting": 6, "bowling": 6, "pacer": 1},
+        {"name": "Washington Sundar", "batting": 6, "bowling": 7, "spinner": 1},
+        {"name": "Kuldeep Yadav", "batting": 4, "bowling": 8, "spinner": 1},
+        {"name": "Jasprit Bumrah", "batting": 3, "bowling": 9, "openingbowler": 1, "pacer": 1},
+        {"name": "Mohammed Siraj", "batting": 3, "bowling": 8, "pacer": 1}
+      ],
+      "key": "IND",
+      "color": "lcyan"
+    },
+
+    "Australia": {
+      "players": [
+        {"name": "Usman Khawaja", "batting": 8, "opener1": 1},
+        {"name": "Sam Konstas", "batting": 7, "opener2": 1},
+        {"name": "Marnus Labuschagne", "batting": 8},
+        {"name": "Steve Smith", "batting": 9},
+        {"name": "Travis Head", "batting": 8},
+        {"name": "Cameron Green", "batting": 7, "bowling": 6, "pacer": 1},
+        {"name": "Alex Carey", "batting": 7, "keeper": 1},
+        {"name": "Pat Cummins", "batting": 5, "bowling": 9, "captain": 1, "openingbowler": 1, "pacer": 1},
+        {"name": "Mitchell Starc", "batting": 4, "bowling": 9, "pacer": 1},
+        {"name": "Nathan Lyon", "batting": 3, "bowling": 8, "spinner": 1},
+        {"name": "Josh Hazlewood", "batting": 2, "bowling": 8, "pacer": 1}
+      ],
+      "key": "AUS",
+      "color": "lyellow"
+    }
+  }
+}

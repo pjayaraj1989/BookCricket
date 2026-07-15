@@ -43,3 +43,8 @@ Notes for the hosted version:
 ## Create new or update your existing teams here
 
 data/*.json
+
+A league can ship separate Test-match squads in a file named
+`teams_<league>_test.json` (e.g. `teams_International_test.json`). When you
+pick that league and then choose "Test match", those rosters are used
+instead; leagues without a `_test` file fall back to their regular rosters.

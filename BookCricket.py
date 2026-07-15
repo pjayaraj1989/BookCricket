@@ -33,8 +33,8 @@ def run_game(autoplay=False, overs=None, format_override=None, fast=False):
         # commentary (text-to-speech) prompt removed for now - always off
         commentary_enabled = False
 
-        teams, venue = ReadData(autoplay)
-        match = GetMatchInfo(teams, venue, autoplay, overs, format_override, fast)
+        teams, venue, match_format = ReadData(autoplay, format_override)
+        match = GetMatchInfo(teams, venue, autoplay, overs, format_override, fast, match_format)
         match.commentary_enabled = commentary_enabled
         match.PlayMatch(ScriptPath)
         while True:
