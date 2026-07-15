@@ -164,6 +164,8 @@ socket.on("server_event", (data) => {
     renderEvent(data.kind, data.data);
   } else if (data.type === "highlights") {
     renderMatchHighlights(data.data);
+  } else if (data.type === "xi") {
+    renderPlayingXI(data.data);
   }
 });
 
@@ -497,14 +499,18 @@ function drainEventQueue() {
   // next event arrives and replaces it immediately
 }
 
-function buildPlayerCard(name, role, srcPath) {
-  const initials = name
+function initialsOf(name) {
+  return name
     .split(/\s+/)
     .map((w) => w[0])
     .filter(Boolean)
     .slice(0, 2)
     .join("")
     .toUpperCase();
+}
+
+function buildPlayerCard(name, role, srcPath) {
+  const initials = initialsOf(name);
 
   const card = document.createElement("div");
   card.className = "event-player";
@@ -645,6 +651,50 @@ function renderEvent(kind, data) {
       3000
     );
   }
+}
+
+function renderPlayingXI(xi) {
+  const card = document.createElement("div");
+  card.className = "playing-xi";
+
+  (xi.teams || []).forEach((team) => {
+    const col = document.createElement("div");
+    col.className = "xi-col";
+
+    const heading = document.createElement("h4");
+    heading.textContent = team.name;
+    col.appendChild(heading);
+
+    (team.players || []).forEach((p) => {
+      const row = document.createElement("div");
+      row.className = "xi-row";
+
+      const img = document.createElement("img");
+      img.className = "xi-pic";
+      img.alt = p.name;
+      img.src = "players/pics/" + encodeURIComponent(p.name);
+      img.addEventListener("error", () => {
+        const fallback = document.createElement("span");
+        fallback.className = "xi-pic xi-fallback";
+        fallback.textContent = initialsOf(p.name);
+        img.replaceWith(fallback);
+      });
+
+      const label = document.createElement("span");
+      let name = p.name;
+      if (p.captain) name += " (c)";
+      if (p.keeper) name += " (wk)";
+      label.textContent = name;
+
+      row.appendChild(img);
+      row.appendChild(label);
+      col.appendChild(row);
+    });
+    card.appendChild(col);
+  });
+
+  logEl.appendChild(card);
+  logEl.scrollTop = logEl.scrollHeight;
 }
 
 function renderMatchHighlights(highlights) {

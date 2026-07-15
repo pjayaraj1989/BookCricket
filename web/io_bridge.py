@@ -47,6 +47,11 @@ class WebChannel:
         # and the structured scorecard state.
         self._emit("server_event", {"type": "event", "kind": kind, "data": data or {}})
 
+    def playing_xi(self, data):
+        # persistent two-column playing-XI card (with player pics) for the
+        # scrolling log, sent alongside the plain-text elevens table.
+        self._emit("server_event", {"type": "xi", "data": data})
+
     def highlights(self, data):
         # a persistent post-match summary card (result, top scorers/
         # wicket-takers, player of the match), sent once the match is over.

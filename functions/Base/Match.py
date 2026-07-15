@@ -3156,6 +3156,7 @@ class Match:
             data_to_print.append([name1, name2])
         # now print it
         PrintListFormatted(data_to_print, 0.1, None)
+        utilities.PushPlayingXI(self)
 
     def MatchSummary(self):
         """
