@@ -615,6 +615,14 @@ function renderEvent(kind, data) {
       names.forEach((n) => row.appendChild(buildPlayerCard(n, "Umpire", "umpires/")));
       showEventPane(row, 4000, "player");
     }
+  } else if (kind === "commentators") {
+    const names = ((data && data.names) || []).map(String).filter(Boolean);
+    if (names.length) {
+      const row = document.createElement("div");
+      row.className = "event-openers";
+      names.forEach((n) => row.appendChild(buildPlayerCard(n, "Commentator", "commentators/")));
+      showEventPane(row, 4000, "player");
+    }
   } else if (kind === "venue_selected") {
     const name = data && data.name ? String(data.name) : "";
     if (name) {
@@ -686,4 +694,19 @@ function renderMatchHighlights(highlights) {
   card.innerHTML = parts.join("");
   logEl.appendChild(card);
   logEl.scrollTop = logEl.scrollHeight;
+
+  // celebrate the Man of the Match in the event pane too (queued after the
+  // victory card, since highlights always arrive after the result)
+  if (highlights.playerOfMatch && highlights.playerOfMatch.name) {
+    const mom = buildPlayerCard(
+      String(highlights.playerOfMatch.name),
+      highlights.playerOfMatch.stat ? String(highlights.playerOfMatch.stat) : ""
+    );
+    const badge = document.createElement("div");
+    badge.className = "event-achievement-badge";
+    badge.textContent = "🏅 Man of the Match";
+    // badge sits between the photo and the name
+    mom.insertBefore(badge, mom.children[1]);
+    showEventPane(mom, 6000, "player");
+  }
 }
