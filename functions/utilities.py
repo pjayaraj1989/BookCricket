@@ -273,6 +273,38 @@ def PushEvent(kind, data=None):
     channel.event(kind, data)
 
 
+def PushPlayingXI(match):
+    """
+    Send both playing XIs to the web UI, which renders them as a card with
+    player pictures next to the plain-text elevens table. No-op in console
+    mode (no channel set).
+
+    Args:
+        match: The Match object, called when the elevens are displayed.
+
+    Returns:
+        None
+    """
+    channel = get_channel()
+    if channel is None:
+        return
+
+    def _team(team):
+        return {
+            "name": team.name,
+            "players": [
+                {
+                    "name": p.name,
+                    "captain": bool(p.attr.iscaptain),
+                    "keeper": bool(p.attr.iskeeper),
+                }
+                for p in team.team_array
+            ],
+        }
+
+    channel.playing_xi({"teams": [_team(match.team1), _team(match.team2)]})
+
+
 def _over_history_series(team):
     # over_history/over_wkt_history are only populated for completed overs,
     # keyed by over index - not necessarily contiguous if called mid-over.
