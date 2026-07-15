@@ -562,6 +562,10 @@ class Match:
         """
         batting_team = self.batting_team
         over = 0
+        # discard a Declare press left over from a previous innings (or one
+        # made while it wasn't applicable) so it can't trigger a surprise
+        # confirmation prompt at the first over of this innings
+        utilities.ConsumeDeclareRequest()
         while True:
             if self._AdvanceSessionIfNeeded():
                 break
@@ -682,8 +686,11 @@ class Match:
     def _ShouldDeclare(self, over):
         """
         Decide whether the batting captain declares this Test innings
-        closed. Only offered for non-chase innings (self.declare_eligible),
-        and only once the innings has reached a plausible declaring point.
+        closed. Only offered for non-chase innings (self.declare_eligible).
+        In the web GUI a persistent Declare button raises the confirmation
+        prompt at the next over boundary (no score threshold); the console
+        keeps the classic behavior of offering it every over once the
+        innings passes 300.
 
         Returns:
             bool
@@ -691,10 +698,16 @@ class Match:
         if not self.declare_eligible or self.batting_team.wickets_fell >= 10:
             return False
         bt = self.batting_team
-        if bt.total_score < 300:
-            return False
         if self.autoplay:
+            if bt.total_score < 300:
+                return False
             return self._AutoplayDeclareHeuristic(over)
+        if utilities.IsWebMode():
+            # only confirm when the GUI's Declare button was pressed
+            if not utilities.ConsumeDeclareRequest():
+                return False
+        elif bt.total_score < 300:
+            return False
         return (
             ChooseFromOptions(
                 ["y", "n"],

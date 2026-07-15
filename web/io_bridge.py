@@ -27,6 +27,18 @@ class WebChannel:
         self._emit = emit
         self._queue = queue.Queue()
         self._line_buffer = ""
+        # set from the socket thread when the GUI's Declare button is pressed;
+        # the game thread consumes it at the next over boundary (single bool
+        # flip, so no lock needed under the GIL)
+        self._declare_requested = False
+
+    def request_declare(self):
+        self._declare_requested = True
+
+    def consume_declare_request(self):
+        requested = self._declare_requested
+        self._declare_requested = False
+        return requested
 
     def output(self, text, color=None):
         self._emit("server_event", {"type": "output", "text": strip_ansi(text), "color": resolve_color(color)})

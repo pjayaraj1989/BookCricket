@@ -55,6 +55,18 @@ header h1 {
 .kill-btn:hover { background: #4a1c1c; }
 .kill-btn:disabled { opacity: 0.5; cursor: default; }
 
+.declare-btn {
+  font-size: 0.78rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid #8a7443;
+  background: #33290f;
+  color: #f2d16b;
+  cursor: pointer;
+}
+.declare-btn:hover { background: #453712; }
+.declare-btn:disabled { opacity: 0.6; cursor: default; }
+
 main {
   flex: 1;
   min-height: 0;

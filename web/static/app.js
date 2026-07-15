@@ -2,6 +2,7 @@ const logEl = document.getElementById("log");
 const controlsEl = document.getElementById("controls");
 const statusEl = document.getElementById("status");
 const killBtn = document.getElementById("killBtn");
+const declareBtn = document.getElementById("declareBtn");
 const liveScorecardEl = document.getElementById("liveScorecard");
 const inningsSummariesEl = document.getElementById("inningsSummaries");
 const eventPaneEl = document.getElementById("eventPane");
@@ -33,6 +34,24 @@ killBtn.addEventListener("click", () => {
   appendLine("Server is shutting down…", "fore-lightred_ex");
   fetch("shutdown", { method: "POST" }).catch(() => {});
 });
+
+declareBtn.addEventListener("click", () => {
+  socket.emit("declare_request");
+  // the engine confirms at the next over boundary; freeze the button until
+  // the next scorecard push so it can't be spammed meanwhile
+  declareBtn.disabled = true;
+  declareBtn.textContent = "🏳️ Declaring at over end…";
+});
+
+function updateDeclareButton(state) {
+  if (state.declareEligible) {
+    declareBtn.style.display = "";
+    declareBtn.disabled = false;
+    declareBtn.textContent = "🏳️ Declare";
+  } else {
+    declareBtn.style.display = "none";
+  }
+}
 
 function appendLine(text, color) {
   const line = document.createElement("div");
@@ -233,6 +252,7 @@ function renderScorecard(state) {
 
   liveScorecardEl.innerHTML = parts.join("");
   renderRunRateGraph(state);
+  updateDeclareButton(state);
 }
 
 const RUN_RATE_COLOR_CURRENT = "#7fe3a3";

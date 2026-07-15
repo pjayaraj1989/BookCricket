@@ -273,6 +273,25 @@ def PushEvent(kind, data=None):
     channel.event(kind, data)
 
 
+def IsWebMode():
+    """True when this thread's I/O is bridged to a browser session."""
+    return get_channel() is not None
+
+
+def ConsumeDeclareRequest():
+    """
+    Check-and-clear the web GUI's Declare button flag for this session.
+    Always False in console mode (no channel set).
+
+    Returns:
+        bool
+    """
+    channel = get_channel()
+    if channel is None:
+        return False
+    return channel.consume_declare_request()
+
+
 def PushPlayingXI(match):
     """
     Send both playing XIs to the web UI, which renders them as a card with
@@ -421,6 +440,12 @@ def PushScorecard(match):
         "maxDays": _int(match.max_days) if is_test else None,
         "session": _int(match.session) if is_test else None,
         "sessionsPerDay": _int(match.sessions_per_day) if is_test else None,
+        # drives the GUI's Declare button: Test only, never during a chase
+        "declareEligible": bool(
+            is_test
+            and getattr(match, "declare_eligible", False)
+            and batting.wickets_fell < 10
+        ),
         "crr": _float(batting.GetCurrentRate()),
         "target": _int(batting.target) if batting.batting_second else None,
         # GetRequiredRate() is intentionally a no-op (returns 0.0) for Test -
