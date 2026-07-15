@@ -34,6 +34,24 @@
       ],
       "key": "AUS",
       "color": "lyellow"
+    },
+
+    "India": {
+      "players": [
+        {"name": "Shikhar Dhawan", "batting": 8, "opener1": 1},
+        {"name": "Murali Vijay", "batting": 7, "opener2": 1},
+        {"name": "Cheteshwar Pujara", "batting": 9},
+        {"name": "Virat Kohli", "batting": 9, "captain": 1, "bowling": 5},
+        {"name": "Ajinkya Rahane", "batting": 7},
+        {"name": "Rohit Sharma", "batting": 8, "bowling": 6, "spinner": 1},
+        {"name": "Wridhiman Saha", "batting": 7, "keeper": 1},
+        {"name": "Ravindra Jadeja", "batting": 7, "bowling": 8, "spinner": 1},
+        {"name": "Ravichandran Ashwin", "batting": 6, "bowling": 9, "spinner": 1},
+        {"name": "Ishant Sharma", "batting": 4, "bowling": 9, "openingbowler": 1, "pacer": 1},
+        {"name": "Bhuvneshwar Kumar", "batting": 5, "bowling": 8, "pacer": 1}
+      ],
+      "key": "IND",
+      "color": "lblue"
     }
   }
 }
