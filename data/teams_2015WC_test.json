@@ -1,36 +1,36 @@
 {
   "Teams": {
-    "India": {
+    "England": {
       "players": [
-        {"name": "Yashasvi Jaiswal", "batting": 9, "opener1": 1},
-        {"name": "K.L Rahul", "batting": 8, "opener2": 1},
-        {"name": "Sai Sudharsan", "batting": 7},
-        {"name": "Shubman Gill", "batting": 9, "captain": 1},
-        {"name": "Rishabh Pant", "batting": 8, "keeper": 1},
-        {"name": "Ravindra Jadeja", "batting": 7, "bowling": 8, "spinner": 1},
-        {"name": "Nitish Kumar Reddy", "batting": 6, "bowling": 6, "pacer": 1},
-        {"name": "Washington Sundar", "batting": 6, "bowling": 7, "spinner": 1},
-        {"name": "Kuldeep Yadav", "batting": 4, "bowling": 8, "spinner": 1},
-        {"name": "Jasprit Bumrah", "batting": 3, "bowling": 9, "openingbowler": 1, "pacer": 1},
-        {"name": "Mohammed Siraj", "batting": 3, "bowling": 8, "pacer": 1}
+        {"name": "Adam Lyth", "batting": 7, "opener1": 1},
+        {"name": "Alastair Cook", "batting": 8, "opener2": 1, "captain": 1},
+        {"name": "Gary Ballance", "batting": 7},
+        {"name": "Ian Bell", "batting": 9},
+        {"name": "Joe Root", "batting": 9, "bowling": 6, "spinner": 1},
+        {"name": "Jos Buttler", "batting": 8, "keeper": 1},
+        {"name": "Ben Stokes", "batting": 8, "bowling": 8, "pacer": 1},
+        {"name": "Moeen Ali", "batting": 7, "bowling": 7, "spinner": 1},
+        {"name": "Mark Wood", "batting": 6, "bowling": 8, "pacer": 1},
+        {"name": "James Anderson", "batting": 5, "bowling": 9, "openingbowler": 1, "pacer": 1},
+        {"name": "Stuart Broad", "batting": 5, "bowling": 9, "pacer": 1}
       ],
-      "key": "IND",
+      "key": "ENG",
       "color": "lcyan"
     },
 
     "Australia": {
       "players": [
-        {"name": "Usman Khawaja", "batting": 8, "opener1": 1},
-        {"name": "Sam Konstas", "batting": 7, "opener2": 1},
-        {"name": "Marnus Labuschagne", "batting": 8},
-        {"name": "Steve Smith", "batting": 9},
-        {"name": "Travis Head", "batting": 8},
-        {"name": "Cameron Green", "batting": 7, "bowling": 6, "pacer": 1},
-        {"name": "Alex Carey", "batting": 7, "keeper": 1},
-        {"name": "Pat Cummins", "batting": 5, "bowling": 9, "captain": 1, "openingbowler": 1, "pacer": 1},
-        {"name": "Mitchell Starc", "batting": 4, "bowling": 9, "pacer": 1},
-        {"name": "Nathan Lyon", "batting": 3, "bowling": 8, "spinner": 1},
-        {"name": "Josh Hazlewood", "batting": 2, "bowling": 8, "pacer": 1}
+        {"name": "Chris Rogers", "batting": 7, "opener1": 1},
+        {"name": "David Warner", "batting": 8, "opener2": 1},
+        {"name": "Steve Smith", "batting": 9, "spinner":1, "bowling": 6},
+        {"name": "Michael Clarke", "batting": 9, "captain": 1, "spinner": 1, "bowling": 6},
+        {"name": "Adam Voges", "batting": 7},
+        {"name": "Mitchell Marsh", "batting": 7, "bowling": 8, "pacer": 1},
+        {"name": "Brad Haddin", "batting": 7, "keeper": 1},
+        {"name": "Mitchell Johnson", "batting": 6, "bowling": 9, "pacer": 1},
+        {"name": "Mitchell Starc", "batting": 6, "bowling": 9,"openingbowler": 1, "pacer": 1},
+        {"name": "Nathan Lyon", "batting": 5, "bowling": 8, "spinner": 1},
+        {"name": "Josh Hazlewood", "batting": 4, "bowling": 9, "pacer": 1}
       ],
       "key": "AUS",
       "color": "lyellow"

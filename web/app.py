@@ -164,6 +164,17 @@ def handle_client_input(value):
         channel.submit(value)
 
 
+@socketio.on("declare_request")
+def handle_declare_request():
+    # the GUI's Declare button: flags the session's game thread, which shows
+    # the confirmation prompt at the next over boundary (Test innings only)
+    sid = request.sid
+    with _channels_lock:
+        channel = _channels.get(sid)
+    if channel is not None:
+        channel.request_declare()
+
+
 @socketio.on("disconnect")
 def handle_disconnect():
     sid = request.sid
