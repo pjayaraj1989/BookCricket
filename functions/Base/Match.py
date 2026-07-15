@@ -1605,37 +1605,28 @@ class Match:
             ):
                 prob = prob_death
 
-            # if need 1 to win, don't take 2 or 3,
-            if batting_team.target - batting_team.total_score == 1:
-                prob = [
-                    1 / 7,
-                    1 / 7,
-                    1 / 7,
-                    0,
-                    0,
-                    2 / 7,
-                    1 / 7,
-                    1 / 7,
-                ]
-            # if 2 to win, don't take 3
-            if (batting_team.target - batting_team.total_score) == 2:
-                prob = [
-                    1 / 7,
-                    1 / 7,
-                    1 / 7,
-                    1 / 7,
-                    0,
-                    1 / 7,
-                    1 / 7,
-                    1 / 7,
-                ]
-
         # FIXME:
         # if initial overs, play carefully based on RR
         # if death overs, try to go big
         # but, if batsman is poor and bowler is skilled, more chances of getting out
         if bowler.attr.bowling - player_on_strike.attr.batting >= 4:
             prob = [0.25, 0.20, 0.20, 0.15, 0.05, 0.05, 0.05, 0.05]
+
+        # endgame: batsmen only run what's needed to win - with 1 to win
+        # never a 2 or 3, with 2 to win never a 3 (boundaries still count in
+        # full). Applied last so no distribution override above (death overs,
+        # skill matchup) can sneak the impossible outcomes back in; the
+        # remaining probabilities are renormalized rather than replaced, so
+        # the batting character of the situation is otherwise preserved.
+        if batting_team.batting_second and batting_team.target:
+            needed = batting_team.target - batting_team.total_score
+            if needed in (1, 2):
+                prob = [
+                    0.0 if (r in (2, 3) and r > needed) else p
+                    for r, p in zip(run_array, prob)
+                ]
+                total = sum(prob)
+                prob = [p / total for p in prob]
 
         # select from final run_array with the given probability distribution
         run = choice(run_array, 1, p=prob, replace=False)[0]
