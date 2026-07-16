@@ -40,7 +40,7 @@
       "players": [
         {"name": "Andrew Strauss", "batting": 8, "opener1": 1},
         {"name": "Alastair Cook", "batting": 8, "opener2": 1},
-        {"name": "Michael Vaughan", "batting": 8, "captain": 1},
+        {"name": "Michael Vaughan", "batting": 8, "captain": 1, "bowling":6, "spinner": 1},
         {"name": "Kevin Pietersen", "batting": 9},
         {"name": "Paul Collingwood", "batting": 8, "bowling": 5, "pacer": 1},
         {"name": "Ian Bell", "batting": 8},

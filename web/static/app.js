@@ -477,6 +477,45 @@ function buildMiscCard(srcPath, fallbackEmoji, caption, subtitle) {
   return card;
 }
 
+// partnership milestone: a badge over both batsmen's photos
+function buildPartnershipCard(names, runs) {
+  const wrap = document.createElement("div");
+  wrap.className = "event-player";
+
+  const badge = document.createElement("div");
+  badge.className = "event-achievement-badge";
+  badge.textContent = "🤝 " + runs + " run partnership";
+  wrap.appendChild(badge);
+
+  const row = document.createElement("div");
+  row.className = "event-openers";
+  names.forEach((n) => row.appendChild(buildPlayerCard(String(n))));
+  wrap.appendChild(row);
+  return wrap;
+}
+
+// team total milestone: big score number with team name and wickets
+function buildTeamScoreCard(team, score, wickets) {
+  const card = document.createElement("div");
+  card.className = "event-player";
+
+  const num = document.createElement("div");
+  num.className = "event-countdown-num";
+  num.textContent = String(score);
+  card.appendChild(num);
+
+  const label = document.createElement("div");
+  label.className = "event-player-name";
+  label.textContent = team;
+  card.appendChild(label);
+
+  const sub = document.createElement("div");
+  sub.className = "event-player-role";
+  sub.textContent = score + "/" + wickets + " · team milestone";
+  card.appendChild(sub);
+  return card;
+}
+
 // umpire giving a decision (LBW / run out): umpire photo, a "wickets hit"
 // stumps symbol, and the decision label
 function buildUmpireDecisionCard(umpireName, label) {
@@ -668,6 +707,29 @@ function renderEvent(kind, data) {
   } else if (kind === "follow_on") {
     const sub = data && data.opponent ? data.opponent + " to bat again" : "";
     showEventPane(buildMiscCard("misc/follow_on", "🔁", "Follow-on enforced!", sub), 4000, "takeover");
+  } else if (kind === "partnership_milestone") {
+    const names = ((data && data.names) || []).map(String).filter(Boolean);
+    const runs = data && data.runs;
+    if (names.length && runs) {
+      showEventPane(buildPartnershipCard(names, runs), 4000, "takeover roster");
+    }
+  } else if (kind === "team_score") {
+    if (data && data.score) {
+      showEventPane(
+        buildTeamScoreCard(String(data.team), data.score, data.wickets),
+        4000,
+        "takeover"
+      );
+    }
+  } else if (kind === "rain") {
+    const cfg = {
+      clouds: ["misc/rain_clouds", "🌥️", "Rain clouds gathering", ""],
+      cloudy: ["misc/rain_cloudy", "🌥️", "It's getting cloudy", ""],
+      drizzle: ["misc/rain_drizzle", "🌦️", "It's drizzling", "umpires might stop play soon"],
+      heavy: ["misc/rain_heavy", "🌧️", "Heavy rain!", ""],
+      stopped: ["misc/rain_stopped", "☔", "Rain stopped play", (data && data.resume) || ""],
+    }[data && data.stage];
+    if (cfg) showEventPane(buildMiscCard(cfg[0], cfg[1], cfg[2], cfg[3]), 3500, "takeover");
   } else if (kind === "runout") {
     const ump = data && data.umpire ? String(data.umpire) : "";
     showEventPane(buildUmpireDecisionCard(ump, "RUN OUT"), 3000, "takeover");
@@ -783,6 +845,15 @@ function renderPlayingXI(xi) {
   logEl.scrollTop = logEl.scrollHeight;
 }
 
+// small circular player thumbnail for the highlights card; the initials
+// fallback is wired up after the card's innerHTML is set (see below)
+function mhThumb(name) {
+  return (
+    '<img class="mh-pic" alt="" src="players/pics/' + encodeURIComponent(name) +
+    '" data-name="' + escapeHtml(name) + '">'
+  );
+}
+
 function renderMatchHighlights(highlights) {
   const parts = [];
   parts.push("<h2>🏆 Match Highlights</h2>");
@@ -796,22 +867,22 @@ function renderMatchHighlights(highlights) {
   });
 
   if ((highlights.topBatters || []).length) {
-    parts.push("<h4>Top Scorers</h4><ul>");
+    parts.push('<h4>Top Scorers</h4><ul class="mh-list">');
     highlights.topBatters.forEach((b) => {
       parts.push(
-        "<li>" + escapeHtml(b.name) + " (" + escapeHtml(b.team) + ") - " +
-        b.runs + " (" + b.balls + ")</li>"
+        "<li>" + mhThumb(b.name) + "<span>" + escapeHtml(b.name) + " (" +
+        escapeHtml(b.team) + ") - " + b.runs + " (" + b.balls + ")</span></li>"
       );
     });
     parts.push("</ul>");
   }
 
   if ((highlights.topBowlers || []).length) {
-    parts.push("<h4>Top Wicket-Takers</h4><ul>");
+    parts.push('<h4>Top Wicket-Takers</h4><ul class="mh-list">');
     highlights.topBowlers.forEach((b) => {
       parts.push(
-        "<li>" + escapeHtml(b.name) + " (" + escapeHtml(b.team) + ") - " +
-        b.wickets + "/" + b.runs + "</li>"
+        "<li>" + mhThumb(b.name) + "<span>" + escapeHtml(b.name) + " (" +
+        escapeHtml(b.team) + ") - " + b.wickets + "/" + b.runs + "</span></li>"
       );
     });
     parts.push("</ul>");
@@ -819,15 +890,25 @@ function renderMatchHighlights(highlights) {
 
   if (highlights.playerOfMatch) {
     parts.push(
-      '<div class="mom-line">Player of the Match: <strong>' +
+      '<div class="mom-line">' + mhThumb(highlights.playerOfMatch.name) +
+      "<span>Player of the Match: <strong>" +
       escapeHtml(highlights.playerOfMatch.name) + "</strong> (" +
-      escapeHtml(highlights.playerOfMatch.stat) + ")</div>"
+      escapeHtml(highlights.playerOfMatch.stat) + ")</span></div>"
     );
   }
 
   const card = document.createElement("div");
   card.className = "match-highlights";
   card.innerHTML = parts.join("");
+  // swap in an initials avatar for any thumbnail whose photo is missing
+  card.querySelectorAll("img.mh-pic").forEach((img) => {
+    img.addEventListener("error", () => {
+      const fb = document.createElement("span");
+      fb.className = "mh-pic mh-fallback";
+      fb.textContent = initialsOf(img.dataset.name || "");
+      img.replaceWith(fb);
+    }, { once: true });
+  });
   logEl.appendChild(card);
   logEl.scrollTop = logEl.scrollHeight;
 
