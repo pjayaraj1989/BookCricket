@@ -1315,6 +1315,17 @@ class Match:
                 else:
                     self.UpdateDismissal(dismissal)
                     return
+            elif "runout" in dismissal or "st " in dismissal:
+                # run-outs and stumpings: the umpire either gives it out on
+                # the spot or refers it upstairs, and the third umpire's
+                # verdict can overturn it
+                kind = "runout" if "runout" in dismissal else "stumped"
+                if not self._CheckThirdUmpire(dismissal, kind):
+                    run = 0  # third umpire reprieve - the batsman survives
+                    used_drs = True
+                    break
+                self.UpdateDismissal(dismissal)
+                return
             else:
                 self.UpdateDismissal(dismissal)
                 return
@@ -1518,12 +1529,14 @@ class Match:
         # add player dismissed to the list of wickets for the bowler
         bowler.wickets_taken.append(player_dismissed)
 
-        # LBW and run-outs are the umpire's call, so pop up the umpire giving
-        # the decision; other dismissals get the generic stumps animation
-        if "runout" in dismissal:
-            utilities.PushEvent("runout", {"umpire": self.umpire})
-        elif "lbw" in dismissal:
+        # LBW is the umpire's call, so pop up the umpire giving the decision;
+        # run-outs and stumpings already showed their third-umpire pop-up
+        # before UpdateDismissal was reached; everything else (bowled/caught)
+        # gets the generic stumps animation
+        if "lbw" in dismissal:
             utilities.PushEvent("lbw", {"umpire": self.umpire})
+        elif "runout" in dismissal or "st " in dismissal:
+            pass  # third-umpire flow already showed the decision
         else:
             utilities.PushEvent("wicket")
         PrintInColor("Thats OUT !", Fore.RED)
@@ -1968,6 +1981,77 @@ class Match:
                     )
                     team.drs_chances -= 1
         return result
+
+    def _CheckThirdUmpire(self, dismissal, kind):
+        """
+        Resolve a run-out or stumping. The on-field umpire either gives it out
+        on the spot or refers it upstairs; a referral shows the big-screen
+        replay and green/red lights, and the third umpire's verdict can
+        overturn the dismissal. `kind` is "runout" or "stumped".
+
+        Returns:
+            bool: True if the batsman is OUT, False if reprieved (not out).
+        """
+        referred = random.choice([True, False])
+        if not referred:
+            # given out on the spot
+            PrintInColor(Randomize(commentary.commentary_given_out), Fore.LIGHTRED_EX)
+            utilities.PushEvent(
+                "third_umpire", {"stage": "out", "kind": kind, "umpire": self.umpire}
+            )
+            return True
+
+        # referred to the third umpire
+        referral = (
+            commentary.commentary_referred_stumped
+            if kind == "stumped"
+            else commentary.commentary_referred_runout
+        )
+        PrintInColor(Randomize(referral), Style.BRIGHT)
+        utilities.PushEvent("third_umpire", {"stage": "referred", "kind": kind})
+        # green/red lights, just like DRS
+        utilities.PushEvent("drs_pending")
+        if not self.fast:
+            time.sleep(4)
+        out = random.choice([True, False])
+        utilities.PushEvent("drs_result", {"out": out})
+        if out:
+            PrintInColor(
+                Randomize(commentary.commentary_third_umpire_out), Fore.LIGHTRED_EX
+            )
+        else:
+            PrintInColor(
+                Randomize(commentary.commentary_third_umpire_not_out),
+                Fore.LIGHTGREEN_EX,
+            )
+            # a reprieve must un-credit the stat GenerateDismissal already
+            # awarded, so an overturned dismissal leaves no phantom on record
+            self._UndoDismissalStat(dismissal, kind)
+        return out
+
+    def _UndoDismissalStat(self, dismissal, kind):
+        """
+        Reverse the fielding stat GenerateDismissal credited when a run-out or
+        stumping is overturned upstairs.
+
+        Returns:
+            None
+        """
+        if kind == "stumped":
+            keeper = self.bowling_team.keeper
+            keeper.stumpings = max(0, keeper.stumpings - 1)
+        else:  # runout: fielder named in "runout <shortname>"
+            name = dismissal.replace("runout", "").strip()
+            fielder = next(
+                (
+                    p
+                    for p in self.bowling_team.team_array
+                    if GetShortName(p.name) == name
+                ),
+                None,
+            )
+            if fielder is not None:
+                fielder.runouts = max(0, fielder.runouts - 1)
 
     def PrintCommentaryDismissal(self, dismissal):
         """
