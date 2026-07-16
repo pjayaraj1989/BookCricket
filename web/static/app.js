@@ -477,6 +477,19 @@ function buildMiscCard(srcPath, fallbackEmoji, caption, subtitle) {
   return card;
 }
 
+// umpire giving a decision (LBW / run out): umpire photo, a "wickets hit"
+// stumps symbol, and the decision label
+function buildUmpireDecisionCard(umpireName, label) {
+  const card = buildPlayerCard(umpireName || "Umpire", label, "umpires/");
+  const nameEl = card.querySelector(".event-player-name");
+  if (nameEl) nameEl.remove(); // show only the umpire's photo, not the name
+  const stumps = document.createElement("div");
+  stumps.className = "event-decision-stumps";
+  stumps.innerHTML = STUMPS_SVG;
+  card.insertBefore(stumps, card.firstChild); // wickets symbol above the umpire
+  return card;
+}
+
 function buildCountdownCard(name, number) {
   const card = buildPlayerCard(name);
   const nameEl = card.querySelector(".event-player-name");
@@ -488,13 +501,22 @@ function buildCountdownCard(name, number) {
   return card;
 }
 
+const GAME_ON_PHRASES = [
+  "GAME ON!",
+  "LET'S GO!",
+  "BRING IT ON!",
+  "IT'S SHOWTIME!",
+  "CHALLENGE ACCEPTED!",
+  "GO TIME!",
+];
+
 function buildGameOnCard(name) {
   const card = buildPlayerCard(name);
   const nameEl = card.querySelector(".event-player-name");
   if (nameEl) nameEl.remove();
   const go = document.createElement("div");
   go.className = "event-gameon-text";
-  go.textContent = "GAME ON!";
+  go.textContent = GAME_ON_PHRASES[Math.floor(Math.random() * GAME_ON_PHRASES.length)];
   card.insertBefore(go, card.firstChild);
   return card;
 }
@@ -647,7 +669,11 @@ function renderEvent(kind, data) {
     const sub = data && data.opponent ? data.opponent + " to bat again" : "";
     showEventPane(buildMiscCard("misc/follow_on", "🔁", "Follow-on enforced!", sub), 4000, "takeover");
   } else if (kind === "runout") {
-    showEventPane(buildMiscCard("misc/runout", "🏃", "Run out!"), 2500, "player");
+    const ump = data && data.umpire ? String(data.umpire) : "";
+    showEventPane(buildUmpireDecisionCard(ump, "RUN OUT"), 3000, "takeover");
+  } else if (kind === "lbw") {
+    const ump = data && data.umpire ? String(data.umpire) : "";
+    showEventPane(buildUmpireDecisionCard(ump, "LBW"), 3000, "takeover");
   } else if (kind === "achievement") {
     const name = data && data.name ? String(data.name) : "";
     const text = data && data.text ? String(data.text) : "";
@@ -817,6 +843,6 @@ function renderMatchHighlights(highlights) {
     badge.textContent = "🏅 Man of the Match";
     // badge sits between the photo and the name
     mom.insertBefore(badge, mom.children[1]);
-    showEventPane(mom, 6000, "player");
+    showEventPane(mom, 6000, "takeover");
   }
 }
