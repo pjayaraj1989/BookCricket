@@ -370,6 +370,10 @@ class Match:
             enforce_follow_on = self._DecideFollowOn(lead_team, trail_team, lead_inn1, trail_inn1)
 
         if enforce_follow_on:
+            utilities.PushEvent(
+                "follow_on",
+                {"team": lead_team.name, "opponent": trail_team.name},
+            )
             # trailing team bats again immediately
             self._SetupTestInnings(trail_team, lead_team, chase=False)
             self.Play()
@@ -575,6 +579,14 @@ class Match:
                 break
             if self._ShouldDeclare(over):
                 batting_team.declared = True
+                utilities.PushEvent(
+                    "declare",
+                    {
+                        "team": batting_team.name,
+                        "score": int(batting_team.total_score),
+                        "wickets": int(batting_team.wickets_fell),
+                    },
+                )
                 PrintInColor(
                     "%s have declared their innings at %s/%s (%s overs)!"
                     % (
@@ -1378,6 +1390,10 @@ class Match:
 
         if isHattrick:
             bowler.hattricks += 1
+            utilities.PushEvent(
+                "achievement",
+                {"name": bowler.name, "type": "hattrick", "text": "HAT-TRICK!"},
+            )
             PrintInColor(Randomize(commentary.commentary_hattrick), bowling_team.color)
             if not self.autoplay:   input("press enter to continue..")
         if bowler.wkts == 3:

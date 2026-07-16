@@ -532,6 +532,132 @@ main {
   animation: event-pop 0.4s ease;
 }
 
+.event-countdown-num {
+  font-size: 3.2rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #f2d16b;
+  text-shadow: 0 0 16px rgba(242, 209, 107, 0.5);
+  animation: countdown-pop 0.5s ease;
+}
+
+@keyframes countdown-pop {
+  0% { transform: scale(1.9); opacity: 0; }
+  55% { transform: scale(0.92); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.event-gameon-text {
+  font-size: 1.9rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: #7fe3a3;
+  text-shadow: 0 0 16px rgba(127, 227, 163, 0.6);
+  animation: event-pop 0.45s ease;
+}
+
+/* "takeover" pop-ups fill the whole screen with a dark backdrop, so they
+   read as a "watch this" moment rather than a corner pop-up. Used by the
+   pre-match countdown (game is blocked on the server meanwhile) and the
+   stadium reveal. */
+.event-pane.takeover {
+  inset: 0;
+  width: auto;
+  height: auto;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: rgba(3, 16, 10, 0.95);
+  transform: none;
+  z-index: 150;
+}
+
+.event-pane.takeover.visible {
+  transform: none;
+  /* block clicks on the controls behind it, only while actually shown */
+  pointer-events: auto;
+}
+
+.event-pane.takeover .event-player-pic,
+.event-pane.takeover .event-player-fallback {
+  width: 160px;
+  height: 160px;
+  border-width: 3px;
+}
+
+.event-pane.takeover .event-player-fallback {
+  font-size: 3.4rem;
+}
+
+.event-pane.takeover .event-player-name {
+  font-size: 1.5rem;
+  max-width: 80vw;
+}
+
+.event-pane.takeover .event-countdown-num {
+  font-size: clamp(5rem, 22vw, 10rem);
+}
+
+.event-pane.takeover .event-gameon-text {
+  font-size: clamp(2.4rem, 12vw, 4.5rem);
+}
+
+/* stadium reveal: large ground photo (or emoji fallback) with its caption */
+.event-pane.takeover .event-misc-pic {
+  max-width: min(85vw, 960px);
+  max-height: 68vh;
+  border-radius: 14px;
+  border-width: 3px;
+}
+
+.event-pane.takeover .event-misc-fallback {
+  font-size: clamp(5rem, 24vw, 11rem);
+}
+
+/* achievement badge (50/100/5-for/hat-trick) and misc subtitles scale up too */
+.event-pane.takeover .event-achievement-badge {
+  font-size: clamp(1.8rem, 6vw, 2.6rem);
+}
+
+.event-pane.takeover .event-player-role {
+  font-size: 1.05rem;
+}
+
+/* multi-card rows (teams flags, umpires, commentators) fill the screen too;
+   wrap on narrow viewports rather than overflowing */
+.event-pane.takeover .event-openers {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem 2.4rem;
+}
+
+.event-pane.takeover .event-vs {
+  font-size: 1.6rem;
+}
+
+.event-pane.takeover .event-flag-pic,
+.event-pane.takeover .event-flag-fallback {
+  width: min(46vw, 264px);
+  height: auto;
+  aspect-ratio: 3 / 2;
+}
+
+.event-pane.takeover .event-flag-fallback {
+  font-size: 2.4rem;
+}
+
+/* rosters (umpires / commentators) put several people side by side, so use
+   a slightly smaller portrait than the single-player countdown card */
+.event-pane.takeover.roster .event-player-pic,
+.event-pane.takeover.roster .event-player-fallback {
+  width: 130px;
+  height: 130px;
+}
+
+.event-pane.takeover.roster .event-player-fallback {
+  font-size: 2.8rem;
+}
+
 .drs-lights {
   display: flex;
   gap: 0.5rem;

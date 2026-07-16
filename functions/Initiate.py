@@ -10,7 +10,7 @@ from functions.helper import Venue
 from functions.Base.Player import Player
 from functions.Base.Match import Match
 from functions.Base.Team import Team
-from functions.utilities import ChooseFromOptions, PrintInColor, Randomize, Error_Exit, PushEvent
+from functions.utilities import ChooseFromOptions, PrintInColor, Randomize, Error_Exit, PushEvent, PushLineupCountdown
 import random
 from numpy.random import choice
 from colorama import Fore, Style
@@ -339,4 +339,7 @@ def GetMatchInfo(list_of_teams, venue, autoplay, overs, format_override=None, fa
     # display squad
     match.DisplayPlayingXI()
     match.autoplay = autoplay
+    # cool pre-match countdown in the web UI (skipped in autoplay/console)
+    if not autoplay:
+        PushLineupCountdown(match)
     return match

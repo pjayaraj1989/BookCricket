@@ -11,6 +11,8 @@ event kind:
 | Innings over                 | `innings_over.png`| 🏏             |
 | Match won                    | `victory.png`     | 🏆             |
 | Run out                      | `runout.png`      | 🏃             |
+| Declaration (Test)           | `declare.png`     | ✋             |
+| Follow-on enforced (Test)    | `follow_on.png`   | 🔁             |
 
 Supported extensions: `.png`, `.jpg`, `.jpeg`, `.webp` (checked in that
 order). Images are shown at up to 150x95, cropped to fit.
