@@ -13,6 +13,11 @@ event kind:
 | Run out                      | `runout.png`      | 🏃             |
 | Declaration (Test)           | `declare.png`     | ✋             |
 | Follow-on enforced (Test)    | `follow_on.png`   | 🔁             |
+| Rain clouds (pre-match)      | `rain_clouds.png` | 🌥️             |
+| Getting cloudy (Test)        | `rain_cloudy.png` | 🌥️             |
+| Drizzle (Test)               | `rain_drizzle.png`| 🌦️             |
+| Heavy rain (Test)            | `rain_heavy.png`  | 🌧️             |
+| Rain stopped play (Test)     | `rain_stopped.png`| ☔             |
 
 Supported extensions: `.png`, `.jpg`, `.jpeg`, `.webp` (checked in that
 order). Images are shown at up to 150x95, cropped to fit.

@@ -69,6 +69,17 @@ class Match:
             "match_drawn": False,
             "declare_eligible": False,
             "follow_on_margin": 200,
+            # rainy-Test rain sequence (all no-op on dry venues / limited-overs)
+            "rain_enabled": False,
+            "rain_done": False,
+            "rain_stage": 0,  # 0 waiting, 1 cloudy, 2 drizzle, 3 heavy/stopped
+            "rain_buildup_over": 0,  # match-over count when the build-up begins
+            "rain_next_over": 0,  # match-over count for the next build-up stage
+            "match_overs_bowled": 0,
+            # live milestone pop-ups (reset each innings in Play)
+            "team_score_milestone_shown": 0,  # highest team-total 100 popped
+            "partnership_milestone_shown": 0,  # highest 50 popped, current stand
+            "partnership_tracked_wkt": 0,  # wickets_fell the stand is tracked at
         }
         self = FillAttributes(self, attrs, kwargs)
 
@@ -338,6 +349,18 @@ class Match:
         """
         team_a, team_b = self.team1, self.team2
 
+        # a rainy venue gets a live rain sequence later in the day (once per
+        # match): flag it and greet the players with brooding rain clouds
+        if self.venue.weather == "rainy":
+            self.rain_enabled = True
+            # build-up begins after ~30+ overs of play
+            self.rain_buildup_over = 30 + random.randint(0, 25)
+            utilities.PushEvent("rain", {"stage": "clouds"})
+            PrintInColor(
+                "Dark rain clouds hang over the ground as the players take the field.",
+                Style.BRIGHT,
+            )
+
         # innings 1: A bats
         self._SetupTestInnings(team_a, team_b, chase=False)
         self.Play()
@@ -432,6 +455,11 @@ class Match:
         pair = list(batting_team.opening_pair)
 
         utilities.PushEvent("openers", {"names": [p.name for p in pair]})
+
+        # fresh milestone tracking for this innings (team-total and stand pop-ups)
+        self.team_score_milestone_shown = 0
+        self.partnership_milestone_shown = 0
+        self.partnership_tracked_wkt = 0
 
         # reset accumulators for this innings. For limited-overs matches this
         # is a no-op in effect (each team only ever calls it once, and fields
@@ -605,13 +633,114 @@ class Match:
             self.batting_team.current_pair = pair
             self.PlayOver(over)
             self.overs_bowled_this_session += 1
+            self.match_overs_bowled += 1
 
             if self.status is False:
+                break
+
+            # rain may build up and eventually stop play, burning overs off
+            # the day/match clock (and drawing the match if days run out)
+            if self._MaybeRain():
                 break
 
             self._PostOverDisplay(pair)
             over += 1
         return
+
+    def _MaybeRain(self):
+        """
+        Drive the Test-match rain sequence on a rainy venue: a gradual
+        build-up (cloudy -> drizzle -> heavy) spread over a handful of overs,
+        then a stoppage that burns overs off the day/match clock. Runs once
+        per match; a no-op on dry venues or after it has already happened.
+        Called once per over from the Test over-loop.
+
+        Returns:
+            bool: True if the rain stoppage ended the match (drew it).
+        """
+        if not self.rain_enabled or self.rain_done:
+            return False
+        n = self.match_overs_bowled
+
+        if self.rain_stage == 0:
+            if n < self.rain_buildup_over:
+                return False
+            PrintInColor(Randomize(commentary.commentary_rain_cloudy), Style.BRIGHT)
+            utilities.PushEvent("rain", {"stage": "cloudy"})
+            self.rain_stage = 1
+            self.rain_next_over = n + random.randint(5, 10)
+        elif self.rain_stage == 1 and n >= self.rain_next_over:
+            PrintInColor(Randomize(commentary.commentary_rain_drizzling), Style.BRIGHT)
+            utilities.PushEvent("rain", {"stage": "drizzle"})
+            self.rain_stage = 2
+            self.rain_next_over = n + random.randint(2, 5)
+        elif self.rain_stage == 2 and n >= self.rain_next_over:
+            PrintInColor(Randomize(commentary.commentary_rain_heavy), Style.BRIGHT)
+            utilities.PushEvent("rain", {"stage": "heavy"})
+            self.rain_stage = 3
+            self.rain_done = True
+            return self._RainStopsPlay()
+        return False
+
+    def _RainStopsPlay(self):
+        """
+        Rain has stopped play: announce it, wash out a chunk of overs from the
+        day/match clock (rolling into the next day if the rest of today is
+        lost), and draw the match if the delay uses up the scheduled days.
+
+        Returns:
+            bool: True if the match is now drawn (over), else False.
+        """
+        lost = random.randint(25, 60)  # overs washed out by the rain
+        day_before = self.day
+        drawn = self._BurnOversToRain(lost)
+        if drawn:
+            PrintInColor(
+                "The rain has the final say - no further play is possible and "
+                "the match is drawn!",
+                Style.BRIGHT,
+            )
+            utilities.PushEvent(
+                "rain", {"stage": "stopped", "resume": "No further play - match drawn"}
+            )
+            return True
+        resume = (
+            "Play resumes on Day %s" % str(self.day)
+            if self.day > day_before
+            else "Play will resume shortly"
+        )
+        PrintInColor("Rain has stopped play. %s." % resume, Style.BRIGHT)
+        utilities.PushEvent("rain", {"stage": "stopped", "resume": resume})
+        if not self.autoplay:
+            input("press enter to continue..")
+        return False
+
+    def _BurnOversToRain(self, n):
+        """
+        Advance the session/day clock by n washed-out overs, rolling into
+        later sessions and the next day as needed. Marks the match drawn if
+        the days run out.
+
+        Returns:
+            bool: True if the match ran out of days (drawn), else False.
+        """
+        while n > 0:
+            remaining = self.overs_per_session - self.overs_bowled_this_session
+            if n < remaining:
+                self.overs_bowled_this_session += n
+                return False
+            n -= remaining
+            self.overs_bowled_this_session = 0
+            if self.session < self.sessions_per_day:
+                self.session += 1
+            else:
+                self.session = 1
+                self.day += 1
+                if self.day > self.max_days:
+                    self.match_drawn = True
+                    self.status = False
+                    return True
+        return False
 
     def _PostOverDisplay(self, pair):
         """
@@ -642,8 +771,48 @@ class Match:
         # already pushed to the web UI's side pane after every ball (see the
         # per-ball loop in PlayOver), so no additional push is needed here
 
+        # milestone pop-ups (team total 100/200/..., current stand 50/100/...)
+        self._CheckScoreMilestones()
+
         # rotate strike after an over
         RotateStrike(pair)
+
+    def _CheckScoreMilestones(self):
+        """
+        Fire web pop-ups when the team total crosses a fresh multiple of 100
+        (100/200/300/...) or the current unbroken partnership crosses a fresh
+        multiple of 50 (50/100/150/...). Checked once per over; no-op in
+        console mode (the pushes are no-ops when no channel is set).
+
+        Returns:
+            None
+        """
+        bt = self.batting_team
+
+        # team total milestone: every 100 runs
+        hundred = (int(bt.total_score) // 100) * 100
+        if hundred >= 100 and hundred > self.team_score_milestone_shown:
+            self.team_score_milestone_shown = hundred
+            utilities.PushEvent(
+                "team_score",
+                {"team": bt.name, "score": hundred, "wickets": int(bt.wickets_fell)},
+            )
+
+        # partnership milestone: every 50 runs for the current stand. A new
+        # stand (a wicket has fallen) resets the tracked milestone.
+        if bt.wickets_fell != self.partnership_tracked_wkt:
+            self.partnership_tracked_wkt = bt.wickets_fell
+            self.partnership_milestone_shown = 0
+        if bt.wickets_fell < 10:
+            runs_at_last_wkt = bt.fow[-1].runs if bt.fow else 0
+            stand = int(bt.total_score) - int(runs_at_last_wkt)
+            fifty = (stand // 50) * 50
+            if fifty >= 50 and fifty > self.partnership_milestone_shown:
+                self.partnership_milestone_shown = fifty
+                names = [p.name for p in (bt.current_pair or []) if p is not None]
+                utilities.PushEvent(
+                    "partnership_milestone", {"runs": fifty, "names": names}
+                )
 
     def _AdvanceSessionIfNeeded(self):
         """

@@ -206,11 +206,47 @@ main {
   padding-top: 0.6rem;
   border-top: 1px solid #1e4530;
   color: #f2d16b;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .match-highlights ul {
   margin: 0;
   padding-left: 1.2rem;
+}
+
+/* thumbnail lists (top scorers / wicket-takers) drop the bullet in favour
+   of the player photo */
+.match-highlights ul.mh-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.match-highlights ul.mh-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.28rem 0;
+}
+
+.mh-pic {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid #2a6b45;
+  background: #1e4530;
+  object-fit: cover;
+  flex: none;
+}
+
+.mh-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: #e6f2ea;
 }
 
 .innings-summary td.dismissal {

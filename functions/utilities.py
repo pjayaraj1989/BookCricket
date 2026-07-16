@@ -261,7 +261,8 @@ def PushEvent(kind, data=None):
             "six", "drs_pending", "drs_result", "new_batsman", "new_bowler",
             "openers", "teams_selected", "session_break", "innings_over",
             "victory", "runout", "venue_selected", "umpires", "achievement",
-            "commentators", "declare", "follow_on", "lbw").
+            "commentators", "declare", "follow_on", "lbw", "rain",
+            "team_score", "partnership_milestone").
         data: Optional dict of extra fields for the frontend to render.
 
     Returns:
