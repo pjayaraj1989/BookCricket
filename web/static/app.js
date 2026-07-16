@@ -649,7 +649,7 @@ function buildPlayerCard(name, role, srcPath) {
 
 function renderEvent(kind, data) {
   if (kind === "toss") {
-    showEventPane('<span class="event-coin">🪙</span>', 2500);
+    showEventPane('<span class="event-coin">🪙</span>', 2500, "takeover");
   } else if (kind === "wicket") {
     showEventPane('<span class="event-stumps">' + STUMPS_SVG + "</span>", 2500);
   } else if (kind === "four") {
@@ -786,17 +786,31 @@ function renderEvent(kind, data) {
         "takeover venue"
       );
     }
+  } else if (kind === "third_umpire") {
+    if (data && data.stage === "referred") {
+      showEventPane(
+        buildMiscCard("misc/third_umpire", "📺", "Third umpire", "checking the replay…"),
+        3000,
+        "takeover"
+      );
+    } else {
+      // given out on the spot by the on-field umpire
+      const label = data && data.kind === "stumped" ? "STUMPED" : "RUN OUT";
+      showEventPane(buildUmpireDecisionCard(data && data.umpire, label), 3000, "takeover");
+    }
   } else if (kind === "drs_pending") {
     showEventPane(
       '<div class="drs-lights blinking"><span class="drs-bulb red"></span><span class="drs-bulb green"></span></div>',
-      0
+      0,
+      "takeover"
     );
   } else if (kind === "drs_result") {
     const out = !!(data && data.out);
     showEventPane(
       '<div class="drs-lights decided ' + (out ? "out" : "not-out") + '">' +
         '<span class="drs-bulb red"></span><span class="drs-bulb green"></span></div>',
-      3000
+      3000,
+      "takeover"
     );
   }
 }

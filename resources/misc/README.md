@@ -18,6 +18,7 @@ event kind:
 | Drizzle (Test)               | `rain_drizzle.png`| 🌦️             |
 | Heavy rain (Test)            | `rain_heavy.png`  | 🌧️             |
 | Rain stopped play (Test)     | `rain_stopped.png`| ☔             |
+| Third umpire (referral)      | `third_umpire.png`| 📺             |
 
 Supported extensions: `.png`, `.jpg`, `.jpeg`, `.webp` (checked in that
 order). Images are shown at up to 150x95, cropped to fit.

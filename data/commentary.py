@@ -976,3 +976,44 @@ class commentary:
         "this is an unfortunate end ! Rain has forced to call off the match",
         "heavy rains.. and the umpires and the match referee have decided to call off the match",
     ]
+
+    # umpire gives a run-out/stumping out on the spot (no referral)
+    commentary_given_out = [
+        "that's out by a mile! the finger goes up straightaway!",
+        "no doubt about that one, given out on the spot!",
+        "the umpire didn't even need a replay for that, that's out!",
+        "comfortably out! the umpire's finger is up in a flash!",
+        "easy decision that, he's well short and given out!",
+    ]
+
+    # stumping sent upstairs to the third umpire
+    commentary_referred_stumped = [
+        "oh, big appeal for the stumping! the keeper whips off the bails, the umpire is unsure and sends it upstairs",
+        "the keeper thinks he's got him stumped! the umpire is doubtful and calls for the third umpire",
+        "close one this! was the foot behind the line? over to the third umpire for the stumping",
+        "the bails are off and the keeper is appealing hard.. the umpire wants a closer look upstairs",
+    ]
+
+    # run-out sent upstairs to the third umpire
+    commentary_referred_runout = [
+        "direct hit! and the umpire goes upstairs to check the run out",
+        "oh that's close! the run-out decision is referred to the third umpire",
+        "the throw hits the stumps, and the umpires check with the third umpire",
+        "there could be a run out here! the on-field umpire is unsure and sends it up",
+    ]
+
+    # third umpire's verdict - out
+    commentary_third_umpire_out = [
+        "the replays confirm it, he's out!",
+        "the red light is on! the batsman has to walk back!",
+        "third umpire says out! good decision in the end",
+        "the replays are conclusive, that's out!",
+    ]
+
+    # third umpire's verdict - not out (a reprieve)
+    commentary_third_umpire_not_out = [
+        "the green light! he's made his ground, not out!",
+        "replays show he just got back in time, the batsman survives!",
+        "not out says the third umpire! a huge reprieve for the batsman",
+        "he's in! the bat was grounded behind the line, not out!",
+    ]

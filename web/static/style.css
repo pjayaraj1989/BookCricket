@@ -402,6 +402,10 @@ main {
   animation: event-flip 1.4s ease-in-out;
 }
 
+.event-pane.takeover .event-coin {
+  font-size: clamp(5rem, 24vw, 11rem);
+}
+
 @keyframes event-flip {
   0% { transform: rotateY(0deg); }
   50% { transform: rotateY(900deg); }
@@ -659,6 +663,16 @@ main {
 
 .event-pane.takeover .event-player-role {
   font-size: 1.05rem;
+}
+
+/* DRS / third-umpire review lights, enlarged for the full-screen takeover */
+.event-pane.takeover .drs-lights {
+  gap: 1.4rem;
+}
+
+.event-pane.takeover .drs-lights .drs-bulb {
+  width: 84px;
+  height: 84px;
 }
 
 /* umpire-decision (LBW / run out) stumps symbol above the umpire photo */
