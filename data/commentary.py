@@ -127,6 +127,12 @@ class commentary:
     # comments for diff shots
     commentary_six = [
         "that's in the stands! ",
+        "that's launched into orbit!",
+        "he's picked the length early and deposited it over the ropes!",
+        "clean as a whistle, straight down the ground for six!",
+        "the crowd is on its feet, that's a monster hit!",
+        "no fielder was going to stop that one!",
+        "right off the middle and it has sailed over the rope!",
         "he goes bang ! that's a big one!",
         "smashed it out of the park!",
         "where do you set fielders for this man!",
@@ -151,6 +157,12 @@ class commentary:
     ]
     commentary_four = [
         "what a shot!.. that will find the fence!",
+        "threaded the gap beautifully and it races away to the fence!",
+        "silky timing, no power needed for that one!",
+        "leans into the drive and its four all the way!",
+        "cut hard and it flies to the boundary!",
+        "clipped off the pads, four more!",
+        "the gap was there and he found it, four runs!",
         "short and wide and punished hard!",
         "that's the shot of the day for me!",
         "oh will this be taken in the deep, oh he has dropped it.. and its 4!",
@@ -158,7 +170,8 @@ class commentary:
         "fielder in pursuit... wont get there..",
         "beautiful drive and the fielder has given up the chase!",
         "into the gap for four!",
-        "pierced the gap for four!" "smashed through the gap!",
+        "pierced the gap for four!",
+        "smashed through the gap!",
         "poor delivery and deserved to be hit!",
         "long chase for the fielder... and the ball wins the race!",
         "how do you set fields for this batsman!",
@@ -217,7 +230,7 @@ class commentary:
         "oh this man %s is having a good day on the field!",
         "its that man %s again!",
         "oh %s, he is a live wire on the ground!",
-        "%s!  he is super fast on the field!",
+        "%s! he is super fast on the field!",
     ]
 
     # first runs of  the day for the team
@@ -323,6 +336,11 @@ class commentary:
     # diff types of dismissals
     commentary_hit_wkt = ["gone! he has hit the stumps!"]
     commentary_bowled = [
+        "timber! the stumps are shattered!",
+        "through the gate! completely beaten!",
+        "castled him! that's a beauty!",
+        "the off stump is cartwheeling!",
+        "played all around it, bowled!",
         "full and straight what a ball",
         "what a yorker! he is on fire!",
         "bowled him!",
@@ -427,7 +445,7 @@ class commentary:
         "tries for a wild shot and missed it.. quick stumping by %s!",
         "batsman misses it and swift work %s!",
         "stumped, %s looks confident, no need to refer it!",
-        "%s " "s fast hands behind the stumps!",
+        "%s's fast hands behind the stumps!",
         "very quick piece of stumping by %s!",
         "terrific stumping by %s!!",
         "quick stumping! %s appeals, umpire says out!",
@@ -443,7 +461,7 @@ class commentary:
         "brilliant catch! %s is a supreme athlete!",
         "oh man! what a catch by %s! one of the best catches ever!",
         "that's in the air, %s is underneath it, has he dropped it, no he hasn't! what a catch!",
-        "that's hit straight down %s" "s throat!",
+        "that's hit straight down %s's throat!",
         "hit in the air and what a catch!...unbelievable catch by %s!",
         "straight up in the air.. %s says mine.. takes it in the end!",
         "hit very hard but straight to %s.. batsman cant believe what he has done!",
@@ -713,6 +731,10 @@ class commentary:
     ]
     commentary_milestone = [
         "Its been a terrific knock by %s today..!",
+        "what a fine innings this has been from %s!",
+        "%s has led from the front today!",
+        "take a bow %s, a knock to remember!",
+        "%s has made batting look so easy out there!",
         "what a performance by %s...!",
         "Take a bow %s! What a knock!",
         "Absolutely magnificent innings %s!",
@@ -733,6 +755,10 @@ class commentary:
     ]
     commentary_fifer = [
         "what a bowler he is!",
+        "five wickets in the bag, what a spell!",
+        "he has ripped the heart out of this batting line-up!",
+        "a well-deserved five-for, superb bowling!",
+        "the batting side simply had no answer to him today!",
         "he has totally rattled this batting team!",
         "he is on absolute fire!",
         "he has been on fire with the ball today!",
@@ -742,6 +768,10 @@ class commentary:
     ]
     commentary_hattrick = [
         "that's it! that's a hat-trick !!",
+        "three wickets in three balls, sensational!",
+        "he was on a hat-trick and he has got it!",
+        "unbelievable scenes, that's a hat-trick!",
+        "he will remember this one forever, a hat-trick!",
         "Hat-trick for the bowler!",
         "3 in 3! This man is on absolute fire!",
         "hat-trick for the bowler! what a performance from him!",
@@ -754,6 +784,10 @@ class commentary:
 
     commentary_match_won = [
         "that's it, that's the end of the match!",
+        "the winning runs are struck, it's all over!",
+        "job done, they have closed out the match!",
+        "the contest is settled, what a game!",
+        "and that seals it, the match is won!",
         "that's it, they have won the match!",
         "that's the end of the match!",
     ]
@@ -773,6 +807,10 @@ class commentary:
 
     commentary_all_out = [
         "that's it! they have been bowled out!",
+        "the innings folds, they are all out!",
+        "the tail has been mopped up, all out!",
+        "no more batsmen to come, that's all out!",
+        "the bowlers have done the job, all out!",
         "terrific bowling performance, they have been bowled out!",
         "its all over for them!.. they have been bowled out!",
         "that's all over!! all out!",
@@ -925,7 +963,7 @@ class commentary:
     ]
     commentary_rain_drizzling = [
         "this is not looking good, a slight drizzle.. we can see raincoats among the crowd",
-        "it started drizzling a little now..  tougher for the players",
+        "it started drizzling a little now.. tougher for the players",
         "slight drizzle, and fielding is getting tougher!.. we could see the spectators getting their coats",
     ]
     commentary_rain_heavy = [

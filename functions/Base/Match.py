@@ -1012,7 +1012,7 @@ class Match:
                     if batting_team.total_score >= batting_team.target:
                         PrintInColor(
                             Randomize(commentary.commentary_won_last_ball)
-                            % (batting_team.name, bowling_team.name),
+                            % batting_team.name,
                             Style.BRIGHT,
                         )
                     else:
@@ -1349,7 +1349,14 @@ class Match:
         # add player dismissed to the list of wickets for the bowler
         bowler.wickets_taken.append(player_dismissed)
 
-        utilities.PushEvent("runout" if "runout" in dismissal else "wicket")
+        # LBW and run-outs are the umpire's call, so pop up the umpire giving
+        # the decision; other dismissals get the generic stumps animation
+        if "runout" in dismissal:
+            utilities.PushEvent("runout", {"umpire": self.umpire})
+        elif "lbw" in dismissal:
+            utilities.PushEvent("lbw", {"umpire": self.umpire})
+        else:
+            utilities.PushEvent("wicket")
         PrintInColor("Thats OUT !", Fore.RED)
         print(
             "%s %s %s (%s) SR: %s"

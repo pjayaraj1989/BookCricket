@@ -554,6 +554,8 @@ main {
   color: #7fe3a3;
   text-shadow: 0 0 16px rgba(127, 227, 163, 0.6);
   animation: event-pop 0.45s ease;
+  text-align: center;
+  max-width: 92vw;
 }
 
 /* "takeover" pop-ups fill the whole screen with a dark backdrop, so they
@@ -621,6 +623,16 @@ main {
 
 .event-pane.takeover .event-player-role {
   font-size: 1.05rem;
+}
+
+/* umpire-decision (LBW / run out) stumps symbol above the umpire photo */
+.event-decision-stumps {
+  animation: event-pop 0.4s ease;
+}
+
+.event-pane.takeover .event-decision-stumps svg {
+  width: 96px;
+  height: 96px;
 }
 
 /* multi-card rows (teams flags, umpires, commentators) fill the screen too;
