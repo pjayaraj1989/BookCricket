@@ -477,6 +477,28 @@ function buildMiscCard(srcPath, fallbackEmoji, caption, subtitle) {
   return card;
 }
 
+function buildCountdownCard(name, number) {
+  const card = buildPlayerCard(name);
+  const nameEl = card.querySelector(".event-player-name");
+  if (nameEl) nameEl.remove(); // countdown shows just the photo + number
+  const num = document.createElement("div");
+  num.className = "event-countdown-num";
+  num.textContent = String(number);
+  card.insertBefore(num, card.firstChild); // big number above the photo
+  return card;
+}
+
+function buildGameOnCard(name) {
+  const card = buildPlayerCard(name);
+  const nameEl = card.querySelector(".event-player-name");
+  if (nameEl) nameEl.remove();
+  const go = document.createElement("div");
+  go.className = "event-gameon-text";
+  go.textContent = "GAME ON!";
+  card.insertBefore(go, card.firstChild);
+  return card;
+}
+
 // Events can arrive back-to-back with no user interaction in between (the
 // openers card followed instantly by the opening bowler's card at innings
 // start), so queue them: each pop-up gets its full hold time instead of the
@@ -600,7 +622,7 @@ function renderEvent(kind, data) {
         }
         row.appendChild(buildFlagCard(n));
       });
-      showEventPane(row, 4000, "player");
+      showEventPane(row, 4000, "takeover roster");
     }
   } else if (kind === "session_break") {
     const isLunch = data && data.interval === "Lunch";
@@ -609,21 +631,29 @@ function renderEvent(kind, data) {
         ? buildMiscCard("misc/lunch", "🍽️", "Lunch break")
         : buildMiscCard("misc/tea", "☕", "Tea break"),
       3500,
-      "player"
+      "takeover"
     );
   } else if (kind === "innings_over") {
     const sub = data && data.team ? data.team + " " + data.score + "/" + data.wickets : "";
-    showEventPane(buildMiscCard("misc/innings_over", "🏏", "Innings over", sub), 3500, "player");
+    showEventPane(buildMiscCard("misc/innings_over", "🏏", "Innings over", sub), 3500, "takeover");
   } else if (kind === "victory") {
     const caption = data && data.result ? String(data.result) : "Victory!";
-    showEventPane(buildMiscCard("misc/victory", "🏆", caption), 5000, "player");
+    showEventPane(buildMiscCard("misc/victory", "🏆", caption), 5000, "takeover");
+  } else if (kind === "declare") {
+    const sub = data && data.team ? data.score + "/" + data.wickets : "";
+    const cap = data && data.team ? data.team + " declared" : "Declared";
+    showEventPane(buildMiscCard("misc/declare", "✋", cap, sub), 4000, "takeover");
+  } else if (kind === "follow_on") {
+    const sub = data && data.opponent ? data.opponent + " to bat again" : "";
+    showEventPane(buildMiscCard("misc/follow_on", "🔁", "Follow-on enforced!", sub), 4000, "takeover");
   } else if (kind === "runout") {
     showEventPane(buildMiscCard("misc/runout", "🏃", "Run out!"), 2500, "player");
   } else if (kind === "achievement") {
     const name = data && data.name ? String(data.name) : "";
     const text = data && data.text ? String(data.text) : "";
     // no dedicated cricket-ball emoji exists, baseball is the stand-in
-    const emoji = { batting: "🏏", bowling: "⚾", fielding: "🧤" }[data && data.type] || "🌟";
+    const emoji =
+      { batting: "🏏", bowling: "⚾", fielding: "🧤", hattrick: "🎩" }[data && data.type] || "🌟";
     if (name && text) {
       const card = buildPlayerCard(name);
       const badge = document.createElement("div");
@@ -631,7 +661,7 @@ function renderEvent(kind, data) {
       badge.textContent = emoji + " " + text;
       // badge sits between the photo and the name
       card.insertBefore(badge, card.lastChild);
-      showEventPane(card, 4000, "player");
+      showEventPane(card, 4000, "takeover");
     }
   } else if (kind === "umpires") {
     const names = ((data && data.names) || []).map(String).filter(Boolean);
@@ -639,7 +669,17 @@ function renderEvent(kind, data) {
       const row = document.createElement("div");
       row.className = "event-openers";
       names.forEach((n) => row.appendChild(buildPlayerCard(n, "Umpire", "umpires/")));
-      showEventPane(row, 4000, "player");
+      showEventPane(row, 2500, "takeover roster");
+    }
+  } else if (kind === "lineup_countdown") {
+    const players = (data && data.players) || [];
+    const frameMs = (data && data.frameMs) || 900;
+    const gameOnMs = (data && data.gameOnMs) || 2200;
+    players.forEach((p) => {
+      showEventPane(buildCountdownCard(String(p.name), p.count), frameMs, "takeover countdown");
+    });
+    if (data && data.gameOn && data.gameOn.name) {
+      showEventPane(buildGameOnCard(String(data.gameOn.name)), gameOnMs, "takeover countdown");
     }
   } else if (kind === "commentators") {
     const names = ((data && data.names) || []).map(String).filter(Boolean);
@@ -647,7 +687,7 @@ function renderEvent(kind, data) {
       const row = document.createElement("div");
       row.className = "event-openers";
       names.forEach((n) => row.appendChild(buildPlayerCard(n, "Commentator", "commentators/")));
-      showEventPane(row, 4000, "player");
+      showEventPane(row, 2500, "takeover roster");
     }
   } else if (kind === "venue_selected") {
     const name = data && data.name ? String(data.name) : "";
@@ -655,7 +695,7 @@ function renderEvent(kind, data) {
       showEventPane(
         buildMiscCard("venues/" + encodeURIComponent(name), "🏟️", name),
         4000,
-        "player"
+        "takeover venue"
       );
     }
   } else if (kind === "drs_pending") {

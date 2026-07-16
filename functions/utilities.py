@@ -261,7 +261,7 @@ def PushEvent(kind, data=None):
             "six", "drs_pending", "drs_result", "new_batsman", "new_bowler",
             "openers", "teams_selected", "session_break", "innings_over",
             "victory", "runout", "venue_selected", "umpires", "achievement",
-            "commentators").
+            "commentators", "declare", "follow_on").
         data: Optional dict of extra fields for the frontend to render.
 
     Returns:
@@ -322,6 +322,62 @@ def PushPlayingXI(match):
         }
 
     channel.playing_xi({"teams": [_team(match.team1), _team(match.team2)]})
+
+
+# how many players flash a number in the pre-match countdown (both captains
+# plus the rest picked at random from the two XIs)
+LINEUP_COUNTDOWN_SIZE = 9
+
+
+def PushLineupCountdown(match):
+    """
+    Play a pre-match countdown in the web UI's event pane:
+    LINEUP_COUNTDOWN_SIZE players - one captain plus others picked at random
+    from the two XIs - each flash a number N..1, then the OTHER captain calls
+    "GAME ON!" (kept out of the numbered countdown so nobody appears twice).
+    Blocks the game thread for the animation's duration so the toss doesn't
+    start underneath it. No-op in console mode (no channel set).
+
+    Args:
+        match: The Match object, called just after the elevens are shown.
+
+    Returns:
+        None
+    """
+    channel = get_channel()
+    if channel is None:
+        return
+
+    cap1, cap2 = match.team1.captain, match.team2.captain
+    # one captain is reserved to call "GAME ON!" and is kept out of the
+    # numbered countdown, so nobody appears twice; the other captain still
+    # features among the numbers
+    game_on = Randomize([cap1, cap2])
+    other_cap = cap2 if game_on is cap1 else cap1
+    others = [
+        p for p in (match.team1.team_array + match.team2.team_array)
+        if p not in (cap1, cap2)
+    ]
+    random.shuffle(others)
+    lineup = [other_cap] + others[:LINEUP_COUNTDOWN_SIZE - 1]
+    random.shuffle(lineup)
+    count = len(lineup)
+
+    # frontend holds each frame for this long; the total is what we sleep so
+    # the toss prompt waits for the animation to finish (single source of
+    # truth for the timing, passed through in the payload). Frames are kept
+    # brisk so a longer countdown doesn't drag.
+    frame_ms = 700
+    game_on_ms = 2200
+
+    channel.event("lineup_countdown", {
+        "players": [{"name": p.name, "count": count - i} for i, p in enumerate(lineup)],
+        "gameOn": {"name": game_on.name},
+        "frameMs": frame_ms,
+        "gameOnMs": game_on_ms,
+    })
+
+    time.sleep((frame_ms * count + game_on_ms) / 1000.0)
 
 
 def _over_history_series(team):
