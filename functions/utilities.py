@@ -262,7 +262,7 @@ def PushEvent(kind, data=None):
             "openers", "teams_selected", "session_break", "innings_over",
             "victory", "runout", "venue_selected", "umpires", "achievement",
             "commentators", "declare", "follow_on", "lbw", "rain",
-            "team_score", "partnership_milestone", "third_umpire").
+            "team_score", "partnership_milestone", "third_umpire", "tension").
         data: Optional dict of extra fields for the frontend to render.
 
     Returns:
@@ -449,6 +449,14 @@ def PushScorecard(match):
         runs_needed = _int(max(batting.target - batting.total_score, 0))
         wickets_in_hand = _int(10 - batting.wickets_fell)
 
+    # Balls left in a limited-overs chase, so the UI can say "need N from M
+    # balls". A Test chase has no ball limit, so there's nothing to count down.
+    balls_remaining = None
+    if not is_test and match.overs and batting.batting_second:
+        balls_remaining = _int(
+            max(int(match.overs) * 6 - _int(batting.total_balls), 0)
+        )
+
     # Over-by-over "worm" graph data - limited overs only (Test innings can
     # run to 100+ overs across multiple days, not meaningful to chart the
     # same way). While chasing, bowling_team is the side that batted first
@@ -514,6 +522,7 @@ def PushScorecard(match):
         "resultMessage": result_message,
         "runsNeeded": runs_needed,
         "wicketsInHand": wickets_in_hand,
+        "ballsRemaining": balls_remaining,
         "overHistory": over_history,
         "firstInningsOverHistory": first_innings_over_history,
         "firstInningsTeam": bowling.name if first_innings_over_history is not None else None,

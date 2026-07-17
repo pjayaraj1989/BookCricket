@@ -213,7 +213,13 @@ function renderScorecard(state) {
     parts.push('<div class="target-line">' + escapeHtml(state.resultMessage) + "</div>");
   } else if (state.target !== null && state.target !== undefined) {
     const need = Math.max(state.target - state.score, 0);
-    let targetLine = "Need " + need + " more vs " + escapeHtml(state.bowlingTeam);
+    // limited-overs chases count down the balls; a Test chase has no ball limit
+    const balls = state.ballsRemaining;
+    const from =
+      balls === null || balls === undefined
+        ? " more"
+        : " from " + balls + " ball" + (balls === 1 ? "" : "s");
+    let targetLine = "Need " + need + from + " vs " + escapeHtml(state.bowlingTeam);
     if (state.wicketsInHand !== null && state.wicketsInHand !== undefined) {
       targetLine += "  ·  " + state.wicketsInHand + " wkt" + (state.wicketsInHand === 1 ? "" : "s") + " in hand";
     }
@@ -442,6 +448,18 @@ function buildFlagCard(teamName) {
 
   card.appendChild(img);
   card.appendChild(label);
+  return card;
+}
+
+// match won: the winning team's flag over the result line
+function buildVictoryCard(teamName, resultStr) {
+  const card = buildFlagCard(teamName);
+  const nameEl = card.querySelector(".event-player-name");
+  if (nameEl) nameEl.remove(); // the result line already names the winner
+  const badge = document.createElement("div");
+  badge.className = "event-achievement-badge";
+  badge.textContent = "🏆 " + resultStr;
+  card.appendChild(badge);
   return card;
 }
 
@@ -713,7 +731,12 @@ function renderEvent(kind, data) {
     showEventPane(buildMiscCard("misc/innings_over", "🏏", "Innings over", sub), 3500, "takeover");
   } else if (kind === "victory") {
     const caption = data && data.result ? String(data.result) : "Victory!";
-    showEventPane(buildMiscCard("misc/victory", "🏆", caption), 5000, "takeover");
+    const team = data && data.team ? String(data.team) : "";
+    showEventPane(
+      team ? buildVictoryCard(team, caption) : buildMiscCard("misc/victory", "🏆", caption),
+      5000,
+      "takeover"
+    );
   } else if (kind === "declare") {
     const sub = data && data.team ? data.score + "/" + data.wickets : "";
     const cap = data && data.team ? data.team + " declared" : "Declared";
@@ -734,6 +757,19 @@ function renderEvent(kind, data) {
         4000,
         "takeover"
       );
+    }
+  } else if (kind === "tension") {
+    const text = data && data.text ? String(data.text) : "";
+    const isFinal = !!(data && data.final);
+    if (text) {
+      const card = document.createElement("div");
+      card.className = "event-player";
+      const line = document.createElement("div");
+      line.className = "event-tension-text" + (isFinal ? " final" : "");
+      line.textContent = text;
+      card.appendChild(line);
+      // kept short so the pop-ups keep pace with the balls being bowled
+      showEventPane(card, isFinal ? 2600 : 1600, "takeover");
     }
   } else if (kind === "rain") {
     const cfg = {
