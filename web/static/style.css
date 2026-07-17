@@ -686,6 +686,29 @@ main {
   font-size: 1.05rem;
 }
 
+/* last-over-of-a-chase tension lines */
+.event-tension-text {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #e6f2ea;
+  text-align: center;
+  max-width: 92vw;
+  animation: event-pop 0.4s ease;
+}
+
+.event-tension-text.final {
+  color: #f2d16b;
+  text-shadow: 0 0 18px rgba(242, 209, 107, 0.5);
+}
+
+.event-pane.takeover .event-tension-text {
+  font-size: clamp(1.6rem, 6vw, 3rem);
+}
+
+.event-pane.takeover .event-tension-text.final {
+  font-size: clamp(2rem, 8vw, 4rem);
+}
+
 /* DRS / third-umpire review lights, enlarged for the full-screen takeover */
 .event-pane.takeover .drs-lights {
   gap: 1.4rem;

@@ -569,6 +569,41 @@ class commentary:
         "No more reviews left!",
     ]
 
+    # last over of a chase - a tension line for each ball (5 are picked at
+    # random from this pool at the start of the over)
+    commentary_last_over_tension = [
+        "the stadium is on its feet!",
+        "tension time here at the ground!",
+        "you could cut the atmosphere with a knife!",
+        "nobody in this crowd is sitting down now!",
+        "the nerves are jangling out in the middle!",
+        "this is exactly what we came to see!",
+        "the crowd is roaring on every single ball!",
+        "hearts in mouths in both dressing rooms!",
+        "the pressure out there is immense right now!",
+        "the captain can barely watch from the dugout!",
+        "what a finish this is turning out to be!",
+        "the noise here is absolutely deafening!",
+        "every single run counts now!",
+        "the fielders crowd in.. the tension is unbearable!",
+        "the bowler takes a deep breath.. here we go!",
+        "the whole ground is holding its breath!",
+        "you can feel the tension right up in the stands!",
+        "the batsmen have a long chat.. the nerves are showing!",
+        "this is high drama at its very best!",
+        "goosebumps all around the ground!",
+    ]
+
+    # the final ball of a chase - a stronger line than the rest of the over
+    commentary_last_ball_tension = [
+        "IT ALL COMES DOWN TO THIS! ONE BALL LEFT!",
+        "THIS IS IT! THE FINAL BALL OF THE MATCH!",
+        "EVERYTHING RIDES ON THIS ONE DELIVERY!",
+        "THE WHOLE MATCH IN ONE BALL! UNBEARABLE!",
+        "LAST BALL! THE GROUND IS ABSOLUTELY ELECTRIC!",
+        "ONE BALL TO DECIDE IT ALL! HOLD YOUR BREATH!",
+    ]
+
     # the appeal for a catch, before the batsman decides whether to review
     commentary_caught_appeal = [
         "looks like there is an edge, and they are appealing!",

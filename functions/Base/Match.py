@@ -80,6 +80,9 @@ class Match:
             "rain_buildup_over": 0,  # match-over count when the build-up begins
             "rain_next_over": 0,  # match-over count for the next build-up stage
             "match_overs_bowled": 0,
+            # last-over-of-a-chase tension pop-ups (set up in PlayOver)
+            "last_over_phrases": [],  # the lines picked for this over's balls
+            "tension_ball_shown": 0,  # last ball a tension line was popped for
             # live milestone pop-ups (reset each innings in Play)
             "team_score_milestone_shown": 0,  # highest team-total 100 popped
             "partnership_milestone_shown": 0,  # highest 50 popped, current stand
@@ -783,6 +786,27 @@ class Match:
         # rotate strike after an over
         RotateStrike(pair)
 
+    def _PushLastOverTension(self, ball):
+        """
+        Pop a tension line for one ball of the final over of a chase: balls 1-5
+        use the lines picked for this over, and the last ball gets a stronger
+        one of its own.
+
+        Args:
+            ball: The ball number within the over (1-6).
+
+        Returns:
+            None
+        """
+        if ball >= 6:
+            phrase = Randomize(commentary.commentary_last_ball_tension)
+        elif self.last_over_phrases:
+            phrase = self.last_over_phrases[(ball - 1) % len(self.last_over_phrases)]
+        else:
+            return
+        PrintInColor(phrase, Style.BRIGHT)
+        utilities.PushEvent("tension", {"text": phrase, "final": ball >= 6})
+
     def _CheckScoreMilestones(self):
         """
         Fire web pop-ups when the team total crosses a fresh multiple of 100
@@ -1047,11 +1071,27 @@ class Match:
         ball = 1
         over_arr = []
 
+        # last over of a chase: pick this over's tension lines up front so no
+        # two balls repeat one, and reset the per-ball tracker
+        is_last_over_chase = bool(
+            overs and over == overs - 1 and batting_team.batting_second
+        )
+        if is_last_over_chase:
+            pool = commentary.commentary_last_over_tension
+            self.last_over_phrases = random.sample(pool, min(5, len(pool)))
+            self.tension_ball_shown = 0
+
         # loop for an over
         while ball <= 6:
             # if match ended
             if not self.status:
                 break
+
+            # crank up the tension, once per ball (a wide/no-ball re-enters the
+            # loop on the same ball number, so don't pop the same line twice)
+            if is_last_over_chase and ball != self.tension_ball_shown:
+                self.tension_ball_shown = ball
+                self._PushLastOverTension(ball)
 
             # check if dramatic over!
             if over_arr.count(6) > 2 or over_arr.count(4) > 2 and -1 in over_arr:
@@ -1663,8 +1703,14 @@ class Match:
         self.PrintCommentaryDismissal(dismissal)
         # show score
         self.CurrentMatchStatus()
-        # get next batsman
-        self.GetNextBatsman()
+        # a new batsman only walks out if there is still an innings to bat:
+        # not when the wicket fell on the last ball of the innings, and not
+        # when it ended the match (GetNextBatsman itself handles all-out)
+        overs_done = bool(
+            self.overs and batting_team.total_balls >= self.overs * 6
+        )
+        if self.status and not overs_done:
+            self.GetNextBatsman()
         if not self.autoplay:   input("press enter to continue")
         self.DisplayScore()
         if not self.is_test:
