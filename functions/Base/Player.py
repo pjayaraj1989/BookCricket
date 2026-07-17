@@ -38,6 +38,9 @@ class Player:
             "stumpings": 0,
             "runouts": 0,
             "ball_history": [],
+            # runs of the boundaries this batsman has hit back-to-back right
+            # now (e.g. [4, 6, 4]); any non-boundary ball they face clears it
+            "boundary_streak": [],
             "status": True,
             "spell_over": False,
             "onfield": False,
@@ -74,6 +77,7 @@ class Player:
         self.singles = 0
         self.dots = 0
         self.strikerate = 0.0
+        self.boundary_streak = []
 
     def ResetBowlingInnings(self):
         """

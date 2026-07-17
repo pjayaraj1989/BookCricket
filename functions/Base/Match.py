@@ -786,6 +786,49 @@ class Match:
         # rotate strike after an over
         RotateStrike(pair)
 
+    def _UpdateBoundaryStreak(self, batsman, run):
+        """
+        Track a batsman's back-to-back boundaries and pop a big card once they
+        reach three in a row (and again for each one after that). A boundary
+        never changes the strike, so the streak is genuinely one batsman's.
+        Any non-boundary ball they face clears it.
+
+        Args:
+            batsman: The batsman on strike (None is tolerated).
+            run: Runs off the ball (4 or 6 extends the streak, anything else
+                ends it).
+
+        Returns:
+            None
+        """
+        if batsman is None:
+            return
+        if run not in (4, 6):
+            batsman.boundary_streak = []
+            return
+
+        batsman.boundary_streak.append(run)
+        streak = batsman.boundary_streak
+        if len(streak) < 3:
+            return
+
+        # name the shot when the streak is all one kind, otherwise call them
+        # boundaries
+        if all(r == 6 for r in streak):
+            what = "SIXES"
+        elif all(r == 4 for r in streak):
+            what = "FOURS"
+        else:
+            what = "BOUNDARIES"
+        text = "%s %s IN A ROW!" % (str(len(streak)), what)
+        PrintInColor(
+            "%s - %s!" % (text, GetShortName(batsman.name)), Fore.LIGHTGREEN_EX
+        )
+        utilities.PushEvent(
+            "boundary_streak",
+            {"name": batsman.name, "count": len(streak), "text": text},
+        )
+
     def _PushLastOverTension(self, ball):
         """
         Pop a tension line for one ball of the final over of a chase: balls 1-5
@@ -1536,6 +1579,10 @@ class Match:
                 elif run == 3:
                     on_strike.threes += 1
                 PrintInColor("%s,%s %s runs" % (comment, field, str(run)), Style.BRIGHT)
+
+        # back-to-back boundaries for the batsman on strike (after the FOUR!/
+        # SIX! commentary above, so the streak card lands on top of it)
+        self._UpdateBoundaryStreak(on_strike, run)
 
         # update balls runs
         bowler.balls_bowled += 1
