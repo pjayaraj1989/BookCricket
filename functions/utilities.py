@@ -622,6 +622,43 @@ def PushMatchHighlights(match):
     top_batters.sort(key=lambda b: b["runs"], reverse=True)
     top_bowlers.sort(key=lambda b: (-b["wickets"], b["runs"]))
 
+    # per-innings breakdown, in the order the innings were played, each with
+    # its own top 3 batters and bowlers
+    innings = []
+    for no, inn in enumerate(getattr(match, "innings_log", []) or [], start=1):
+        faced = [b for b in inn.batting_card if _int(b["balls"]) > 0]
+        best_bat = sorted(faced, key=lambda b: -_int(b["runs"]))[:3]
+        best_bowl = sorted(
+            inn.bowling_card, key=lambda b: (-_int(b["wickets"]), _int(b["runs"]))
+        )[:3]
+        innings.append({
+            "no": no,
+            "battingTeam": inn.batting_team,
+            "bowlingTeam": inn.bowling_team,
+            "score": _int(inn.score),
+            "wickets": _int(inn.wickets),
+            "overs": _float(inn.overs),
+            "declared": bool(inn.declared),
+            "topBatters": [
+                {
+                    "name": b["name"],
+                    "runs": _int(b["runs"]),
+                    "balls": _int(b["balls"]),
+                    "dismissal": b["dismissal"],
+                }
+                for b in best_bat
+            ],
+            "topBowlers": [
+                {
+                    "name": b["name"],
+                    "wickets": _int(b["wickets"]),
+                    "runs": _int(b["runs"]),
+                    "overs": _float(b["overs"]),
+                }
+                for b in best_bowl
+            ],
+        })
+
     player_of_match = None
     if is_test:
         if result.mom_name:
@@ -633,6 +670,7 @@ def PushMatchHighlights(match):
         "isTest": is_test,
         "resultStr": result.result_str,
         "teams": teams,
+        "innings": innings,
         "topBatters": top_batters[:3],
         "topBowlers": top_bowlers[:3],
         "playerOfMatch": player_of_match,

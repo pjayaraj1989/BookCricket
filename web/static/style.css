@@ -230,6 +230,27 @@ main {
   margin: 0.28rem 0;
 }
 
+/* per-innings breakdown: batting and bowling side by side */
+.match-highlights .mh-inn {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.match-highlights .mh-inn-col {
+  min-width: 240px;
+}
+
+.match-highlights .mh-sub {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6b8a7a;
+  margin-bottom: 0.15rem;
+}
+
 .mh-pic {
   width: 26px;
   height: 26px;

@@ -58,6 +58,10 @@ class Match:
             "fast": False,  # skip PlayOver's per-ball sleep even outside autoplay; dev/test use only
             "batting_team": None,
             "bowling_team": None,
+            # every completed innings of this match, in the order they were
+            # played (both formats - Team.innings_history is Test-only and
+            # per-team, so it can't give a chronological match-wide view)
+            "innings_log": [],
             # Test-match fields (all unused/no-op for limited-overs formats)
             "is_test": False,
             "day": 1,
@@ -506,6 +510,8 @@ class Match:
         summary = self.BuildInningsSummary()
         if self.is_test:
             batting_team.innings_history.append(summary)
+        # chronological, match-wide record used by the final highlights card
+        self.innings_log.append(summary)
         utilities.PushInningsScorecard(self, summary)
         return
 

@@ -894,6 +894,35 @@ function renderMatchHighlights(highlights) {
     );
   });
 
+  (highlights.innings || []).forEach((inn) => {
+    parts.push(
+      '<h4>Innings ' + inn.no + " · " + escapeHtml(inn.battingTeam) + " " +
+      inn.score + "/" + inn.wickets + (inn.declared ? "d" : "") +
+      " (" + Number(inn.overs).toFixed(1) + ")</h4>"
+    );
+    parts.push('<div class="mh-inn">');
+
+    parts.push('<div class="mh-inn-col"><div class="mh-sub">Batting</div><ul class="mh-list">');
+    (inn.topBatters || []).forEach((b) => {
+      parts.push(
+        "<li>" + mhThumb(b.name) + "<span>" + escapeHtml(b.name) + " " +
+        b.runs + " (" + b.balls + ")</span></li>"
+      );
+    });
+    parts.push("</ul></div>");
+
+    parts.push('<div class="mh-inn-col"><div class="mh-sub">Bowling</div><ul class="mh-list">');
+    (inn.topBowlers || []).forEach((b) => {
+      parts.push(
+        "<li>" + mhThumb(b.name) + "<span>" + escapeHtml(b.name) + " " +
+        b.wickets + "/" + b.runs + " (" + Number(b.overs).toFixed(1) + ")</span></li>"
+      );
+    });
+    parts.push("</ul></div>");
+
+    parts.push("</div>");
+  });
+
   if ((highlights.topBatters || []).length) {
     parts.push('<h4>Top Scorers</h4><ul class="mh-list">');
     highlights.topBatters.forEach((b) => {
