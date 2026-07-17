@@ -758,6 +758,18 @@ function renderEvent(kind, data) {
         "takeover"
       );
     }
+  } else if (kind === "boundary_streak") {
+    const name = data && data.name ? String(data.name) : "";
+    const text = data && data.text ? String(data.text) : "";
+    if (name && text) {
+      const card = buildPlayerCard(name);
+      const badge = document.createElement("div");
+      badge.className = "event-achievement-badge";
+      badge.textContent = "🔥 " + text;
+      // badge sits between the photo and the name
+      card.insertBefore(badge, card.lastChild);
+      showEventPane(card, 3000, "takeover");
+    }
   } else if (kind === "tension") {
     const text = data && data.text ? String(data.text) : "";
     const isFinal = !!(data && data.final);
