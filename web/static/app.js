@@ -567,8 +567,22 @@ function buildGameOnCard(name) {
 const eventQueue = [];
 let eventTimer = null;
 
+// A hold-open frame (holdMs 0, e.g. the DRS "decision pending" lights) waits
+// to be replaced by the event that resolves it. It still needs a timer: with
+// none at all, a frame already queued behind it would never be drained and
+// the pane would stick on screen forever.
+const HOLD_OPEN_MIN_MS = 1200; // brief look-at-it time when the next frame is already waiting
+const HOLD_OPEN_MAX_MS = 15000; // safety net if the resolving event never arrives
+
+let holdingOpen = false; // the visible frame is waiting to be replaced
+
 function showEventPane(content, holdMs, paneClass) {
   eventQueue.push({ content: content, holdMs: holdMs, paneClass: paneClass });
+  // a hold-open frame is meant to give way the moment its result lands
+  if (holdingOpen && eventTimer) {
+    clearTimeout(eventTimer);
+    eventTimer = null;
+  }
   if (!eventTimer) drainEventQueue();
 }
 
@@ -588,18 +602,18 @@ function drainEventQueue() {
   void eventPaneEl.offsetWidth; // force reflow
   eventPaneEl.classList.add("visible");
 
-  if (item.holdMs) {
-    eventTimer = setTimeout(() => {
-      eventTimer = null;
-      if (eventQueue.length) {
-        drainEventQueue();
-      } else {
-        eventPaneEl.classList.remove("visible");
-      }
-    }, item.holdMs);
-  }
-  // holdMs of 0 (drs_pending) keeps the pane up, with no timer, until the
-  // next event arrives and replaces it immediately
+  holdingOpen = !item.holdMs;
+  const hold =
+    item.holdMs || (eventQueue.length ? HOLD_OPEN_MIN_MS : HOLD_OPEN_MAX_MS);
+  eventTimer = setTimeout(() => {
+    eventTimer = null;
+    if (eventQueue.length) {
+      drainEventQueue();
+    } else {
+      eventPaneEl.classList.remove("visible");
+      holdingOpen = false;
+    }
+  }, hold);
 }
 
 function initialsOf(name) {
