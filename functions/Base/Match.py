@@ -1315,6 +1315,24 @@ class Match:
                 else:
                     self.UpdateDismissal(dismissal)
                     return
+            elif dismissal.startswith("c&b") or dismissal.startswith("c "):
+                # caught: the umpire gives it out on the appeal, and the
+                # batsman can review it for a missing edge
+                PrintInColor(
+                    Randomize(commentary.commentary_caught_appeal), Fore.LIGHTRED_EX
+                )
+
+                # if match has no DRS, do not go into this
+                if self.drs is False:
+                    self.UpdateDismissal(dismissal)
+                    return
+
+                if self.CheckDRS(kind="caught"):
+                    run = 0  # no edge - the batsman survives
+                    used_drs = True
+                    break
+                self.UpdateDismissal(dismissal)
+                return
             elif "runout" in dismissal or "st " in dismissal:
                 # run-outs and stumpings: the umpire either gives it out on
                 # the spot or refers it upstairs, and the third umpire's
@@ -1919,14 +1937,19 @@ class Match:
         self.FindPlayerOfTheMatch()
         return
 
-    def CheckDRS(self):
+    def CheckDRS(self, kind="lbw"):
         """
-        Check the Decision Review System (DRS) for a dismissal.
+        Offer the batting side a review of an on-field OUT decision (an LBW or
+        a catch). Each team gets Team.drs_chances reviews per innings. A
+        successful review (the on-field call is overturned) costs nothing; an
+        unsuccessful one (the on-field call was right) burns a chance.
+
+        Args:
+            kind: "lbw" or "caught" - picks the review commentary.
 
         Returns:
-            bool: True if the decision is overturned, False otherwise.
+            bool: True if the decision is overturned (batsman NOT out).
         """
-        result = False
         team = self.batting_team
         pair = team.current_pair
 
@@ -1934,53 +1957,73 @@ class Match:
             PrintInColor(
                 Randomize(commentary.commentary_lbw_nomore_drs), Fore.LIGHTRED_EX
             )
-            return result
-        # check if all 4 decisions are taken
-        elif team.drs_chances > 0:
-            opt = ChooseFromOptions(
-                ["y", "n"], "DRS? %s chance(s) left" % (str(team.drs_chances)), 200000
+            return False
+
+        opt = ChooseFromOptions(
+            ["y", "n"], "DRS? %s chance(s) left" % (str(team.drs_chances)), 200000
+        )
+        if opt == "n":
+            PrintInColor(
+                Randomize(commentary.commentary_lbw_drs_not_taken), Fore.LIGHTRED_EX
             )
-            if opt == "n":
+            return False
+
+        PrintInColor(
+            Randomize(commentary.commentary_lbw_drs_taken)
+            % (GetSurname(pair[0].name), GetSurname(pair[1].name)),
+            Fore.LIGHTGREEN_EX,
+        )
+        PrintInColor("Decision pending...", Style.BRIGHT)
+        utilities.PushEvent("drs_pending")
+        if not self.fast:
+            time.sleep(5)
+
+        overturned = random.choice([True, False])
+        utilities.PushEvent("drs_result", {"out": not overturned})
+
+        if overturned:
+            # on-field call was wrong: the batsman survives and, because the
+            # review succeeded, the team keeps the chance
+            if kind == "caught":
                 PrintInColor(
-                    Randomize(commentary.commentary_lbw_drs_not_taken), Fore.LIGHTRED_EX
-                )
-                return result
-            else:
-                PrintInColor(
-                    Randomize(commentary.commentary_lbw_drs_taken)
-                    % (GetSurname(pair[0].name), GetSurname(pair[1].name)),
+                    Randomize(commentary.commentary_caught_overturned),
                     Fore.LIGHTGREEN_EX,
                 )
-                PrintInColor("Decision pending...", Style.BRIGHT)
-                utilities.PushEvent("drs_pending")
-                time.sleep(5)
-                result = random.choice([True, False])
-                impact_outside_bat_involved = random.choice([True, False])
-                utilities.PushEvent("drs_result", {"out": not result})
-                # if not out
-                if result:
-                    # if edged or pitching outside
-                    if impact_outside_bat_involved:
-                        PrintInColor(
-                            Randomize(commentary.commentary_lbw_edged_outside),
-                            Fore.LIGHTGREEN_EX,
-                        )
-                    else:
-                        team.drs_chances -= 1
-                    PrintInColor(
-                        Randomize(commentary.commentary_lbw_overturned),
-                        Fore.LIGHTGREEN_EX,
-                    )
-
-                # if out!
-                else:
-                    PrintInColor(
-                        Randomize(commentary.commentary_lbw_decision_stays)
-                        % self.umpire,
-                        Fore.LIGHTRED_EX,
-                    )
-                    team.drs_chances -= 1
-        return result
+            else:
+                # both lists describe a successful LBW review (missing the
+                # stumps, or bat/impact outside the line)
+                PrintInColor(
+                    Randomize(
+                        commentary.commentary_lbw_overturned
+                        + commentary.commentary_lbw_edged_outside
+                    ),
+                    Fore.LIGHTGREEN_EX,
+                )
+            PrintInColor(
+                "Review successful - %s keep their %s review(s)."
+                % (team.name, str(team.drs_chances)),
+                Style.BRIGHT,
+            )
+        else:
+            # on-field call was right: a chance is burnt
+            if kind == "caught":
+                PrintInColor(
+                    Randomize(commentary.commentary_caught_decision_stays)
+                    % self.umpire,
+                    Fore.LIGHTRED_EX,
+                )
+            else:
+                PrintInColor(
+                    Randomize(commentary.commentary_lbw_decision_stays) % self.umpire,
+                    Fore.LIGHTRED_EX,
+                )
+            team.drs_chances -= 1
+            PrintInColor(
+                "Review lost - %s have %s review(s) left."
+                % (team.name, str(team.drs_chances)),
+                Style.BRIGHT,
+            )
+        return overturned
 
     def _CheckThirdUmpire(self, dismissal, kind):
         """

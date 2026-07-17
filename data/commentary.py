@@ -569,6 +569,32 @@ class commentary:
         "No more reviews left!",
     ]
 
+    # the appeal for a catch, before the batsman decides whether to review
+    commentary_caught_appeal = [
+        "looks like there is an edge, and they are appealing!",
+        "huge appeal for the catch! the umpire raises his finger",
+        "the keeper and the slips go up in unison.. and that's given out!",
+        "there was a noise there! the fielders are convinced and the umpire agrees",
+        "did that carry? the fielders think so, and the umpire has given it!",
+        "an outside edge maybe? big appeal, and up goes the finger!",
+    ]
+
+    # review shows no edge - the catch decision is overturned
+    commentary_caught_overturned = [
+        "no spike on ultra-edge! that's not out, brilliant review!",
+        "the bat was nowhere near it! the decision is overturned",
+        "flat line on the snicko.. no edge! the batsman survives",
+        "it came off the pad, not the bat! not out, great review",
+    ]
+
+    # review shows a clear edge - the catch decision stays
+    commentary_caught_decision_stays = [
+        "there's the spike! a clear edge, and %s got it spot on",
+        "ultra-edge confirms it, he has nicked it! %s was right all along",
+        "a big deflection off the bat! decision stays, well done %s",
+        "that's a clear edge, the on field call from %s stands.. he has to go",
+    ]
+
     commentary_dropped = [
         "that's hit straight up in the air, %s says mine.. oh and put down!",
         "edged and dropped at first slip by %s! disappointment for the bowler.. oh dear!.. batsman is lucky !",
