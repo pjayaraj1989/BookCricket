@@ -111,15 +111,15 @@
 	"West-Indies": {
       "players": [
         {"name": "Chris Gayle", "batting": 8, "opener1":  1, "bowling":7, "spinner":1},
-        {"name": "Wavell Hinds", "batting": 7,"opener2": 1, "bowling":6},
+        {"name": "Wavell Hinds", "batting": 8,"opener2": 1, "bowling":6},
         {"name": "Ramnaresh Sarwan", "batting": 8, "bowling":5},
-		    {"name": "Brian Lara", "batting": 8},
-        {"name": "Shivnarine Chanderpaul", "batting": 8},
-        {"name": "Carl Hooper", "batting": 8,"captain": 1, "bowling":6,"spinner":1},
-        {"name": "Ridley Jacobs", "batting": 6,"keeper":1},
+		    {"name": "Brian Lara", "batting": 9},
+        {"name": "Shivnarine Chanderpaul", "batting": 9},
+        {"name": "Carl Hooper", "batting": 9,"captain": 1, "bowling":6,"spinner":1},
+        {"name": "Ridley Jacobs", "batting": 7,"keeper":1},
 		    {"name": "Adam Sanford", "batting": 7, "bowling":7, "pacer":1},
         {"name": "Mervyn Dillon", "batting": 5,"bowling": 8, "openingbowler":1, "pacer":1},
-        {"name": "Pedro Collins", "batting": 5,"bowling": 8, "pacer":1},
+        {"name": "Pedro Collins", "batting": 5,"bowling": 9, "pacer":1},
         {"name": "Cameron Cuffy", "batting": 6,"bowling": 8, "pacer":1}
       ],
       "key": "WI",
@@ -183,8 +183,8 @@
     "England": {
       "players": [
         {"name": "Marcus Trescothick","batting": 8,"opener1":  1},
-        {"name": "Nick Knight","batting": 8,"opener2": 1},
-        {"name": "Michael Vaughan", "batting": 8,"bowling": 6,"spinner": 1},
+          {"name": "Michael Vaughan", "batting": 8,"bowling": 6,"spinner": 1},
+        {"name": "Mark Butcher","batting": 8,"opener2": 1},
         {"name": "Nasser Hussain",  "batting": 8,"captain": 1},
         {"name": "Paul Collingwood", "batting": 8,"bowling": 7},
         {"name": "Alec Stewart", "batting": 7,"keeper": 1},
