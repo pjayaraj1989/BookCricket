@@ -758,6 +758,33 @@ function renderEvent(kind, data) {
         "takeover"
       );
     }
+  } else if (kind === "super_over") {
+    const stage = data && data.stage;
+    if (stage === "start") {
+      showEventPane(
+        buildMiscCard("misc/super_over", "⚡", "SUPER OVER!", "the scores are level!"),
+        3500,
+        "takeover"
+      );
+    } else if (stage === "innings") {
+      showEventPane(
+        buildMiscCard(
+          "misc/super_over", "⚡",
+          data.team + " " + data.runs + "/" + data.wickets,
+          "super over"
+        ),
+        3000,
+        "takeover"
+      );
+    } else if (stage === "result") {
+      showEventPane(
+        data.team
+          ? buildVictoryCard(String(data.team), "won the Super Over!")
+          : buildMiscCard("misc/super_over", "⚡", "Super Over tied!", "honours shared"),
+        4500,
+        "takeover"
+      );
+    }
   } else if (kind === "boundary_streak") {
     const name = data && data.name ? String(data.name) : "";
     const text = data && data.text ? String(data.text) : "";

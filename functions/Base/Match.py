@@ -197,6 +197,19 @@ class Match:
         # show results
         self.CalculateResult()
 
+        # level scores are settled with a super over. Its own stats are
+        # deliberately thrown away (see _PlaySuperOver) - only the result
+        # carries over, on top of the match's real scorecard.
+        if self.result.winner is None and (
+            self.team1.total_score == self.team2.total_score
+        ):
+            super_winner = self._PlaySuperOver()
+            if super_winner is not None:
+                self.result.winner = super_winner
+                self.result.result_str = "Match Tied - %s won the Super Over" % (
+                    super_winner.name
+                )
+
         # say something about the first innings
         self.batting_team.SummarizeBatting(self.autoplay)
         # summarize about bowling performance
@@ -205,6 +218,149 @@ class Match:
         self.MatchSummary()
         self.FindPlayerOfTheMatch()
         return
+
+    # A super-over ball: high risk, high reward. Indexes SUPER_OVER_RUNS
+    # (-1 is a wicket); no fives, they don't happen off the bat.
+    SUPER_OVER_RUNS = [-1, 0, 1, 2, 3, 4, 6]
+    SUPER_OVER_PROB = [0.10, 0.15, 0.25, 0.15, 0.03, 0.17, 0.15]
+
+    def _PlaySuperOver(self):
+        """
+        Decide a tied limited-overs match with a super over: one over a side,
+        three batsmen, and a maximum of two wickets, higher score wins.
+
+        Everything is tallied locally - no Player or Team figure is ever
+        written to - so the super over stays completely out of the match's own
+        scorecard and stats, just as it does in the real game. A tied super
+        over is replayed (capped, so a freak run of ties can't hang the game).
+
+        Returns:
+            Team: the winning team, or None if it stayed tied.
+        """
+        # whoever chased in the match bats first in the super over
+        first = self.team2 if self.team2.batting_second else self.team1
+        second = self.team1 if first is self.team2 else self.team2
+
+        PrintInColor("The scores are level! We go to a SUPER OVER!", Style.BRIGHT)
+        utilities.PushEvent("super_over", {"stage": "start"})
+        if not self.autoplay:
+            input("press enter to continue..")
+
+        for attempt in range(1, 4):
+            if attempt > 1:
+                PrintInColor(
+                    "The super over is tied as well! Another one it is!", Style.BRIGHT
+                )
+                utilities.PushEvent("super_over", {"stage": "start"})
+
+            first_runs, first_wkts = self._PlaySuperOverInnings(first, second)
+            second_runs, second_wkts = self._PlaySuperOverInnings(
+                second, first, target=first_runs + 1
+            )
+
+            if first_runs != second_runs:
+                winner = first if first_runs > second_runs else second
+                msg = "%s win the super over, %s/%s to %s/%s!" % (
+                    winner.name,
+                    str(max(first_runs, second_runs)),
+                    str(first_wkts if winner is first else second_wkts),
+                    str(min(first_runs, second_runs)),
+                    str(second_wkts if winner is first else first_wkts),
+                )
+                PrintInColor(msg, winner.color)
+                utilities.PushEvent(
+                    "super_over", {"stage": "result", "team": winner.name}
+                )
+                if not self.autoplay:
+                    input("press enter to continue..")
+                return winner
+
+        PrintInColor("Still nothing between them - honours shared!", Style.BRIGHT)
+        utilities.PushEvent("super_over", {"stage": "result", "team": None})
+        return None
+
+    def _PlaySuperOverInnings(self, batting_team, bowling_team, target=None):
+        """
+        One super-over innings: up to six balls, three batsmen, two wickets
+        (with only three batsmen there is nobody left after the second).
+        Read-only against the real squads - the tallies here are local.
+
+        Args:
+            batting_team: The team batting this super over.
+            bowling_team: The team bowling it.
+            target: Runs needed to win, if batting second.
+
+        Returns:
+            tuple: (runs, wickets)
+        """
+        # each side sends in its three best batsmen and its best bowler,
+        # picked off the real squads without touching them
+        batsmen = sorted(batting_team.team_array, key=lambda p: -p.runs)[:3]
+        bowler = max(bowling_team.team_array, key=lambda p: p.attr.bowling)
+        PrintInColor(
+            "%s to bat: %s - and %s has the ball."
+            % (
+                batting_team.name,
+                ", ".join(GetShortName(b.name) for b in batsmen),
+                GetShortName(bowler.name),
+            ),
+            batting_team.color,
+        )
+
+        runs = 0
+        wickets = 0
+        striker, next_in = 0, 2
+        for ball in range(1, 7):
+            hit = int(choice(self.SUPER_OVER_RUNS, 1, p=self.SUPER_OVER_PROB)[0])
+            if hit == -1:
+                wickets += 1
+                PrintInColor(
+                    "%s.%s  OUT! %s goes, %s bowled by %s"
+                    % (
+                        str(ball // 6),
+                        str(ball % 6),
+                        GetShortName(batsmen[striker].name),
+                        "%s/%s" % (str(runs), str(wickets)),
+                        GetShortName(bowler.name),
+                    ),
+                    Fore.LIGHTRED_EX,
+                )
+                # two down and only three batsmen: that's the innings
+                if wickets >= 2:
+                    break
+                striker = next_in
+                next_in += 1
+            else:
+                runs += hit
+                PrintInColor(
+                    "%s.%s  %s scores %s - %s"
+                    % (
+                        str(ball // 6),
+                        str(ball % 6),
+                        GetShortName(batsmen[striker].name),
+                        str(hit),
+                        "%s/%s" % (str(runs), str(wickets)),
+                    ),
+                    batting_team.color,
+                )
+            if target is not None and runs >= target:
+                break
+
+        PrintInColor(
+            "%s finish their super over on %s/%s"
+            % (batting_team.name, str(runs), str(wickets)),
+            Style.BRIGHT,
+        )
+        utilities.PushEvent(
+            "super_over",
+            {
+                "stage": "innings",
+                "team": batting_team.name,
+                "runs": runs,
+                "wickets": wickets,
+            },
+        )
+        return runs, wickets
 
     def _SetupTestInnings(self, batting_team, bowling_team, chase, target=0):
         """
