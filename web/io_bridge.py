@@ -43,6 +43,11 @@ class WebChannel:
     def output(self, text, color=None):
         self._emit("server_event", {"type": "output", "text": strip_ansi(text), "color": resolve_color(color)})
 
+    def reset(self):
+        # tell the browser to clear the side pane (scorecard, innings
+        # summaries, run-rate graph) before a fresh match begins.
+        self._emit("server_event", {"type": "reset"})
+
     def state(self, data):
         # structured snapshot for the side-pane scorecard, distinct from the
         # scrolling commentary log; not a request/response, fire-and-forget.
