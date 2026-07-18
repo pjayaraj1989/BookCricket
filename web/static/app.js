@@ -383,10 +383,13 @@ function buildInningsCardHtml(innings) {
     let name = b.name;
     if (b.captain) name += " (c)";
     if (b.keeper) name += " (wk)";
+    // a batsman who did not bat has no score to show
+    const dnb = b.dismissal === "DNB";
+    const num = dnb ? "" : b.runs + " (" + b.balls + ")";
     parts.push(
       '<tr><td class="name">' + escapeHtml(name) + "</td>" +
       '<td class="dismissal">' + escapeHtml(b.dismissal) + "</td>" +
-      '<td class="num">' + b.runs + " (" + b.balls + ")</td></tr>"
+      '<td class="num">' + num + "</td></tr>"
     );
   });
   parts.push("</table>");
