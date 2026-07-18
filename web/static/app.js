@@ -244,7 +244,9 @@ function renderScorecard(state) {
   } else if (state.leadTrail) {
     let leadLine;
     if (state.leadTrail.team) {
-      leadLine = escapeHtml(state.leadTrail.team) + " leads by " + state.leadTrail.diff +
+      // always the batting team's perspective: "lead by" / "trail by"
+      const verb = state.leadTrail.status === "trail" ? "trail by" : "lead by";
+      leadLine = escapeHtml(state.leadTrail.team) + " " + verb + " " + state.leadTrail.diff +
         (state.leadTrail.diff === 1 ? " run" : " runs");
     } else {
       leadLine = "Scores level";
@@ -833,6 +835,20 @@ function renderEvent(kind, data) {
       stopped: ["misc/rain_stopped", "☔", "Rain stopped play", (data && data.resume) || ""],
     }[data && data.stage];
     if (cfg) showEventPane(buildMiscCard(cfg[0], cfg[1], cfg[2], cfg[3]), 3500, "takeover");
+  } else if (kind === "weather") {
+    const w = data && data.weather;
+    const cfg = {
+      sunny: ["misc/weather_sunny", "☀️", "Sunny"],
+      overcast: ["misc/weather_overcast", "☁️", "Overcast"],
+      rainy: ["misc/weather_rainy", "🌧️", "Rain about"],
+      cloudy: ["misc/weather_cloudy", "⛅", "Cloudy"],
+      humid: ["misc/weather_humid", "🥵", "Humid"],
+    }[w] || ["misc/weather_" + (w || "unknown"), "🌤️", w || "Weather"];
+    showEventPane(
+      buildMiscCard(cfg[0], cfg[1], cfg[2], (data && data.text) || ""),
+      3500,
+      "takeover"
+    );
   } else if (kind === "free_hit") {
     const ump = data && data.umpire ? String(data.umpire) : "Umpire";
     // umpire signalling the free hit: photo + big "FREE HIT!" badge

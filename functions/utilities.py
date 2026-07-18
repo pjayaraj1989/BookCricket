@@ -263,7 +263,7 @@ def PushEvent(kind, data=None):
             "victory", "runout", "venue_selected", "umpires", "achievement",
             "commentators", "declare", "follow_on", "lbw", "rain",
             "team_score", "partnership_milestone", "third_umpire", "tension",
-            "boundary_streak", "super_over", "free_hit").
+            "boundary_streak", "super_over", "free_hit", "weather").
         data: Optional dict of extra fields for the frontend to render.
 
     Returns:
@@ -451,10 +451,12 @@ def PushScorecard(match):
         bowling_total = sum(inn.score for inn in bowling.innings_history)
         if batting.innings_history or bowling.innings_history:
             diff = batting_total - bowling_total
+            # always from the batting team's perspective - they lead or trail,
+            # never "the other team leads"
             if diff > 0:
-                lead_trail = {"team": batting.name, "diff": _int(diff)}
+                lead_trail = {"team": batting.name, "status": "lead", "diff": _int(diff)}
             elif diff < 0:
-                lead_trail = {"team": bowling.name, "diff": _int(-diff)}
+                lead_trail = {"team": batting.name, "status": "trail", "diff": _int(-diff)}
             else:
                 lead_trail = {"team": None, "diff": 0}
 

@@ -64,6 +64,10 @@ def GetVenue(venue_data, autoplay):
     weather = choice(list(resources.weathers.keys()), 1, p=resources.weather_prob, replace=False)[0]
     venue_obj.weather = weather
     PrintInColor(resources.weathers[weather], Style.BRIGHT)
+    PushEvent(
+        "weather",
+        {"weather": weather, "text": resources.weathers[weather]},
+    )
 
     return venue_obj
 
