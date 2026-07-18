@@ -3150,12 +3150,14 @@ class Match:
             PrintInColor("NO BALL...!", Fore.LIGHTCYAN_EX)
             PrintInColor(Randomize(commentary.commentary_no_ball), Style.BRIGHT)
             logger.info("NO BALL")
-            # the next legal delivery is a free hit
-            self.free_hit = True
-            PrintInColor(
-                Randomize(commentary.commentary_free_hit), Fore.LIGHTGREEN_EX
-            )
-            utilities.PushEvent("free_hit", {"umpire": self.umpire})
+            # the next legal delivery is a free hit - a limited-overs rule only,
+            # Test cricket has no free hit
+            if not self.is_test:
+                self.free_hit = True
+                PrintInColor(
+                    Randomize(commentary.commentary_free_hit), Fore.LIGHTGREEN_EX
+                )
+                utilities.PushEvent("free_hit", {"umpire": self.umpire})
 
         return
 
