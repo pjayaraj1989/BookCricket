@@ -49,6 +49,7 @@ class Match:
             "umpire": None,
             "commentators": None,
             "drs": False,
+            "review_upheld": False,  # last DRS review was taken and OUT stood
             "firstinnings": None,
             "secondinnings": None,
             "batting_first": None,
@@ -1576,6 +1577,10 @@ class Match:
                     run = 0  # no edge - the batsman survives
                     used_drs = True
                     break
+                # an edge confirmed on review is a catch behind the wicket, so
+                # the keeper always takes it
+                if self.review_upheld:
+                    dismissal = self._RewriteCatchToKeeper(dismissal)
                 self.UpdateDismissal(dismissal)
                 return
             elif "runout" in dismissal or "st " in dismissal:
@@ -2207,6 +2212,9 @@ class Match:
         """
         team = self.batting_team
         pair = team.current_pair
+        # set true only when a review was actually taken and the on-field OUT
+        # stood (i.e. an edge/impact was confirmed) - read by the catch flow
+        self.review_upheld = False
 
         if team.drs_chances <= 0:
             PrintInColor(
@@ -2260,7 +2268,9 @@ class Match:
                 Style.BRIGHT,
             )
         else:
-            # on-field call was right: a chance is burnt
+            # on-field call was right: a chance is burnt (and, for a catch,
+            # an edge was confirmed - so it's a catch behind the wicket)
+            self.review_upheld = True
             if kind == "caught":
                 PrintInColor(
                     Randomize(commentary.commentary_caught_decision_stays)
@@ -2350,6 +2360,47 @@ class Match:
             )
             if fielder is not None:
                 fielder.runouts = max(0, fielder.runouts - 1)
+
+    def _RewriteCatchToKeeper(self, dismissal):
+        """
+        A caught dismissal whose edge was confirmed on review is a catch behind
+        the wicket, so credit it to the keeper. Rewrites the dismissal string
+        to "c +<keeper> b <bowler>" and moves the catch off whoever
+        GenerateDismissal first credited (a fielder, or the bowler on a c&b).
+        Already-keeper catches are left untouched.
+
+        Args:
+            dismissal: The generated catch dismissal string.
+
+        Returns:
+            str: The (possibly rewritten) dismissal string.
+        """
+        keeper = self.bowling_team.keeper
+        bowler = self.bowling_team.current_bowler
+        # already a keeper catch: nothing to change
+        if dismissal.startswith("c +"):
+            return dismissal
+
+        if dismissal.startswith("c&b"):
+            original = bowler
+        else:  # "c <fielder> b <bowler>"
+            name = dismissal.split(" b ")[0][2:].strip()
+            original = next(
+                (
+                    p
+                    for p in self.bowling_team.team_array
+                    if GetShortName(p.name) == name
+                ),
+                None,
+            )
+        if original is keeper:
+            return dismissal
+
+        # move the catch from the original catcher to the keeper
+        if original is not None:
+            original.catches = max(0, original.catches - 1)
+        keeper.catches += 1
+        return "c +%s b %s" % (GetShortName(keeper.name), GetShortName(bowler.name))
 
     def PrintCommentaryDismissal(self, dismissal):
         """
