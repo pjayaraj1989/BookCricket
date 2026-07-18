@@ -2867,100 +2867,65 @@ class Match:
 
     def Toss(self):
         """
-        Perform the toss to decide which team bats first.
+        Perform the toss. Team1's captain calls it; whoever calls correctly
+        wins the toss and chooses to bat or bowl first, and the other side
+        gets what's left.
 
         Returns:
             None
         """
         logger = self.logger
+        t1, t2 = self.team1, self.team2
+
         PrintInColor("Toss..", Style.BRIGHT)
         PrintInColor(
             "We have the captains %s from %s and %s from %s in the middle"
-            % (
-                self.team1.captain.name,
-                self.team1.name,
-                self.team2.captain.name,
-                self.team2.name,
-            ),
+            % (t1.captain.name, t1.name, t2.captain.name, t2.name),
+            Style.BRIGHT,
+        )
+        PrintInColor("%s is going to flip the coin" % t2.captain.name, Style.BRIGHT)
+
+        # team1's captain calls the coin
+        if self.autoplay:
+            call = Randomize(["Heads", "Tails"])
+        else:
+            call = ChooseFromOptions(
+                ["Heads", "Tails"], "%s, Heads or Tails?" % t1.captain.name, 5
+            )
+        coin = Randomize(["Heads", "Tails"])
+        utilities.PushEvent("toss")
+        PrintInColor(
+            "%s called %s.. and it's %s!" % (t1.captain.name, call, coin),
             Style.BRIGHT,
         )
 
+        # a correct call wins team1 the toss, otherwise team2 wins
+        toss_winner = t1 if call == coin else t2
+        toss_loser = t2 if toss_winner is t1 else t1
         PrintInColor(
-            "%s is gonna flip the coin" % self.team2.captain.name, Style.BRIGHT
+            "%s have won the toss!" % toss_winner.name, toss_winner.color
         )
-        # FIXME: use the ChooseFromOptions function here
-        opts = [1, 2]
-        msg = "%s your call, Heads or tails?" % (self.team1.captain.name)
-        PrintInColor(msg, self.team1.color)
-        
-        print ("Self.autoplay is %s" % str(self.autoplay))
-        if self.autoplay:
-            call = int(Randomize(opts))
-            print("Auto-selected choice: %s" % ("Heads" if call == 1 else "Tails"))
-        else:
-            call = input("1.Heads 2.Tails\n")
-        # if invalid, auto-select
-        if call == "" or None:
-            call = int(Randomize(opts))
-            print("Invalid choice, auto-selected")
-        coin = int(Randomize(opts))
-        utilities.PushEvent("toss")
 
-        # check if call == coin selected
-        if coin == call:
-            msg = (
-                "%s, you have won the toss, do you wanna bat or bowl first?"
-                % self.team1.captain.name
-            )
-            PrintInColor(msg, Style.BRIGHT)
-            if self.autoplay:
-                call = int(Randomize(opts))
-                print("Auto-selected choice: %s" % ("Bat" if call == 1 else "Bowl"))
-            else:
-                call = input("1.Bat 2.Bowl")
-            # if invalid, auto-select
-            if call == "" or None:
-                call = int(Randomize(opts))
-                print("Invalid choice, auto-selected")
-            if int(call) == 1:
-                msg = "%s has elected to bat first" % self.team1.captain.name
-                PrintInColor(msg, self.team1.color)
-                self.team1.batting_second = False
-                self.team2.batting_second = True
-                logger.info(msg)
-            else:
-                msg = "%s has elected to bowl first" % self.team1.captain.name
-                PrintInColor(msg, self.team1.color)
-                self.team2.batting_second = False
-                self.team1.batting_second = True
-                logger.info(msg)
+        # the toss winner elects to bat or bowl first
+        if self.autoplay:
+            decision = Randomize(["Bat", "Bowl"])
         else:
-            msg = (
-                "%s, you have won the toss, do you wanna bat or bowl first?"
-                % self.team2.captain.name
+            decision = ChooseFromOptions(
+                ["Bat", "Bowl"],
+                "%s, do you want to bat or bowl first?" % toss_winner.captain.name,
+                5,
             )
-            
-            if self.autoplay:
-                call = int(Randomize(opts))
-                print("Auto-selected choice: %s" % ("Bat" if call == 1 else "Bowl"))
-            else:
-                call = input("1.Bat 2.Bowl first")
-            # if invalid, auto-select
-            if call == "" or None:
-                call = int(Randomize(opts))
-                print("Invalid choice, auto-selected")
-            if int(call) == 1:
-                msg = "%s has elected to bat first" % self.team2.captain.name
-                PrintInColor(msg, self.team2.color)
-                self.team2.batting_second = False
-                self.team1.batting_second = True
-                logger.info(msg)
-            else:
-                msg = "%s has elected to bowl first" % self.team2.captain.name
-                PrintInColor(msg, self.team2.color)
-                self.team1.batting_second = False
-                self.team2.batting_second = True
-                logger.info(msg)
+
+        if decision == "Bat":
+            toss_winner.batting_second = False
+            toss_loser.batting_second = True
+        else:
+            toss_winner.batting_second = True
+            toss_loser.batting_second = False
+
+        msg = "%s have elected to %s first" % (toss_winner.name, decision.lower())
+        PrintInColor(msg, toss_winner.color)
+        logger.info(msg)
 
         # now find out who is batting first
         batting_first = next(
@@ -2985,6 +2950,7 @@ class Match:
 
         self.status = True
         return
+
 
     def ValidateMatchTeams(self):
         """
