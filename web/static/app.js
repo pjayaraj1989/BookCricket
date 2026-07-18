@@ -704,18 +704,45 @@ function renderEvent(kind, data) {
     showEventPane('<span class="event-digit four">4!</span>', 1500);
   } else if (kind === "six") {
     showEventPane('<span class="event-digit six">6!</span>', 1500);
+  } else if (kind === "new_bowler" && data && data.opening) {
+    // opening bowler at innings start: full screen with a flavour caption
+    const name = data.name ? String(data.name) : "";
+    if (name) {
+      const card = buildPlayerCard(name);
+      const nameEl = card.querySelector(".event-player-name");
+      if (nameEl) nameEl.remove(); // the caption names them, no need to repeat
+      const cap = document.createElement("div");
+      cap.className = "event-achievement-badge";
+      cap.textContent = data.caption ? String(data.caption) : "Opening bowler";
+      card.appendChild(cap); // caption below the photo
+      showEventPane(card, 3500, "takeover");
+    }
   } else if (kind === "new_batsman" || kind === "new_bowler") {
     const name = data && data.name ? String(data.name) : "";
-    let role = "New batsman";
-    if (kind === "new_bowler") role = data && data.opening ? "Opening bowler" : "New bowler";
+    const role = kind === "new_bowler" ? "New bowler" : "New batsman";
     if (name) showEventPane(buildPlayerCard(name, role), 3000, "player");
   } else if (kind === "openers") {
     const names = ((data && data.names) || []).map(String).filter(Boolean);
     if (names.length) {
+      // the opening batting pair, full screen, with a flavour caption
+      const wrap = document.createElement("div");
+      wrap.className = "event-player";
+      if (data && data.caption) {
+        const cap = document.createElement("div");
+        cap.className = "event-achievement-badge";
+        cap.textContent = String(data.caption);
+        wrap.appendChild(cap);
+      }
       const row = document.createElement("div");
       row.className = "event-openers";
-      names.forEach((n) => row.appendChild(buildPlayerCard(n, "Opener")));
-      showEventPane(row, 4000, "player");
+      names.forEach((n) => {
+        const c = buildPlayerCard(n);
+        const nameEl = c.querySelector(".event-player-name");
+        if (nameEl) nameEl.remove(); // the caption names them, no need to repeat
+        row.appendChild(c);
+      });
+      wrap.appendChild(row);
+      showEventPane(wrap, 4000, "takeover roster");
     }
   } else if (kind === "teams_selected") {
     const names = ((data && data.names) || []).map(String).filter(Boolean);
@@ -835,6 +862,23 @@ function renderEvent(kind, data) {
       stopped: ["misc/rain_stopped", "☔", "Rain stopped play", (data && data.resume) || ""],
     }[data && data.stage];
     if (cfg) showEventPane(buildMiscCard(cfg[0], cfg[1], cfg[2], cfg[3]), 3500, "takeover");
+  } else if (kind === "target") {
+    const team = data && data.team ? String(data.team) : "";
+    let caption, sub;
+    if (data && data.status) {
+      // Test non-chase innings: lead / trail on aggregate
+      const verb = data.status === "trail" ? "trail by" : "lead by";
+      caption = team + " " + verb + " " + data.diff + (data.diff === 1 ? " run" : " runs");
+      sub = "";
+    } else {
+      // chasing: the run target
+      const runs = data && data.runsToWin;
+      caption = team + " need " + runs + (runs === 1 ? " run to win" : " runs to win");
+      sub = data && data.overs
+        ? "from " + data.overs + (data.overs === 1 ? " over" : " overs")
+        : "in the final innings";
+    }
+    showEventPane(buildMiscCard("misc/target", "🎯", caption, sub), 4000, "takeover");
   } else if (kind === "weather") {
     const w = data && data.weather;
     const cfg = {

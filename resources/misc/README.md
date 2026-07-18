@@ -20,6 +20,7 @@ event kind:
 | Rain stopped play (Test)     | `rain_stopped.png`| ☔             |
 | Third umpire (referral)      | `third_umpire.png`| 📺             |
 | Super over (tied match)      | `super_over.png`  | ⚡             |
+| Chase target / lead-trail    | `target.png`      | 🎯             |
 | Weather: sunny               | `weather_sunny.png`   | ☀️             |
 | Weather: overcast            | `weather_overcast.png`| ☁️             |
 | Weather: rainy               | `weather_rainy.png`   | 🌧️             |
