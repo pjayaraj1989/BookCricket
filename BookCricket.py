@@ -33,6 +33,10 @@ def run_game(autoplay=False, overs=None, format_override=None, fast=False):
         # commentary (text-to-speech) prompt removed for now - always off
         commentary_enabled = False
 
+        # clear the web UI's side pane so a replayed match doesn't show the
+        # previous one's scorecard/innings/run-rate (no-op in console mode)
+        PushMatchReset()
+
         teams, venue, match_format = ReadData(autoplay, format_override)
         match = GetMatchInfo(teams, venue, autoplay, overs, format_override, fast, match_format)
         match.commentary_enabled = commentary_enabled

@@ -10,7 +10,7 @@ from functions.helper import Venue
 from functions.Base.Player import Player
 from functions.Base.Match import Match
 from functions.Base.Team import Team
-from functions.utilities import ChooseFromOptions, PrintInColor, Randomize, Error_Exit, PushEvent, PushLineupCountdown
+from functions.utilities import ChooseFromOptions, PrintInColor, Randomize, Error_Exit, PushEvent, PushLineupCountdown, PushMatchReset
 import random
 from numpy.random import choice
 from colorama import Fore, Style

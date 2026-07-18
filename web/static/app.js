@@ -185,8 +185,22 @@ socket.on("server_event", (data) => {
     renderMatchHighlights(data.data);
   } else if (data.type === "xi") {
     renderPlayingXI(data.data);
+  } else if (data.type === "reset") {
+    resetSidePane();
   }
 });
+
+// clear the side pane between matches so a replay doesn't show the previous
+// match's scorecard, innings summaries or run-rate graph
+function resetSidePane() {
+  liveScorecardEl.innerHTML =
+    '<p class="hint">Scorecard will appear after the first over.</p>';
+  inningsSummariesEl.innerHTML = "";
+  currentLiveInningsBlockEl = null;
+  runRateGraphEl.style.display = "none";
+  runRateLegendEl.innerHTML = "";
+  runRateSvgEl.innerHTML = "";
+}
 
 function escapeHtml(s) {
   const div = document.createElement("div");

@@ -280,6 +280,21 @@ def IsWebMode():
     return get_channel() is not None
 
 
+def PushMatchReset():
+    """
+    Tell the web UI to clear the side pane (scorecard, innings summaries,
+    run-rate graph) so a fresh match doesn't show the previous one's stats.
+    No-op in console mode (no channel set).
+
+    Returns:
+        None
+    """
+    channel = get_channel()
+    if channel is None:
+        return
+    channel.reset()
+
+
 def ConsumeDeclareRequest():
     """
     Check-and-clear the web GUI's Declare button flag for this session.
