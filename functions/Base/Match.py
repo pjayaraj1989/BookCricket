@@ -50,6 +50,7 @@ class Match:
             "commentators": None,
             "drs": False,
             "review_upheld": False,  # last DRS review was taken and OUT stood
+            "free_hit": False,  # next legal delivery is a free hit (after a no-ball)
             "firstinnings": None,
             "secondinnings": None,
             "batting_first": None,
@@ -1521,6 +1522,12 @@ class Match:
         # get who is on strike
         on_strike = next((x for x in pair if x.onstrike), None)
 
+        # this legal delivery consumes any pending free hit (a no-ball earlier
+        # in the over set it; wides/no-balls don't reach Ball(), so it survives
+        # them until a legal ball is bowled)
+        is_free_hit = self.free_hit
+        self.free_hit = False
+
         # first runs
         if (
             batting_team.total_score == 0
@@ -1537,7 +1544,15 @@ class Match:
         # if out
         used_drs = False
         while run == -1:
-            dismissal = self.GenerateDismissal()
+            dismissal = self.GenerateDismissal(free_hit=is_free_hit)
+            # free hit: anything but a run out is not out
+            if dismissal is None:
+                PrintInColor(
+                    Randomize(commentary.commentary_free_hit_survived),
+                    Fore.LIGHTGREEN_EX,
+                )
+                run = 0  # treat as a dot; the batsman lives on
+                break
             if "lbw" in dismissal:
                 PrintInColor(
                     Randomize(commentary.commentary_lbw_umpire) % self.umpire,
@@ -3135,6 +3150,12 @@ class Match:
             PrintInColor("NO BALL...!", Fore.LIGHTCYAN_EX)
             PrintInColor(Randomize(commentary.commentary_no_ball), Style.BRIGHT)
             logger.info("NO BALL")
+            # the next legal delivery is a free hit
+            self.free_hit = True
+            PrintInColor(
+                Randomize(commentary.commentary_free_hit), Fore.LIGHTGREEN_EX
+            )
+            utilities.PushEvent("free_hit", {"umpire": self.umpire})
 
         return
 
@@ -3317,12 +3338,18 @@ class Match:
             )
             batting_team.partnerships.append(last_partnership)
 
-    def GenerateDismissal(self):
+    def GenerateDismissal(self, free_hit=False):
         """
         Generate a random mode of dismissal.
 
+        Args:
+            free_hit: When True (a free-hit delivery), only a run out can
+                dismiss - any other mode returns None (batsman not out), and
+                the check happens before any fielding stat is credited.
+
         Returns:
-            str: The dismissal string.
+            str: The dismissal string, or None if the batsman survives a free
+                hit.
         """
         bowling_team = self.bowling_team
         bowler = bowling_team.current_bowler
@@ -3341,6 +3368,11 @@ class Match:
 
         # generate dismissal
         dismissal = choice(dismissal_types, 1, p=dismissal_prob, replace=False)[0]
+
+        # on a free hit only a run out counts - bail before any stat is
+        # credited so a survived free hit leaves the fielding figures untouched
+        if free_hit and dismissal != "runout":
+            return None
 
         # generate dismissal string
         if dismissal == "lbw" or dismissal == "b":

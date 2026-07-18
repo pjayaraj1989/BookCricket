@@ -790,6 +790,23 @@ class commentary:
         "in the air and taken!. but no ball called!!",
         "oh that's a high full toss! no ball called!",
     ]
+
+    # announced after a no-ball: the next delivery is a free hit
+    commentary_free_hit = [
+        "and that means the next ball is a FREE HIT!",
+        "free hit coming up! the batsman can swing away without fear!",
+        "it's a free hit! only a run out can get him now!",
+        "here comes the free hit.. license to go big!",
+    ]
+
+    # the batsman is bowled/caught/lbw off a free hit - not out!
+    commentary_free_hit_survived = [
+        "he's cleaned him up.. but it's a FREE HIT! not out!",
+        "that would have been the wicket.. but it's a free hit, he survives!",
+        "up goes the finger.. no wait, free hit! the batsman lives on!",
+        "beaten all ends up, but it doesn't matter - free hit, not out!",
+    ]
+
     commentary_milestone = [
         "Its been a terrific knock by %s today..!",
         "what a fine innings this has been from %s!",

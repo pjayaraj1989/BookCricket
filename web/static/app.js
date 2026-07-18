@@ -833,6 +833,17 @@ function renderEvent(kind, data) {
       stopped: ["misc/rain_stopped", "☔", "Rain stopped play", (data && data.resume) || ""],
     }[data && data.stage];
     if (cfg) showEventPane(buildMiscCard(cfg[0], cfg[1], cfg[2], cfg[3]), 3500, "takeover");
+  } else if (kind === "free_hit") {
+    const ump = data && data.umpire ? String(data.umpire) : "Umpire";
+    // umpire signalling the free hit: photo + big "FREE HIT!" badge
+    const card = buildPlayerCard(ump, "", "umpires/");
+    const nameEl = card.querySelector(".event-player-name");
+    if (nameEl) nameEl.remove();
+    const badge = document.createElement("div");
+    badge.className = "event-gameon-text";
+    badge.textContent = "FREE HIT!";
+    card.insertBefore(badge, card.firstChild);
+    showEventPane(card, 3000, "takeover");
   } else if (kind === "runout") {
     const ump = data && data.umpire ? String(data.umpire) : "";
     showEventPane(buildUmpireDecisionCard(ump, "RUN OUT"), 3000, "takeover");
