@@ -20,6 +20,11 @@ event kind:
 | Rain stopped play (Test)     | `rain_stopped.png`| ☔             |
 | Third umpire (referral)      | `third_umpire.png`| 📺             |
 | Super over (tied match)      | `super_over.png`  | ⚡             |
+| Weather: sunny               | `weather_sunny.png`   | ☀️             |
+| Weather: overcast            | `weather_overcast.png`| ☁️             |
+| Weather: rainy               | `weather_rainy.png`   | 🌧️             |
+| Weather: cloudy              | `weather_cloudy.png`  | ⛅             |
+| Weather: humid               | `weather_humid.png`   | 🥵             |
 
 Supported extensions: `.png`, `.jpg`, `.jpeg`, `.webp` (checked in that
 order). Images are shown at up to 150x95, cropped to fit.
