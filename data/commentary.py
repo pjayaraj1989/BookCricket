@@ -807,6 +807,54 @@ class commentary:
         "beaten all ends up, but it doesn't matter - free hit, not out!",
     ]
 
+    # the opening pair walking out - two placeholders, both opener names
+    commentary_openers_intro = [
+        "%s and %s to get the innings underway!",
+        "%s and %s stride out to open the batting",
+        "it's %s and %s to face up to the new ball",
+        "the opening pair %s and %s make their way to the middle",
+        "%s and %s will look to give their side a flying start",
+        "here come the openers, %s and %s",
+        "%s and %s have the task of seeing off the new ball",
+        "%s and %s out there to lay the platform",
+        "the new-ball examination awaits %s and %s",
+        "%s and %s walk out to a warm reception",
+        "plenty riding on the openers, %s and %s",
+        "first use of a fresh pitch for %s and %s",
+        "%s and %s take guard to begin the innings",
+        "all eyes on the top order as %s and %s get us going",
+        "%s and %s to set the tone at the top",
+        "a big role for the openers %s and %s",
+        "%s and %s ready to take on the new ball",
+        "the openers are out - %s and %s to start things off",
+        "%s and %s stride to the crease to open up",
+        "%s and %s to knock the shine off the new ball",
+    ]
+
+    # the opening bowler taking the new ball - one placeholder, bowler name
+    commentary_opening_bowler_intro = [
+        "%s will take the new ball",
+        "%s to open the attack",
+        "the batsmen will be facing %s first up",
+        "%s gets the ball in hand to start the innings",
+        "%s to steam in with the new ball",
+        "first over of the innings, and it's %s",
+        "%s has the shine to work with",
+        "%s to lead the attack from one end",
+        "the new ball goes to %s",
+        "%s marks out his run-up to get us started",
+        "%s will be hunting an early breakthrough",
+        "up first with the ball is %s",
+        "%s to test the openers with the new ball",
+        "%s gets the nod to open the bowling",
+        "the shiny new ball in the hands of %s",
+        "%s to bowl the first over of the innings",
+        "%s charges in to get the innings started",
+        "%s has been handed the new ball",
+        "%s to open up the bowling",
+        "a probing first spell expected from %s",
+    ]
+
     commentary_milestone = [
         "Its been a terrific knock by %s today..!",
         "what a fine innings this has been from %s!",

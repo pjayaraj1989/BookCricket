@@ -619,7 +619,14 @@ class Match:
         # once a team can bat a second time in a Test match
         pair = list(batting_team.opening_pair)
 
-        utilities.PushEvent("openers", {"names": [p.name for p in pair]})
+        utilities.PushEvent(
+            "openers",
+            {
+                "names": [p.name for p in pair],
+                "caption": Randomize(commentary.commentary_openers_intro)
+                % (pair[0].name, pair[1].name),
+            },
+        )
 
         # fresh milestone tracking for this innings (team-total and stand pop-ups)
         self.team_score_milestone_shown = 0
@@ -646,6 +653,10 @@ class Match:
                 msg = "Reqd. run rate: %s" % (str(reqd_rr))
                 print(msg)
                 logger.info(msg)
+
+        # pop-up as the innings begins: the target when chasing, or (in a Test)
+        # how far this side leads/trails entering the innings
+        self._PushInningsSituation()
 
         if self.is_test:
             self._PlayTestInningsOvers(pair)
@@ -1008,6 +1019,41 @@ class Match:
         PrintInColor(phrase, Style.BRIGHT)
         utilities.PushEvent("tension", {"text": phrase, "final": ball >= 6})
 
+    def _PushInningsSituation(self):
+        """
+        Pop up the state of play as an innings begins: the run target when a
+        side is chasing (limited-overs 2nd innings, or a Test 4th innings),
+        or - in a Test non-chase innings - how far the batting side leads or
+        trails on aggregate. No-op for a first innings with nothing to compare
+        against. The push is a no-op in console mode.
+
+        Returns:
+            None
+        """
+        bt = self.batting_team
+
+        if bt.batting_second:
+            data = {"team": bt.name, "runsToWin": int(bt.target)}
+            if self.overs:
+                data["overs"] = int(self.overs)
+            utilities.PushEvent("target", data)
+            return
+
+        if not self.is_test:
+            return
+
+        # Test, batting again but not chasing: lead/trail on aggregate so far
+        opp = self.bowling_team
+        if not (bt.innings_history or opp.innings_history):
+            return
+        diff = sum(i.score for i in bt.innings_history) - sum(
+            i.score for i in opp.innings_history
+        )
+        if diff < 0:
+            utilities.PushEvent("target", {"team": bt.name, "status": "trail", "diff": -diff})
+        elif diff > 0:
+            utilities.PushEvent("target", {"team": bt.name, "status": "lead", "diff": diff})
+
     def _CheckScoreMilestones(self):
         """
         Fire web pop-ups when the team total crosses a fresh multiple of 100
@@ -1242,7 +1288,19 @@ class Match:
         # get bowler
         bowler = self.AssignBowler()
 
-        utilities.PushEvent("new_bowler", {"name": bowler.name, "opening": over == 0})
+        utilities.PushEvent(
+            "new_bowler",
+            {
+                "name": bowler.name,
+                "opening": over == 0,
+                "caption": (
+                    Randomize(commentary.commentary_opening_bowler_intro)
+                    % bowler.name
+                )
+                if over == 0
+                else None,
+            },
+        )
         msg = "New bowler is %s" % (bowler.name)
         PrintInColor(msg, bowling_team.color)
         msg = "New bowler: %s %s/%s (%s)" % (
