@@ -264,7 +264,7 @@ def PushEvent(kind, data=None):
             "commentators", "declare", "follow_on", "lbw", "rain",
             "team_score", "partnership_milestone", "third_umpire", "tension",
             "boundary_streak", "super_over", "free_hit", "weather", "target",
-            "approaching", "first_ball_wicket").
+            "approaching", "first_ball_wicket", "validating_teams").
         data: Optional dict of extra fields for the frontend to render.
 
     Returns:
@@ -388,14 +388,15 @@ def PushLineupCountdown(match):
     frame_ms = 700
     game_on_ms = 2200
 
+    # channel.event() itself blocks until the browser acks the last takeover
+    # frame (the "GAME ON!" card) leaving the screen, so the toss waits for
+    # the animation with no additional sleep needed here
     channel.event("lineup_countdown", {
         "players": [{"name": p.name, "count": count - i} for i, p in enumerate(lineup)],
         "gameOn": {"name": game_on.name},
         "frameMs": frame_ms,
         "gameOnMs": game_on_ms,
     })
-
-    time.sleep((frame_ms * count + game_on_ms) / 1000.0)
 
 
 def _over_history_series(team):
