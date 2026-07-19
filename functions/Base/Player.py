@@ -41,6 +41,9 @@ class Player:
             # runs of the boundaries this batsman has hit back-to-back right
             # now (e.g. [4, 6, 4]); any non-boundary ball they face clears it
             "boundary_streak": [],
+            # score at which an "approaching a milestone" pop-up already fired
+            # (49/99/199), so it isn't shown twice for the same score
+            "nervous_at": 0,
             "status": True,
             "spell_over": False,
             "onfield": False,
@@ -78,6 +81,7 @@ class Player:
         self.dots = 0
         self.strikerate = 0.0
         self.boundary_streak = []
+        self.nervous_at = 0
 
     def ResetBowlingInnings(self):
         """
