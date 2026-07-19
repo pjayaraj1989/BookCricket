@@ -1009,6 +1009,15 @@ function renderEvent(kind, data) {
       3500,
       "takeover"
     );
+  } else if (kind === "validating_teams") {
+    // small centered pop-up so the pause between the playing XI and the
+    // toss doesn't look like a hang (not a takeover: it must not hold up
+    // the very validation it announces)
+    showEventPane(
+      buildMiscCard("misc/validating_teams", "🔍", "Validating teams…", "just a moment"),
+      2500,
+      "popup"
+    );
   } else if (kind === "free_hit") {
     const ump = data && data.umpire ? String(data.umpire) : "Umpire";
     // umpire signalling the free hit: photo + big "FREE HIT!" badge

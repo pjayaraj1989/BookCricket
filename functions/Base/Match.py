@@ -3520,6 +3520,11 @@ class Match:
         if self.team1 is None or self.team2 is None:
             Error_Exit("No teams found!")
 
+        # let the player know why there's a pause between the playing XI and
+        # the toss (the autoplay name checks below can take a while)
+        PrintInColor("Validating teams, please wait...", Style.BRIGHT)
+        utilities.PushEvent("validating_teams", {})
+
         for t in [self.team1, self.team2]:
             # check if 11 players
             if len(t.team_array) != 11:

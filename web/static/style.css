@@ -627,6 +627,26 @@ main {
   max-width: 92vw;
 }
 
+/* "popup" pop-ups: a small centered card floating over the page - for
+   lightweight notices (e.g. "Validating teams…") that should catch the eye
+   without taking over the screen or hiding in the docked pane */
+.event-pane.popup {
+  position: fixed;
+  top: 38%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  width: auto;
+  height: auto;
+  min-width: 220px;
+  padding: 1rem 1.6rem;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  z-index: 150;
+}
+
+.event-pane.popup.visible {
+  transform: translate(-50%, -50%) scale(1);
+}
+
 /* "takeover" pop-ups fill the whole screen with a dark backdrop, so they
    read as a "watch this" moment rather than a corner pop-up. Used by the
    pre-match countdown (game is blocked on the server meanwhile) and the
