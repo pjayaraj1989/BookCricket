@@ -663,23 +663,42 @@ class Match:
         else:
             self._PlayLimitedOversInnings(pair)
 
-        # innings ended with the match still alive (not a completed chase or
-        # a day-5 draw): pop the "innings over" card. When the innings ends
-        # the match, the victory card that follows says it better.
+        # innings just finished: snapshot it first so the "innings over" card
+        # can carry a quick summary (top scorer / best bowler)
+        summary = self.BuildInningsSummary()
+
+        # pop the "innings over" card if the match is still alive (not a
+        # completed chase or a day-5 draw - the victory card says it better).
         if self.status:
+            faced = [b for b in summary.batting_card if b["balls"] > 0]
+            top_bat = max(faced, key=lambda b: b["runs"], default=None)
+            top_bowl = None
+            if summary.bowling_card:
+                top_bowl = sorted(
+                    summary.bowling_card, key=lambda b: (-b["wickets"], b["runs"])
+                )[0]
             utilities.PushEvent(
                 "innings_over",
                 {
                     "team": batting_team.name,
                     "score": int(batting_team.total_score),
                     "wickets": int(batting_team.wickets_fell),
+                    "overs": float(summary.overs),
+                    "topBatter": (
+                        {"name": top_bat["name"], "runs": top_bat["runs"], "balls": top_bat["balls"]}
+                        if top_bat
+                        else None
+                    ),
+                    "topBowler": (
+                        {"name": top_bowl["name"], "wickets": top_bowl["wickets"], "runs": top_bowl["runs"]}
+                        if top_bowl
+                        else None
+                    ),
                 },
             )
 
-        # innings just finished: snapshot it (Test's multi-innings history)
-        # and send the web UI's full innings summary; the push is a no-op
-        # outside web mode
-        summary = self.BuildInningsSummary()
+        # store the snapshot (Test's multi-innings history) and send the web
+        # UI's full innings summary; the push is a no-op outside web mode
         if self.is_test:
             batting_team.innings_history.append(summary)
         # chronological, match-wide record used by the final highlights card
@@ -1016,8 +1035,21 @@ class Match:
             phrase = self.last_over_phrases[(ball - 1) % len(self.last_over_phrases)]
         else:
             return
+        bt = self.batting_team
+        # equation as this ball is about to be bowled: runs still needed and
+        # legal balls left in the over (this ball included)
+        runs_to_win = int(bt.target - bt.total_score)
+        balls_left = 7 - ball
         PrintInColor(phrase, Style.BRIGHT)
-        utilities.PushEvent("tension", {"text": phrase, "final": ball >= 6})
+        utilities.PushEvent(
+            "tension",
+            {
+                "text": phrase,
+                "final": ball >= 6,
+                "runsToWin": runs_to_win,
+                "ballsLeft": balls_left,
+            },
+        )
 
     def _PushInningsSituation(self):
         """
