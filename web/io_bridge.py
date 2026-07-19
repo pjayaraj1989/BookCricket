@@ -8,6 +8,7 @@ import builtins
 import queue
 import re
 import threading
+import time
 
 import colorama
 
@@ -26,6 +27,11 @@ class WebChannel:
         # emit(event_name, data) sends a message to this session's browser tab.
         self._emit = emit
         self._queue = queue.Queue()
+        # acks for event pop-ups: the browser reports when each pop-up has
+        # left the screen, so the game thread can stay in sync with what the
+        # player is actually watching (see event() below)
+        self._ack_queue = queue.Queue()
+        self._event_seq = 0
         self._line_buffer = ""
         # set from the socket thread when the GUI's Declare button is pressed;
         # the game thread consumes it at the next over boundary (single bool
@@ -58,11 +64,46 @@ class WebChannel:
         # has just finished.
         self._emit("server_event", {"type": "innings", "data": data})
 
+    # how long event() will wait for the browser's pop-up ack before giving
+    # up and letting the game continue (a missed ack - old cached app.js,
+    # a wedged tab - must never stall the match)
+    EVENT_ACK_TIMEOUT = 20.0
+
     def event(self, kind, data=None):
-        # a short-lived highlight for the top-left event pane (toss/wicket/
-        # four/six/DRS) - fire-and-forget, distinct from the scrolling log
-        # and the structured scorecard state.
-        self._emit("server_event", {"type": "event", "kind": kind, "data": data or {}})
+        # a short-lived highlight for the event pane (toss/wicket/four/six/
+        # DRS/rain...), distinct from the scrolling log and the structured
+        # scorecard state. Blocks until the browser acks it, so play cannot
+        # run ahead of what the player is watching: the browser acks a
+        # full-screen "takeover" pop-up only once it leaves the screen, and
+        # everything else immediately on receipt.
+        self._event_seq += 1
+        eid = self._event_seq
+        self._emit(
+            "server_event",
+            {"type": "event", "kind": kind, "data": data or {}, "eid": eid},
+        )
+        deadline = time.monotonic() + self.EVENT_ACK_TIMEOUT
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                return
+            try:
+                value = self._ack_queue.get(timeout=remaining)
+            except queue.Empty:
+                return
+            if value is _DISCONNECTED:
+                raise GameAborted("client disconnected")
+            try:
+                # monotonic ids: a stale ack for an earlier (timed-out) event
+                # is drained and ignored rather than satisfying this wait
+                if int(value) >= eid:
+                    return
+            except (TypeError, ValueError):
+                continue
+
+    def ack_event(self, eid):
+        # called from the socket thread when the browser reports a pop-up done
+        self._ack_queue.put(eid)
 
     def playing_xi(self, data):
         # persistent two-column playing-XI card (with player pics) for the
@@ -108,6 +149,8 @@ class WebChannel:
 
     def close(self):
         self._queue.put(_DISCONNECTED)
+        # release the game thread if it is blocked waiting on a pop-up ack
+        self._ack_queue.put(_DISCONNECTED)
 
     def _wait(self):
         value = self._queue.get()
