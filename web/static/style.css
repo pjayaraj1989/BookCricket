@@ -709,6 +709,41 @@ main {
   font-size: clamp(2rem, 8vw, 4rem);
 }
 
+/* innings-over card: score line plus a top-scorer / best-bowler summary */
+.event-innings-score {
+  margin-top: 0.4rem;
+  font-weight: 800;
+  color: #e6f2ea;
+}
+
+.event-innings-sub {
+  font-size: 0.85rem;
+  color: #9fd4b4;
+  margin-top: 0.15rem;
+}
+
+.event-pane.takeover .event-innings-score {
+  font-size: clamp(1.3rem, 4.5vw, 2.2rem);
+}
+
+.event-pane.takeover .event-innings-sub {
+  font-size: clamp(0.95rem, 2.8vw, 1.3rem);
+}
+
+/* the run-chase equation under the tension line, e.g. "12 runs from 4 balls!" */
+.event-tension-eq {
+  margin-top: 0.6rem;
+  font-weight: 900;
+  color: #7fe3a3;
+  text-align: center;
+  text-shadow: 0 0 14px rgba(127, 227, 163, 0.45);
+  animation: event-pop 0.4s ease;
+}
+
+.event-pane.takeover .event-tension-eq {
+  font-size: clamp(1.4rem, 5vw, 2.4rem);
+}
+
 /* DRS / third-umpire review lights, enlarged for the full-screen takeover */
 .event-pane.takeover .drs-lights {
   gap: 1.4rem;

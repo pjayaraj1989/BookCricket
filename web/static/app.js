@@ -773,8 +773,32 @@ function renderEvent(kind, data) {
       "takeover"
     );
   } else if (kind === "innings_over") {
-    const sub = data && data.team ? data.team + " " + data.score + "/" + data.wickets : "";
-    showEventPane(buildMiscCard("misc/innings_over", "🏏", "Innings over", sub), 3500, "takeover");
+    const card = buildMiscCard("misc/innings_over", "🏏", "Innings over", "");
+    if (data && data.team) {
+      const score = document.createElement("div");
+      score.className = "event-innings-score";
+      score.textContent =
+        data.team + "  " + data.score + "/" + data.wickets +
+        (data.overs != null ? " (" + Number(data.overs).toFixed(1) + ")" : "");
+      card.appendChild(score);
+    }
+    if (data && data.topBatter) {
+      const tb = document.createElement("div");
+      tb.className = "event-innings-sub";
+      tb.textContent =
+        "🏏 Top scorer: " + data.topBatter.name + " " +
+        data.topBatter.runs + " (" + data.topBatter.balls + ")";
+      card.appendChild(tb);
+    }
+    if (data && data.topBowler) {
+      const tw = document.createElement("div");
+      tw.className = "event-innings-sub";
+      tw.textContent =
+        "⚾ Best bowler: " + data.topBowler.name + " " +
+        data.topBowler.wickets + "/" + data.topBowler.runs;
+      card.appendChild(tw);
+    }
+    showEventPane(card, 4500, "takeover");
   } else if (kind === "victory") {
     const caption = data && data.result ? String(data.result) : "Victory!";
     const team = data && data.team ? String(data.team) : "";
@@ -853,6 +877,17 @@ function renderEvent(kind, data) {
       line.className = "event-tension-text" + (isFinal ? " final" : "");
       line.textContent = text;
       card.appendChild(line);
+      // the equation on every slide: N runs needed from M balls
+      const runs = data && data.runsToWin;
+      const balls = data && data.ballsLeft;
+      if (runs != null && balls != null && runs > 0) {
+        const eq = document.createElement("div");
+        eq.className = "event-tension-eq";
+        eq.textContent =
+          runs + (runs === 1 ? " run" : " runs") + " from " +
+          balls + (balls === 1 ? " ball!" : " balls!");
+        card.appendChild(eq);
+      }
       // kept short so the pop-ups keep pace with the balls being bowled
       showEventPane(card, isFinal ? 2600 : 1600, "takeover");
     }
