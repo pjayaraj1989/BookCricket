@@ -324,11 +324,95 @@ class Match:
         utilities.PushEvent("super_over", {"stage": "result", "team": None})
         return None
 
+    def _PickSuperOverBatsmen(self, batting_team):
+        """
+        Pick the three batsmen for a super over: the player chooses them
+        (numbers or short names, Enter or anything unrecognized falls back
+        to auto-selection) unless autoplay. Auto-selection sends in the
+        side's three best batsmen of the day.
+
+        Returns:
+            list: three Player objects.
+        """
+        default = sorted(batting_team.team_array, key=lambda p: -p.runs)[:3]
+        if self.autoplay:
+            return default
+        raw = input(
+            "Choose 3 batsmen for %s's super over: %s [Press Enter to auto-select]"
+            % (
+                batting_team.name,
+                " / ".join(
+                    str(p.no) + "." + GetShortName(p.name)
+                    for p in batting_team.team_array
+                ),
+            )
+        )
+        picked = []
+        for token in str(raw).replace(",", " ").split():
+            tl = token.lower()
+            match = next(
+                (
+                    p
+                    for p in batting_team.team_array
+                    if str(p.no) == tl or tl in GetShortName(p.name).lower()
+                ),
+                None,
+            )
+            if match is not None and match not in picked:
+                picked.append(match)
+            if len(picked) == 3:
+                break
+        # top up an empty/partial/invalid selection from the defaults
+        for p in default:
+            if len(picked) == 3:
+                break
+            if p not in picked:
+                picked.append(p)
+        return picked
+
+    def _PickSuperOverBowler(self, bowling_team):
+        """
+        Pick the bowler for a super over: the player chooses (number or
+        short name, Enter or anything unrecognized auto-selects the most
+        skilled bowler) unless autoplay.
+
+        Returns:
+            Player
+        """
+        candidates = sorted(
+            bowling_team.bowlers or bowling_team.team_array,
+            key=lambda p: p.attr.bowling,
+            reverse=True,
+        )
+        if self.autoplay:
+            return candidates[0]
+        raw = input(
+            "Pick %s's super-over bowler: %s [Press Enter to auto-select]"
+            % (
+                bowling_team.name,
+                " / ".join(
+                    str(p.no) + "." + GetShortName(p.name) for p in candidates
+                ),
+            )
+        )
+        tl = str(raw).strip().lower()
+        bowler = next(
+            (
+                p
+                for p in candidates
+                if str(p.no) == tl or (tl and tl in GetShortName(p.name).lower())
+            ),
+            None,
+        )
+        return bowler if bowler is not None else candidates[0]
+
     def _PlaySuperOverInnings(self, batting_team, bowling_team, target=None):
         """
         One super-over innings: up to six balls, three batsmen, two wickets
         (with only three batsmen there is nobody left after the second).
-        Read-only against the real squads - the tallies here are local.
+        Played ball-by-ball at the same pace as a normal over, with both
+        line-ups chosen by the player (unless autoplay). Read-only against
+        the real squads - the tallies here are local.
 
         Args:
             batting_team: The team batting this super over.
@@ -338,10 +422,8 @@ class Match:
         Returns:
             tuple: (runs, wickets)
         """
-        # each side sends in its three best batsmen and its best bowler,
-        # picked off the real squads without touching them
-        batsmen = sorted(batting_team.team_array, key=lambda p: -p.runs)[:3]
-        bowler = max(bowling_team.team_array, key=lambda p: p.attr.bowling)
+        batsmen = self._PickSuperOverBatsmen(batting_team)
+        bowler = self._PickSuperOverBowler(bowling_team)
         PrintInColor(
             "%s to bat: %s - and %s has the ball."
             % (
@@ -356,6 +438,32 @@ class Match:
         wickets = 0
         striker, next_in = 0, 2
         for ball in range(1, 7):
+            # same ball-by-ball cadence as a normal over (PlayOver): announce
+            # the matchup, then wait for the player before the delivery
+            if target is not None:
+                need = target - runs
+                print(
+                    "%s need %s off %s ball%s"
+                    % (
+                        batting_team.name,
+                        str(need),
+                        str(7 - ball),
+                        "" if 7 - ball == 1 else "s",
+                    )
+                )
+            print(
+                "%s to %s"
+                % (
+                    GetShortName(bowler.name),
+                    GetShortName(batsmen[striker].name),
+                )
+            )
+            if self.autoplay:
+                if not self.fast:
+                    time.sleep(1)
+            else:
+                input("press enter to continue..")
+
             hit = int(choice(self.SUPER_OVER_RUNS, 1, p=self.SUPER_OVER_PROB)[0])
             if hit == -1:
                 wickets += 1
