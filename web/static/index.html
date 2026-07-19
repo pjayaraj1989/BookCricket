@@ -20,8 +20,6 @@
     </div>
   </header>
 
-  <div id="eventPane" class="event-pane" aria-hidden="true"></div>
-
   <main>
     <div id="log" class="log" aria-live="polite"></div>
     <aside id="scorecard" class="scorecard">
@@ -30,10 +28,13 @@
       </div>
       <div id="inningsSummaries"></div>
     </aside>
-    <aside id="runRateGraph" class="run-rate-graph" style="display: none;">
-      <h3>Run Rate</h3>
-      <div id="runRateLegend" class="run-rate-legend"></div>
-      <svg id="runRateSvg" viewBox="0 0 260 150" preserveAspectRatio="none"></svg>
+    <aside class="right-rail">
+      <div id="runRateGraph" class="run-rate-graph" style="display: none;">
+        <h3>Run Rate</h3>
+        <div id="runRateLegend" class="run-rate-legend"></div>
+        <svg id="runRateSvg" viewBox="0 0 260 150" preserveAspectRatio="none"></svg>
+      </div>
+      <div id="eventPane" class="event-pane" aria-hidden="true"></div>
     </aside>
   </main>
 
