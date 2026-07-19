@@ -164,6 +164,18 @@ def handle_client_input(value):
         channel.submit(value)
 
 
+@socketio.on("event_ack")
+def handle_event_ack(eid):
+    # the browser reporting that an event pop-up has left the screen; wakes
+    # the game thread blocked in WebChannel.event() so play stays in sync
+    # with the pop-ups the player actually sees
+    sid = request.sid
+    with _channels_lock:
+        channel = _channels.get(sid)
+    if channel is not None:
+        channel.ack_event(eid)
+
+
 @socketio.on("declare_request")
 def handle_declare_request():
     # the GUI's Declare button: flags the session's game thread, which shows

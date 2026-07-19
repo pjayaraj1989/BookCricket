@@ -180,7 +180,23 @@ socket.on("server_event", (data) => {
   } else if (data.type === "innings") {
     renderInningsSummary(data.data);
   } else if (data.type === "event") {
+    // the server blocks until this event is acked. If the event put up any
+    // full-screen takeover frames, the ack rides on the last of them and
+    // fires when it leaves the screen; otherwise (docked pop-up, hold-open
+    // frame, or nothing shown) ack right away so play continues.
+    dispatchPushedItems = [];
     renderEvent(data.kind, data.data);
+    let claimant = null;
+    for (const it of dispatchPushedItems) {
+      if (it.holdMs && it.paneClass && it.paneClass.indexOf("takeover") !== -1) {
+        claimant = it;
+      }
+    }
+    dispatchPushedItems = null;
+    if (data.eid != null) {
+      if (claimant) claimant.eid = data.eid;
+      else socket.emit("event_ack", data.eid);
+    }
   } else if (data.type === "highlights") {
     renderMatchHighlights(data.data);
   } else if (data.type === "xi") {
@@ -613,8 +629,28 @@ const HOLD_OPEN_MAX_MS = 15000; // safety net if the resolving event never arriv
 
 let holdingOpen = false; // the visible frame is waiting to be replaced
 
+// game-sync ack plumbing: the server blocks in WebChannel.event() until the
+// pop-up for the event it just sent is done. While an event is being
+// dispatched, every frame it pushes is collected in dispatchPushedItems;
+// the dispatcher then pins the event's eid on the last takeover frame, and
+// finishEventFrame acks it once that frame leaves the screen. Frames only
+// hold the game while actually timed and full-screen: hold-open frames
+// (holdMs 0) wait to be *replaced* by the server's next event, which a
+// blocked server could never send.
+let dispatchPushedItems = null;
+let currentEventItem = null; // the frame currently visible in the pane
+
+function finishEventFrame() {
+  if (currentEventItem && currentEventItem.eid != null) {
+    socket.emit("event_ack", currentEventItem.eid);
+  }
+  currentEventItem = null;
+}
+
 function showEventPane(content, holdMs, paneClass) {
-  eventQueue.push({ content: content, holdMs: holdMs, paneClass: paneClass });
+  const item = { content: content, holdMs: holdMs, paneClass: paneClass, eid: null };
+  if (dispatchPushedItems) dispatchPushedItems.push(item);
+  eventQueue.push(item);
   // a hold-open frame is meant to give way the moment its result lands
   if (holdingOpen && eventTimer) {
     clearTimeout(eventTimer);
@@ -626,6 +662,10 @@ function showEventPane(content, holdMs, paneClass) {
 function drainEventQueue() {
   const item = eventQueue.shift();
   if (!item) return;
+  // moving on to a new frame: the one on screen (if any) is done - let the
+  // server know if it was holding the game
+  finishEventFrame();
+  currentEventItem = item;
 
   if (typeof item.content === "string") {
     eventPaneEl.innerHTML = item.content;
@@ -649,6 +689,7 @@ function drainEventQueue() {
     } else {
       eventPaneEl.classList.remove("visible");
       holdingOpen = false;
+      finishEventFrame();
     }
   }, hold);
 }
