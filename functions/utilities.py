@@ -263,7 +263,8 @@ def PushEvent(kind, data=None):
             "victory", "runout", "venue_selected", "umpires", "achievement",
             "commentators", "declare", "follow_on", "lbw", "rain",
             "team_score", "partnership_milestone", "third_umpire", "tension",
-            "boundary_streak", "super_over", "free_hit", "weather", "target").
+            "boundary_streak", "super_over", "free_hit", "weather", "target",
+            "approaching").
         data: Optional dict of extra fields for the frontend to render.
 
     Returns:

@@ -855,6 +855,24 @@ function renderEvent(kind, data) {
         "takeover"
       );
     }
+  } else if (kind === "approaching") {
+    const name = data && data.name ? String(data.name) : "";
+    const text = data && data.text ? String(data.text) : "";
+    if (name) {
+      const card = buildPlayerCard(name); // photo + full name
+      const badge = document.createElement("div");
+      badge.className = "event-achievement-badge";
+      badge.textContent = "🔥 " + text;
+      // cool line between the photo and the name
+      card.insertBefore(badge, card.lastChild);
+      if (data && data.milestone) {
+        const sub = document.createElement("div");
+        sub.className = "event-player-role";
+        sub.textContent = "one short of a " + data.milestone;
+        card.appendChild(sub);
+      }
+      showEventPane(card, 3500, "takeover");
+    }
   } else if (kind === "boundary_streak") {
     const name = data && data.name ? String(data.name) : "";
     const text = data && data.text ? String(data.text) : "";

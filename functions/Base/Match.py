@@ -3313,6 +3313,19 @@ class Match:
             if p.nickname != "" or None:
                 name = p.nickname
 
+            # approaching a milestone: one run short (49 / 99 / 199)
+            nervous = {49: "fifty", 99: "hundred", 199: "double hundred"}
+            if p.runs in nervous and p.nervous_at != p.runs:
+                p.nervous_at = p.runs
+                utilities.PushEvent(
+                    "approaching",
+                    {
+                        "name": p.name,
+                        "text": Randomize(commentary.commentary_approaching_milestone),
+                        "milestone": nervous[p.runs],
+                    },
+                )
+
             # first fifty
             if p.runs >= 50 and p.fifty == 0:
                 p.fifty += 1

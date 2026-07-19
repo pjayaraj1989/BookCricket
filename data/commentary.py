@@ -807,6 +807,31 @@ class commentary:
         "beaten all ends up, but it doesn't matter - free hit, not out!",
     ]
 
+    # a batsman one run short of a milestone (49/99/199) - no placeholder,
+    # the pop-up already shows the batter's name
+    commentary_approaching_milestone = [
+        "one run away from a landmark!",
+        "so close to a big milestone now!",
+        "the nerves must be kicking in!",
+        "just a single needed to get there!",
+        "on the brink of something special!",
+        "you can feel the tension building!",
+        "one good shot away from glory!",
+        "almost there.. just one more run!",
+        "the milestone is well and truly in sight!",
+        "heart-in-mouth stuff out in the middle!",
+        "one run to tick off the landmark!",
+        "steady now.. he's oh so close!",
+        "the crowd senses a milestone coming!",
+        "a single away from the mark!",
+        "poised right on the edge of a milestone!",
+        "just the one needed for the big one!",
+        "nerveless he'll need to be right here!",
+        "the landmark beckons!",
+        "one run stands between him and the milestone!",
+        "the whole ground is willing him to the mark!",
+    ]
+
     # the opening pair walking out - two placeholders, both opener names
     commentary_openers_intro = [
         "%s and %s to get the innings underway!",
