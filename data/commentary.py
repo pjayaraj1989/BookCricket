@@ -807,6 +807,56 @@ class commentary:
         "beaten all ends up, but it doesn't matter - free hit, not out!",
     ]
 
+    # a bowler strikes with the very first ball of an innings - no
+    # placeholder, the pop-up shows both players' names
+    commentary_first_ball_wicket = [
+        "gone first ball! what a start!",
+        "a wicket off the very first ball of the innings!",
+        "the perfect start with the ball!",
+        "first ball, and he's struck!",
+        "dream start! a wicket with the very first delivery!",
+        "no time to settle - out first ball!",
+        "what a way to begin the innings!",
+        "the bowler strikes with his very first ball!",
+        "an early, early breakthrough!",
+        "gone before the innings has even settled!",
+        "the innings could not have started any worse!",
+        "off the very first ball! sensational!",
+        "a golden start for the bowling side!",
+        "wicket first ball - dreamland for the bowler!",
+        "the crowd has barely settled and there's a wicket!",
+        "what a bolt from the blue, first ball!",
+        "the opening delivery does the trick!",
+        "first ball of the innings, and it's a wicket!",
+        "an unplayable first ball!",
+        "the breakthrough arrives immediately!",
+    ]
+
+    # crowd applause at a personal 50-run milestone - one placeholder, the
+    # venue name, e.g. "the Adelaide Oval stands up for him!"
+    commentary_milestone_applause = [
+        "%s rises to its feet for him!",
+        "what an ovation here at %s!",
+        "the crowd at %s stands as one!",
+        "%s salutes a superb knock!",
+        "the roar around %s is deafening!",
+        "%s is on its feet for this milestone!",
+        "a standing ovation echoes around %s!",
+        "the fans at %s roar their approval!",
+        "%s rises to acclaim him!",
+        "the applause rings out around %s!",
+        "%s gives him a hero's reception!",
+        "goosebumps around %s for this one!",
+        "the whole of %s stands up for him!",
+        "%s erupts in celebration!",
+        "what a reception from the %s crowd!",
+        "%s rises to salute the milestone!",
+        "the noise at %s lifts another notch!",
+        "%s shows its appreciation in full voice!",
+        "a wonderful ovation here at %s!",
+        "%s stands up to applaud a fine innings!",
+    ]
+
     # a batsman one run short of a milestone (49/99/199) - no placeholder,
     # the pop-up already shows the batter's name
     commentary_approaching_milestone = [

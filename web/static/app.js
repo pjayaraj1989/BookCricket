@@ -855,6 +855,24 @@ function renderEvent(kind, data) {
         "takeover"
       );
     }
+  } else if (kind === "first_ball_wicket") {
+    const batter = data && data.batter ? String(data.batter) : "";
+    const bowler = data && data.bowler ? String(data.bowler) : "";
+    const text = data && data.text ? String(data.text) : "";
+    if (batter && bowler) {
+      const wrap = document.createElement("div");
+      wrap.className = "event-player";
+      const badge = document.createElement("div");
+      badge.className = "event-achievement-badge";
+      badge.textContent = "🎯 " + (text || "First-ball wicket!");
+      wrap.appendChild(badge);
+      const row = document.createElement("div");
+      row.className = "event-openers";
+      row.appendChild(buildPlayerCard(bowler, "Bowler")); // took the wicket
+      row.appendChild(buildPlayerCard(batter, "Out")); // departing batsman
+      wrap.appendChild(row);
+      showEventPane(wrap, 4000, "takeover roster");
+    }
   } else if (kind === "approaching") {
     const name = data && data.name ? String(data.name) : "";
     const text = data && data.text ? String(data.text) : "";

@@ -44,6 +44,8 @@ class Player:
             # score at which an "approaching a milestone" pop-up already fired
             # (49/99/199), so it isn't shown twice for the same score
             "nervous_at": 0,
+            # highest 50-run milestone the crowd-applause line has fired for
+            "applause_at": 0,
             "status": True,
             "spell_over": False,
             "onfield": False,
@@ -82,6 +84,7 @@ class Player:
         self.strikerate = 0.0
         self.boundary_streak = []
         self.nervous_at = 0
+        self.applause_at = 0
 
     def ResetBowlingInnings(self):
         """

@@ -1879,6 +1879,9 @@ class Match:
         batting_team, bowling_team = self.batting_team, self.bowling_team
         pair = batting_team.current_pair
         bowler = bowling_team.current_bowler
+        # a wicket while no legal ball has been faced yet = first ball of the
+        # innings (checked before the ball count below is bumped)
+        is_first_ball = batting_team.total_balls == 0
 
         if "runout" in dismissal:
             bowler.ball_history.append("RO")
@@ -1916,6 +1919,20 @@ class Match:
             pass  # third-umpire flow already showed the decision
         else:
             utilities.PushEvent("wicket")
+
+        # a bowler's wicket off the very first ball of the innings - a big
+        # double bill of the bowler and the departing batsman (a run-out
+        # isn't the bowler's wicket, so it's left out)
+        if is_first_ball and "runout" not in dismissal:
+            utilities.PushEvent(
+                "first_ball_wicket",
+                {
+                    "batter": player_dismissed.name,
+                    "bowler": bowler.name,
+                    "text": Randomize(commentary.commentary_first_ball_wicket),
+                },
+            )
+
         PrintInColor("Thats OUT !", Fore.RED)
         print(
             "%s %s %s (%s) SR: %s"
@@ -3402,6 +3419,17 @@ class Match:
                     )
                 PrintInColor(
                     Randomize(commentary.commentary_milestone) % name,
+                    batting_team.color,
+                )
+
+            # the crowd rises at each 50-run milestone (50/100/150/200/...),
+            # with a line that names the ground
+            applause = (p.runs // 50) * 50
+            if applause >= 50 and applause > p.applause_at:
+                p.applause_at = applause
+                PrintInColor(
+                    Randomize(commentary.commentary_milestone_applause)
+                    % self.venue.name,
                     batting_team.color,
                 )
         if not self.autoplay:
