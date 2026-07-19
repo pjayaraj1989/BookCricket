@@ -24,6 +24,7 @@ from functions.utilities import (
     is_name_valid,
 )
 import functions.utilities as utilities
+from functions.DuckworthLewis import ResourcesRemaining, RevisedTarget, ParScore, G50
 
 
 class Match:
@@ -82,6 +83,15 @@ class Match:
             "rain_buildup_over": 0,  # match-over count when the build-up begins
             "rain_next_over": 0,  # match-over count for the next build-up stage
             "match_overs_bowled": 0,
+            # limited-overs rain / Duckworth-Lewis state (all no-op unless
+            # the venue is rainy and the format is limited-overs)
+            "original_overs": 0,  # overs per side as scheduled at the toss
+            "lo_rain_innings": 0,  # innings (1 or 2) the rain arrives in
+            "lo_rain_over": 0,  # completed-over count when it arrives
+            "lo_rain_done": False,  # the one rain event has happened
+            "dls_lost_inn1": 0.0,  # resources (%) washed out of innings 1
+            "dls_target": 0,  # D/L-revised chase target (0 = no revision)
+            "rain_ended_match": False,  # washout decided the match on D/L par
             # last-over-of-a-chase tension pop-ups (set up in PlayOver)
             "last_over_phrases": [],  # the lines picked for this over's balls
             "tension_ball_shown": 0,  # last ball a tension line was popped for
@@ -168,6 +178,17 @@ class Match:
         Returns:
             None
         """
+        self.original_overs = self.overs
+
+        # a rainy venue gets one rain event, in either innings, at a random
+        # over - it may shorten the innings (D/L revised target) or wash out
+        # the rest of the match (D/L par decides the result)
+        if self.venue.weather == "rainy" and self.overs:
+            self.lo_rain_innings = random.choice([1, 2])
+            self.lo_rain_over = random.randint(
+                max(3, self.overs // 4), self.overs - 1
+            )
+
         # play 1st innings
         self.Play()
 
@@ -180,8 +201,25 @@ class Match:
         # summarize about bowling performance
         self.bowling_team.SummarizeBowling(self.autoplay)
 
-        # play second inns with target
-        self.team2.target = self.team1.total_score + 1
+        # play second inns with target: straight score+1 normally, or the
+        # Duckworth-Lewis revised target if rain shortened the first innings
+        if self.dls_lost_inn1 > 0:
+            self.team2.target = RevisedTarget(
+                self.team1.total_score,
+                self._DLSResourcesTeam1(),
+                ResourcesRemaining(self.overs, 0),
+                self._DLSAvgScore(),
+            )
+            self.dls_target = self.team2.target
+            msg = "D/L revised target for %s: %s from %s overs" % (
+                self.team2.name,
+                str(self.team2.target),
+                str(self.overs),
+            )
+            PrintInColor(msg, Style.BRIGHT)
+            self.logger.info(msg)
+        else:
+            self.team2.target = self.team1.total_score + 1
 
         # swap teams now
         self.batting_team, self.bowling_team = self.team2, self.team1
@@ -196,14 +234,19 @@ class Match:
         # match ended
         self.status = False
 
-        # show results
-        self.CalculateResult()
+        # show results (a mid-innings washout has already decided them on
+        # D/L par and built self.result)
+        if not self.rain_ended_match:
+            self.CalculateResult()
 
         # level scores are settled with a super over. Its own stats are
         # deliberately thrown away (see _PlaySuperOver) - only the result
-        # carries over, on top of the match's real scorecard.
-        if self.result.winner is None and (
-            self.team1.total_score == self.team2.total_score
+        # carries over, on top of the match's real scorecard. A D/L-tied
+        # washout skips this: there's no play possible in the rain.
+        if (
+            not self.rain_ended_match
+            and self.result.winner is None
+            and self.result.result_str.startswith("Match Tied")
         ):
             super_winner = self._PlaySuperOver()
             if super_winner is not None:
@@ -716,43 +759,22 @@ class Match:
             None
         """
         batting_team = self.batting_team
-        overs = self.overs
 
-        over_interrupt = 0
-        if batting_team.batting_second is True:
-            # in case of rainy, interrupt match intermittently
-            if self.venue.weather == "rainy":
-                over_interrupt = random.choice(list(range(15, 50)))
-
-        # now run for each over
-        for over in range(0, overs):
-            # check if match interrupted
-            if batting_team.batting_second and self.venue.weather == "rainy":
-                if over == over_interrupt - 5:
-                    PrintInColor(
-                        Randomize(commentary.commentary_rain_cloudy), Style.BRIGHT
-                    )
-                elif over == over_interrupt - 3:
-                    PrintInColor(
-                        Randomize(commentary.commentary_rain_drizzling), Style.BRIGHT
-                    )
-                elif over == over_interrupt - 1:
-                    PrintInColor(
-                        Randomize(commentary.commentary_rain_heavy), Style.BRIGHT
-                    )
-                elif over == over_interrupt:
-                    self.MatchAbandon()
-                    self.result.result_str = "No result"
-                    Error_Exit("Match abandoned due to rain!!")
-                if not self.autoplay:
-                    input("Press enter to continue")
+        # loop over-by-over; a while (not a for) because a rain interruption
+        # can revise self.overs downwards mid-innings
+        over = 0
+        while over < self.overs:
+            # rain build-up/stoppage; True means the innings (maybe the
+            # match) ends right here
+            if self._MaybeLimitedOversRain(over):
+                break
 
             # check match stats and comment
             if self.status is False:
                 break
 
             # check if last over
-            if over == overs - 1:
+            if over == self.overs - 1:
                 if batting_team.batting_second:
                     PrintInColor(
                         Randomize(commentary.commentary_last_over_match), Style.BRIGHT
@@ -779,7 +801,258 @@ class Match:
                 break
 
             self._PostOverDisplay(pair)
+            over += 1
         return
+
+    def _MaybeLimitedOversRain(self, over):
+        """
+        Drive the limited-overs rain sequence on a rainy venue: build-up
+        commentary in the overs before the scheduled stoppage, then the
+        stoppage itself, which washes a random number of overs out of the
+        match. One rain event per match, in either innings.
+
+        If some overs survive, the innings continues with a reduced overs
+        count (self.overs is revised; a chase also gets a Duckworth-Lewis
+        revised target). If the rain eats everything that was left, the
+        innings ends here - and if that innings is the chase, the match is
+        decided immediately on the D/L par score.
+
+        Args:
+            over: Completed overs bowled in this innings so far.
+
+        Returns:
+            bool: True if the innings should end right now.
+        """
+        if not self.overs or self.lo_rain_done or not self.lo_rain_innings:
+            return False
+        innings_now = 2 if self.batting_team.batting_second else 1
+        if innings_now != self.lo_rain_innings:
+            return False
+
+        if over == self.lo_rain_over - 5:
+            PrintInColor(Randomize(commentary.commentary_rain_cloudy), Style.BRIGHT)
+            utilities.PushEvent("rain", {"stage": "cloudy"})
+        elif over == self.lo_rain_over - 3:
+            PrintInColor(Randomize(commentary.commentary_rain_drizzling), Style.BRIGHT)
+            utilities.PushEvent("rain", {"stage": "drizzle"})
+        elif over == self.lo_rain_over - 1:
+            PrintInColor(Randomize(commentary.commentary_rain_heavy), Style.BRIGHT)
+            utilities.PushEvent("rain", {"stage": "heavy"})
+        elif over == self.lo_rain_over:
+            self.lo_rain_done = True
+            PrintInColor(
+                Randomize(commentary.commentary_rain_interrupt), Style.BRIGHT
+            )
+            remaining = self.overs - over
+            lost = random.randint(max(2, self.overs // 5), self.overs)
+            if lost >= remaining:
+                return self._RainEndsInnings(over)
+            return self._RainShortensInnings(over, lost)
+        return False
+
+    def _RainShortensInnings(self, over, lost):
+        """
+        Rain washed out `lost` overs but play resumes: revise self.overs
+        down, record the resources lost, and - if this is the chase - set
+        the Duckworth-Lewis revised target immediately.
+
+        Returns:
+            bool: True if the (rare) revised target is already passed and
+            the innings is over.
+        """
+        batting_team = self.batting_team
+        remaining_before = self.overs - over
+        wkts = batting_team.wickets_fell
+        washed_resources = ResourcesRemaining(
+            remaining_before, wkts
+        ) - ResourcesRemaining(remaining_before - lost, wkts)
+
+        self._ReviseOvers(self.overs - lost)
+        msg = "Rain has stopped play! %s overs are lost - the %s is reduced to %s overs." % (
+            str(lost),
+            "chase" if batting_team.batting_second else "innings",
+            str(self.overs),
+        )
+        PrintInColor(msg, Style.BRIGHT)
+        self.logger.info(msg)
+        utilities.PushEvent(
+            "rain", {"stage": "stopped", "resume": msg}
+        )
+
+        if not batting_team.batting_second:
+            # innings 1: bank the lost resources; the chase target is
+            # computed from them at the innings break, and the chase is
+            # played to the same reduced overs
+            self.dls_lost_inn1 += washed_resources
+            if not self.autoplay:
+                input("press enter to continue..")
+            return False
+
+        # innings 2: revise the target right away
+        r2 = ResourcesRemaining(self.original_overs, 0) - washed_resources
+        batting_team.target = RevisedTarget(
+            self.bowling_team.total_score,
+            self._DLSResourcesTeam1(),
+            r2,
+            self._DLSAvgScore(),
+        )
+        self.dls_target = batting_team.target
+        msg = "D/L revised target for %s: %s from %s overs" % (
+            batting_team.name,
+            str(batting_team.target),
+            str(self.overs),
+        )
+        PrintInColor(msg, Style.BRIGHT)
+        self.logger.info(msg)
+        utilities.PushEvent(
+            "target",
+            {
+                "team": batting_team.name,
+                "runsToWin": int(batting_team.target - batting_team.total_score),
+                "overs": int(self.overs),
+                "dls": True,
+            },
+        )
+        if not self.autoplay:
+            input("press enter to continue..")
+
+        # the revision can (rarely) leave the chasers already past the new
+        # target - the match is won on the spot
+        if batting_team.total_score >= batting_team.target:
+            self.status = False
+            self.rain_ended_match = True
+            result = Result(team1=self.team1, team2=self.team2, winner=batting_team)
+            margin = 10 - batting_team.wickets_fell
+            result.result_str = "%s won by %s wicket%s (D/L method)" % (
+                batting_team.name,
+                str(margin),
+                "" if margin == 1 else "s",
+            )
+            self.result = result
+            PrintInColor(result.result_str, batting_team.color)
+            return True
+        return False
+
+    def _RainEndsInnings(self, over):
+        """
+        Rain washed out everything that was left of this innings.
+
+        Innings 1: the innings closes at `over` overs and the chase is
+        reduced to the same length (target follows at the innings break).
+        Innings 2: no further play is possible - the match is decided
+        right here on the Duckworth-Lewis par score.
+
+        Returns:
+            bool: True always (the innings is over).
+        """
+        batting_team = self.batting_team
+        remaining = self.overs - over
+        wkts = batting_team.wickets_fell
+
+        if not batting_team.batting_second:
+            self.dls_lost_inn1 += ResourcesRemaining(remaining, wkts)
+            self._ReviseOvers(over)
+            msg = (
+                "The rain refuses to relent! %s's innings is cut short at %s overs - "
+                "the match is reduced to %s overs a side." % (
+                    batting_team.name,
+                    str(over),
+                    str(over),
+                )
+            )
+            PrintInColor(msg, Style.BRIGHT)
+            self.logger.info(msg)
+            utilities.PushEvent("rain", {"stage": "stopped", "resume": msg})
+            if not self.autoplay:
+                input("press enter to continue..")
+            return True
+
+        # chase washed out: decide the match on D/L par
+        r2_start = ResourcesRemaining(self.overs, 0)
+        r2_used = r2_start - ResourcesRemaining(remaining, wkts)
+        par = ParScore(
+            self.bowling_team.total_score,
+            self._DLSResourcesTeam1(),
+            r2_used,
+            self._DLSAvgScore(),
+        )
+        score = int(batting_team.total_score)
+
+        self.status = False
+        self.rain_ended_match = True
+        result = Result(team1=self.team1, team2=self.team2)
+        if score > par:
+            result.winner = batting_team
+            margin = score - par
+            result.result_str = "%s won by %s run%s (D/L method)" % (
+                batting_team.name,
+                str(margin),
+                "" if margin == 1 else "s",
+            )
+        elif score == par:
+            result.winner = None
+            result.result_str = "Match Tied (D/L method)"
+        else:
+            result.winner = self.bowling_team
+            margin = par - score
+            result.result_str = "%s won by %s run%s (D/L method)" % (
+                self.bowling_team.name,
+                str(margin),
+                "" if margin == 1 else "s",
+            )
+        self.result = result
+
+        msg = (
+            "No further play is possible! At %s/%s after %s overs, "
+            "the D/L par score was %s. %s" % (
+                str(score),
+                str(wkts),
+                str(over),
+                str(par),
+                result.result_str,
+            )
+        )
+        PrintInColor(msg, Style.BRIGHT)
+        self.logger.info(msg)
+        utilities.PushEvent("rain", {"stage": "stopped", "resume": msg})
+        if not self.autoplay:
+            input("press enter to continue..")
+        return True
+
+    def _ReviseOvers(self, new_overs):
+        """
+        Cut the match's overs-per-side to new_overs after a rain delay,
+        keeping the teams' own overs fields (used for required-rate maths
+        and the web scorecard) in sync. Bowlers' per-spell caps are left
+        alone - with fewer total overs they simply never bind.
+
+        Returns:
+            None
+        """
+        self.overs = int(new_overs)
+        self.team1.total_overs = self.overs
+        self.team2.total_overs = self.overs
+
+    def _DLSResourcesTeam1(self):
+        """
+        Resources (%) the side batting first actually had: a full innings'
+        worth for the scheduled overs, minus whatever the rain washed out
+        of their innings.
+
+        Returns:
+            float
+        """
+        return ResourcesRemaining(self.original_overs, 0) - self.dls_lost_inn1
+
+    def _DLSAvgScore(self):
+        """
+        The G50 constant (average full-innings score) scaled to this
+        match's scheduled length, for D/L target maths in short formats.
+
+        Returns:
+            float
+        """
+        return G50 * self.original_overs / 50.0
 
     def _PlayTestInningsOvers(self, pair):
         """
@@ -1068,6 +1341,8 @@ class Match:
             data = {"team": bt.name, "runsToWin": int(bt.target)}
             if self.overs:
                 data["overs"] = int(self.overs)
+            if self.dls_target:
+                data["dls"] = True
             utilities.PushEvent("target", data)
             return
 
@@ -2272,53 +2547,6 @@ class Match:
                     PrintInColor("To win: %s" % str(towin), Style.BRIGHT)
         return
 
-    def MatchAbandon(self):
-        """
-        Abandon the match due to rain.
-
-        Returns:
-            None
-        """
-        batting_team, bowling_team = self.batting_team, self.bowling_team
-
-        # abandon due to rain
-        PrintInColor(Randomize(commentary.commentary_rain_interrupt), Style.BRIGHT)
-        input("Press any key to continue")
-
-        # check nrr and crr
-        nrr = batting_team.GetRequiredRate()
-        crr = batting_team.GetCurrentRate()
-        result = Result(team1=self.team1, team2=self.team2)
-
-        remaining_overs = self.overs - BallsToOvers(batting_team.total_balls)
-        simulated_score = int(round(remaining_overs * crr)) + batting_team.total_score
-
-        result_str = "%s wins by %s run(s) using D/L method!"
-
-        if crr >= nrr:
-            # calculate win margin
-            result_str = result_str % (
-                batting_team.name,
-                str(abs(simulated_score - batting_team.target)),
-            )
-        else:
-            result_str = result_str % (
-                bowling_team.name,
-                str(abs(batting_team.target - simulated_score)),
-            )
-        input("Press any key to continue")
-
-        self.status = False
-        result.result_str = result_str
-        self.DisplayScore()
-        self.DisplayBowlingStats()
-
-        # change result string
-        self.result = result
-        self.MatchSummary()
-        self.FindPlayerOfTheMatch()
-        return
-
     def CheckDRS(self, kind="lbw"):
         """
         Offer the batting side a review of an on-field OUT decision (an LBW or
@@ -2786,6 +3014,12 @@ class Match:
         team1 = self.team1
         team2 = self.team2
 
+        # rain revised the chase target: the result compares team2 with the
+        # D/L target, not with team1's total
+        if self.dls_target:
+            self._CalculateResultDLS()
+            return
+
         result = Result(team1=team1, team2=team2)
         # see who won
         loser = None
@@ -2828,6 +3062,49 @@ class Match:
                     if win_margin > 1:
                         char_runs += "s"
                     result.result_str += " by %s %s" % (str(win_margin), char_runs)
+
+        self.result = result
+
+    def _CalculateResultDLS(self):
+        """
+        Result of a rain-shortened match that was still played to a finish:
+        the chase is judged against the Duckworth-Lewis revised target
+        (self.dls_target) rather than team1's raw total.
+
+        Returns:
+            None
+        """
+        team1, team2 = self.team1, self.team2
+        target = self.dls_target
+        score2 = int(team2.total_score)
+        result = Result(team1=team1, team2=team2)
+
+        if score2 >= target:
+            result.winner = team2
+            margin = 10 - team2.wickets_fell
+            balls_left = self.overs * 6 - team2.total_balls
+            result.result_str = "%s won by %s wicket%s" % (
+                team2.name,
+                str(margin),
+                "" if margin == 1 else "s",
+            )
+            if balls_left > 0:
+                result.result_str += " with %s ball%s left" % (
+                    str(balls_left),
+                    "" if balls_left == 1 else "s",
+                )
+            result.result_str += " (D/L method)"
+        elif score2 == target - 1:
+            result.winner = None
+            result.result_str = "Match Tied (D/L method)"
+        else:
+            result.winner = team1
+            margin = target - 1 - score2
+            result.result_str = "%s won by %s run%s (D/L method)" % (
+                team1.name,
+                str(margin),
+                "" if margin == 1 else "s",
+            )
 
         self.result = result
 

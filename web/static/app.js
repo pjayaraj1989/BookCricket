@@ -951,6 +951,7 @@ function renderEvent(kind, data) {
       sub = data && data.overs
         ? "from " + data.overs + (data.overs === 1 ? " over" : " overs")
         : "in the final innings";
+      if (data && data.dls) sub += " · D/L revised target";
     }
     showEventPane(buildMiscCard("misc/target", "🎯", caption, sub), 4000, "takeover");
   } else if (kind === "weather") {
