@@ -19,8 +19,9 @@ from web.io_bridge import WebChannel, GameAborted, set_channel, clear_channel, i
 install_web_io()
 
 import BookCricket  # noqa: E402
+import functions.SaveGame as SaveGame  # noqa: E402
 
-from flask import Flask, abort, request, send_from_directory  # noqa: E402
+from flask import Flask, abort, jsonify, request, send_from_directory  # noqa: E402
 from flask_socketio import SocketIO  # noqa: E402
 
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
@@ -103,6 +104,51 @@ def commentator_pic(commentator_name):
     return _serve_pic(COMMENTATOR_PICS_DIR, commentator_name)
 
 
+# cap on how large an uploaded save may be (a pickled match is tens of KB)
+MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+
+
+@app.route("/saves")
+def list_saves_route():
+    """List a client's resumable saves (client id via ?clientId=...)."""
+    client_id = request.args.get("clientId") or None
+    try:
+        return jsonify({"saves": SaveGame.list_saves(client_id=client_id)})
+    except Exception as exc:
+        return {"error": str(exc)}, 500
+
+
+@app.route("/upload_save", methods=["POST"])
+def upload_save_route():
+    """
+    Accept an uploaded save file, validate it by safely reconstructing the
+    match, then store it as a normal server-side save owned by the uploading
+    client and return its new id so the client can resume it.
+    """
+    upload = request.files.get("file")
+    if upload is None:
+        return {"error": "No file uploaded"}, 400
+    blob = upload.read(MAX_UPLOAD_BYTES + 1)
+    if len(blob) > MAX_UPLOAD_BYTES:
+        return {"error": "Save file too large"}, 400
+    try:
+        match = SaveGame.load_match_bytes(blob)
+    except SaveGame.SaveLoadError as exc:
+        return {"error": "Not a valid BookCricket save: %s" % exc}, 400
+
+    client_id = request.form.get("clientId") or None
+    # give the uploaded copy a fresh id owned by this client, so it can't
+    # collide with an existing save and shows up in this browser's list
+    match.save_id = SaveGame.new_save_id()
+    match.save_client_id = client_id
+    match.save_enabled = True
+    try:
+        SaveGame.save_match(match)
+    except Exception as exc:
+        return {"error": "Could not store uploaded save: %s" % exc}, 500
+    return {"id": match.save_id, "meta": match.SaveMeta()}
+
+
 @app.route("/shutdown", methods=["POST"])
 def shutdown():
     # os._exit rather than sys.exit: this is a dev tool running as a single
@@ -120,10 +166,12 @@ def shutdown():
     return {"status": "stopping"}
 
 
-def _play(sid, channel):
+def _play(sid, channel, resume_id=None, client_id=None):
     set_channel(channel)
     try:
-        BookCricket.run_game(autoplay=False, overs=None)
+        BookCricket.run_game(
+            autoplay=False, overs=None, resume_id=resume_id, save_owner=client_id
+        )
         channel.output("Match finished. Refresh the page to play again.", "style-bright")
     except GameAborted:
         pass
@@ -137,10 +185,27 @@ def _play(sid, channel):
             _channels.pop(sid, None)
 
 
+def _start_game(sid, resume_id=None):
+    """Start the game thread for a session once, from the start menu choice."""
+    with _channels_lock:
+        channel = _channels.get(sid)
+    if channel is None or getattr(channel, "game_started", False):
+        return
+    channel.game_started = True
+    thread = threading.Thread(
+        target=_play,
+        args=(sid, channel, resume_id, getattr(channel, "client_id", None)),
+        daemon=True,
+    )
+    thread.start()
+
+
 @socketio.on("connect")
 def handle_connect():
     sid = request.sid
     channel = WebChannel(lambda event, data: socketio.emit(event, data, to=sid))
+    channel.client_id = None
+    channel.game_started = False
     with _channels_lock:
         if len(_channels) >= MAX_SESSIONS:
             channel.output(
@@ -151,8 +216,40 @@ def handle_connect():
             return False  # reject the connection
         _channels[sid] = channel
     socketio.emit("server_config", {"allowShutdown": not IS_PUBLIC}, to=sid)
-    thread = threading.Thread(target=_play, args=(sid, channel), daemon=True)
-    thread.start()
+    # the game no longer auto-starts: the client sends "hello" with its id,
+    # we reply with the start menu (new game / resume a saved one), and the
+    # game thread begins only once the client emits "start_game".
+
+
+@socketio.on("hello")
+def handle_hello(data):
+    """Client handshake carrying its persistent id; reply with the start
+    menu (this client's resumable saves)."""
+    sid = request.sid
+    client_id = (data or {}).get("clientId") if isinstance(data, dict) else None
+    with _channels_lock:
+        channel = _channels.get(sid)
+    if channel is None:
+        return
+    channel.client_id = client_id or None
+    try:
+        saves = SaveGame.list_saves(client_id=channel.client_id)
+    except Exception:
+        saves = []
+    socketio.emit(
+        "start_menu",
+        {"saves": saves, "canUpload": True},
+        to=sid,
+    )
+
+
+@socketio.on("start_game")
+def handle_start_game(data):
+    """Begin play: a fresh match, or resume a server-side save by id."""
+    sid = request.sid
+    data = data or {}
+    resume_id = data.get("id") if data.get("mode") == "resume" else None
+    _start_game(sid, resume_id=resume_id)
 
 
 @socketio.on("client_input")
