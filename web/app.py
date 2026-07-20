@@ -166,13 +166,15 @@ def shutdown():
     return {"status": "stopping"}
 
 
-def _play(sid, channel, resume_id=None, client_id=None):
+def _play(sid, channel, resume_id=None, client_id=None, series=False,
+          resume_kind="match"):
     set_channel(channel)
     try:
         BookCricket.run_game(
-            autoplay=False, overs=None, resume_id=resume_id, save_owner=client_id
+            autoplay=False, overs=None, resume_id=resume_id, save_owner=client_id,
+            series=series, resume_kind=resume_kind,
         )
-        channel.output("Match finished. Refresh the page to play again.", "style-bright")
+        channel.output("All done. Refresh the page to start again.", "style-bright")
     except GameAborted:
         pass
     except Exception as exc:
@@ -185,7 +187,7 @@ def _play(sid, channel, resume_id=None, client_id=None):
             _channels.pop(sid, None)
 
 
-def _start_game(sid, resume_id=None):
+def _start_game(sid, resume_id=None, series=False, resume_kind="match"):
     """Start the game thread for a session once, from the start menu choice."""
     with _channels_lock:
         channel = _channels.get(sid)
@@ -194,7 +196,8 @@ def _start_game(sid, resume_id=None):
     channel.game_started = True
     thread = threading.Thread(
         target=_play,
-        args=(sid, channel, resume_id, getattr(channel, "client_id", None)),
+        args=(sid, channel, resume_id, getattr(channel, "client_id", None),
+              series, resume_kind),
         daemon=True,
     )
     thread.start()
@@ -233,23 +236,32 @@ def handle_hello(data):
         return
     channel.client_id = client_id or None
     try:
-        saves = SaveGame.list_saves(client_id=channel.client_id)
+        saves = SaveGame.list_saves(client_id=channel.client_id, kind="match")
+        tournaments = SaveGame.list_saves(client_id=channel.client_id, kind="tournament")
     except Exception:
-        saves = []
+        saves, tournaments = [], []
     socketio.emit(
         "start_menu",
-        {"saves": saves, "canUpload": True},
+        {"saves": saves, "tournaments": tournaments, "canUpload": True,
+         "canSeries": True},
         to=sid,
     )
 
 
 @socketio.on("start_game")
 def handle_start_game(data):
-    """Begin play: a fresh match, or resume a server-side save by id."""
+    """Begin play: a fresh match, a new series, or resume a saved match/series."""
     sid = request.sid
     data = data or {}
-    resume_id = data.get("id") if data.get("mode") == "resume" else None
-    _start_game(sid, resume_id=resume_id)
+    mode = data.get("mode")
+    if mode == "series":
+        _start_game(sid, series=True)
+    elif mode == "resume":
+        _start_game(sid, resume_id=data.get("id"), resume_kind="match")
+    elif mode == "resume_series":
+        _start_game(sid, resume_id=data.get("id"), resume_kind="tournament")
+    else:  # "new"
+        _start_game(sid)
 
 
 @socketio.on("client_input")

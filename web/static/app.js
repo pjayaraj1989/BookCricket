@@ -9,6 +9,29 @@ const eventPaneEl = document.getElementById("eventPane");
 const runRateGraphEl = document.getElementById("runRateGraph");
 const runRateLegendEl = document.getElementById("runRateLegend");
 const runRateSvgEl = document.getElementById("runRateSvg");
+const simOverlayEl = document.getElementById("simOverlay");
+
+function showSimOverlay(title, teams) {
+  if (!simOverlayEl) return;
+  simOverlayEl.innerHTML = "";
+  const spinner = document.createElement("div");
+  spinner.className = "sim-spinner";
+  const t = document.createElement("div");
+  t.className = "sim-title";
+  t.textContent = "Simulating " + title;
+  const who = document.createElement("div");
+  who.className = "sim-teams";
+  who.textContent = teams;
+  const sub = document.createElement("div");
+  sub.className = "sim-sub";
+  sub.textContent = "playing out the match…";
+  simOverlayEl.append(spinner, t, who, sub);
+  simOverlayEl.classList.add("visible");
+}
+
+function hideSimOverlay() {
+  if (simOverlayEl) simOverlayEl.classList.remove("visible");
+}
 
 const socket = io();
 
@@ -177,7 +200,7 @@ socket.on("server_config", (config) => {
 // upload a save file. The game thread only begins once we emit "start_game".
 socket.on("start_menu", (data) => {
   if (gameStarted) return;
-  renderStartMenu((data && data.saves) || [], !!(data && data.canUpload));
+  renderStartMenu(data || {});
 });
 
 function beginGame(payload) {
@@ -187,7 +210,11 @@ function beginGame(payload) {
   socket.emit("start_game", payload);
 }
 
-function renderStartMenu(saves, canUpload) {
+function renderStartMenu(data) {
+  const saves = data.saves || [];
+  const tournaments = data.tournaments || [];
+  const canUpload = !!data.canUpload;
+  const canSeries = !!data.canSeries;
   clearControls();
   const wrap = document.createElement("div");
   wrap.className = "start-menu";
@@ -202,6 +229,31 @@ function renderStartMenu(saves, canUpload) {
   newBtn.textContent = "🏏 New game";
   newBtn.addEventListener("click", () => beginGame({ mode: "new" }));
   wrap.appendChild(newBtn);
+
+  if (canSeries) {
+    const seriesBtn = document.createElement("button");
+    seriesBtn.className = "choice-btn start-series";
+    seriesBtn.textContent = "🏆 New series / tournament";
+    seriesBtn.addEventListener("click", () => beginGame({ mode: "series" }));
+    wrap.appendChild(seriesBtn);
+  }
+
+  if (tournaments.length) {
+    const title = document.createElement("div");
+    title.className = "start-saves-title";
+    title.textContent = "Resume a saved series";
+    wrap.appendChild(title);
+    const list = document.createElement("div");
+    list.className = "start-saves";
+    tournaments.forEach((s) => {
+      const row = document.createElement("button");
+      row.className = "choice-btn save-row";
+      row.innerHTML = describeSeries(s);
+      row.addEventListener("click", () => beginGame({ mode: "resume_series", id: s.id }));
+      list.appendChild(row);
+    });
+    wrap.appendChild(list);
+  }
 
   if (saves.length) {
     const title = document.createElement("div");
@@ -249,6 +301,15 @@ function describeSave(s) {
     '<span class="save-sub">' + sub + '</span>';
 }
 
+function describeSeries(s) {
+  const teams = s.teams || [];
+  const who = teams.length === 2 ? teams.join(" v ") : teams.length + " teams";
+  const main = escapeHtml(who) + "  ·  " + escapeHtml(s.match_type || s.format || "");
+  const sub = escapeHtml(s.situation || "");
+  return '<span class="save-main">' + main + '</span>' +
+    '<span class="save-sub">' + sub + '</span>';
+}
+
 function uploadSave(file) {
   const fd = new FormData();
   fd.append("file", file);
@@ -272,6 +333,7 @@ socket.on("disconnect", () => {
   // a reconnect gets a fresh server session and start menu, so allow the
   // menu to show again (the auto-saved game can be resumed from it)
   gameStarted = false;
+  hideSimOverlay();
   clearControls();
   const p = document.createElement("p");
   p.className = "hint";
@@ -1130,6 +1192,33 @@ function renderEvent(kind, data) {
       3000,
       "takeover"
     );
+  } else if (kind === "series") {
+    const stage = data && data.stage;
+    // any series beat other than "simulating" means the sim (if any) is done
+    if (stage !== "simulating") hideSimOverlay();
+    if (stage === "simulating") {
+      showSimOverlay(
+        (data && data.label) || "Match",
+        ((data && data.home) || "") + "  v  " + ((data && data.away) || "")
+      );
+    } else if (stage === "final_set") {
+      showEventPane(
+        buildMiscCard("misc/series_final", "🏆", "Final set!",
+          (data.teamA || "") + " vs " + (data.teamB || "")),
+        3500, "takeover");
+    } else if (stage === "match_result") {
+      const w = data && data.winner;
+      showEventPane(
+        buildMiscCard("misc/series_result", "📋", w ? (w + " win") : "No result",
+          (data.home || "") + " v " + (data.away || "")),
+        2600, "takeover");
+    } else if (stage === "champion") {
+      showEventPane(
+        buildMiscCard("misc/champion", "🏆", "Champions!",
+          (data && data.summary) || (data && data.champion) || ""),
+        5000, "takeover");
+    }
+    // standings/stats/match_start stages are rendered as text in the log
   } else if (kind === "validating_teams") {
     // small centered pop-up so the pause between the playing XI and the
     // toss doesn't look like a hang (not a takeover: it must not hold up

@@ -40,6 +40,7 @@ SAVE_FORMAT_VERSION = 1
 # a crafted save reference callables like functions.utilities.Error_Exit
 # (a process-exit DoS) via a pickle reduce.
 _ALLOWED = {
+    "functions.Tournament": {"Tournament"},
     "functions.Base.Match": {"Match"},
     "functions.Base.Team": {"Team"},
     "functions.Base.Player": {"Player"},
@@ -129,6 +130,45 @@ def save_match(match):
     return save_id
 
 
+def save_tournament(tournament):
+    """Write (or overwrite) a tournament's save files (pickle + JSON sidecar).
+    Mirrors save_match; a Tournament holds only plain data so it pickles small
+    and safe."""
+    _ensure_dir()
+    save_id = tournament.save_id
+    pkl_path, json_path = _paths(save_id)
+
+    blob = pickle.dumps(tournament, protocol=pickle.HIGHEST_PROTOCOL)
+    tmp = pkl_path + ".tmp"
+    with open(tmp, "wb") as f:
+        f.write(blob)
+    os.replace(tmp, pkl_path)
+
+    meta = tournament.SaveMeta()
+    meta["kind"] = "tournament"
+    meta["version"] = SAVE_FORMAT_VERSION
+    meta["id"] = save_id
+    meta["updated"] = time.time()
+    tmp = json_path + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(meta, f)
+    os.replace(tmp, json_path)
+    return save_id
+
+
+def load_tournament(save_id):
+    """Load and safely reconstruct a saved Tournament by id."""
+    pkl_path, _ = _paths(save_id)
+    if not os.path.isfile(pkl_path):
+        raise SaveLoadError("No save found with id %s" % save_id)
+    with open(pkl_path, "rb") as f:
+        blob = f.read()
+    obj = _SafeUnpickler(io.BytesIO(blob)).load()
+    if not hasattr(obj, "fixtures"):
+        raise SaveLoadError("Save file does not contain a tournament")
+    return obj
+
+
 def _reconstruct(blob):
     match = _SafeUnpickler(io.BytesIO(blob)).load()
     if getattr(match, "match_type", None) is None and not hasattr(match, "team1"):
@@ -158,7 +198,7 @@ def load_match_bytes(blob):
         raise SaveLoadError("Could not read save file: %s" % exc)
 
 
-def list_saves(client_id=None):
+def list_saves(client_id=None, kind=None):
     """
     Metadata for saves on disk, newest first, read from the JSON sidecars (no
     unpickling). A sidecar whose .pkl has gone missing, or that is unreadable,
@@ -167,6 +207,8 @@ def list_saves(client_id=None):
     Args:
         client_id: when given, only saves owned by that browser/client are
             returned (web isolation). None returns every save (console/CLI).
+        kind: "match", "tournament", or None for both. Saves written before
+            the kind tag existed are treated as matches.
 
     Returns:
         list[dict]
@@ -186,7 +228,10 @@ def list_saves(client_id=None):
         except (ValueError, OSError):
             continue
         meta.setdefault("id", save_id)
+        meta.setdefault("kind", "match")
         if client_id is not None and meta.get("clientId") != client_id:
+            continue
+        if kind is not None and meta.get("kind") != kind:
             continue
         saves.append(meta)
     saves.sort(key=lambda m: m.get("updated", 0), reverse=True)
@@ -204,17 +249,21 @@ def delete_save(save_id):
 
 def describe(meta):
     """A one-line human label for a save, for the console/CLI picker."""
-    score = "%s/%s" % (meta.get("score", 0), meta.get("wickets", 0))
-    who = meta.get("batting_team", "?")
-    situation = meta.get("situation", "")
     fmt = meta.get("match_type", meta.get("format", ""))
     when = time.strftime("%Y-%m-%d %H:%M", time.localtime(meta.get("updated", 0)))
+    if meta.get("kind") == "tournament":
+        teams = meta.get("teams", [])
+        who = " v ".join(teams) if len(teams) == 2 else "%d teams" % len(teams)
+        return "%s (%s) - %s [%s]" % (
+            who, fmt, meta.get("situation", ""), when,
+        )
+    score = "%s/%s" % (meta.get("score", 0), meta.get("wickets", 0))
     return "%s v %s (%s) - %s %s, %s [%s]" % (
         meta.get("team1", "?"),
         meta.get("team2", "?"),
         fmt,
-        who,
+        meta.get("batting_team", "?"),
         score,
-        situation,
+        meta.get("situation", ""),
         when,
     )

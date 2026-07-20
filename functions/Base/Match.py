@@ -60,6 +60,7 @@ class Match:
             "won": False,
             "autoplay": False,
             "fast": False,  # skip PlayOver's per-ball sleep even outside autoplay; dev/test use only
+            "skip_name_check": False,  # bypass the autoplay Wikipedia roster check (tournament sims)
             "batting_team": None,
             "bowling_team": None,
             # every completed innings of this match, in the order they were
@@ -290,6 +291,7 @@ class Match:
             )
         target = int(bt.target) if bt and bt.batting_second and bt.target else None
         return {
+            "kind": "match",
             "format": fmt,
             "match_type": self.match_type,
             "overs": self.overs,
@@ -3828,9 +3830,12 @@ class Match:
                     available_numbers.remove(player.no)
         print("Validated teams")
         
-        # additional validation of player names if autoplay
+        # additional validation of player names if autoplay (a roster-QA
+        # check that hits the network). Skipped for tournament-simulated
+        # matches, which run autoplay purely for auto-decisions and must not
+        # make dozens of blocking web requests per fixture.
         ValidPlayers = True
-        if self.autoplay:
+        if self.autoplay and not self.skip_name_check:
             print ("Autoplay enabled, validating player names...")
             for t in [self.team1, self.team2]:
                 for player in t.team_array:

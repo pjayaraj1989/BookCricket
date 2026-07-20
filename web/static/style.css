@@ -370,6 +370,45 @@ main {
   to { transform: scale(1.02); opacity: 1; }
 }
 
+/* full-screen "simulating a match" overlay (tournament sims): shown while a
+   fixture is being simulated silently, cleared when its result lands */
+.sim-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 160;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.4rem;
+  background: rgba(3, 16, 10, 0.96);
+  text-align: center;
+  padding: 2rem;
+}
+.sim-overlay.visible { display: flex; }
+.sim-overlay .sim-spinner {
+  width: clamp(56px, 12vw, 96px);
+  height: clamp(56px, 12vw, 96px);
+  border-radius: 50%;
+  border: 6px solid rgba(127, 227, 163, 0.25);
+  border-top-color: #7fe3a3;
+  animation: sim-spin 0.9s linear infinite;
+}
+@keyframes sim-spin { to { transform: rotate(360deg); } }
+.sim-overlay .sim-title {
+  font-size: clamp(1.4rem, 5vw, 2.4rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  color: #7fe3a3;
+  text-shadow: 0 0 16px rgba(127, 227, 163, 0.4);
+}
+.sim-overlay .sim-teams {
+  font-size: clamp(1rem, 3.5vw, 1.6rem);
+  font-weight: 700;
+  color: #e6f2ea;
+}
+.sim-overlay .sim-sub { font-size: 0.95rem; color: #9fc7b1; }
+
 /* start menu (New game / resume a save / upload), shown in the controls
    footer before a match begins */
 .start-menu {
