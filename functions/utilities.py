@@ -925,9 +925,13 @@ def is_name_valid(name):
         response.raise_for_status()
         data = response.json()
     except requests.RequestException as e:
-        print(f"Error occurred while checking name: {e}")
-        return False
-    
+        # A network/rate-limit error (e.g. Wikipedia 429 Too Many Requests)
+        # means we couldn't verify the name - it does NOT mean the name is
+        # fake. Fail open: treat as valid so a transient error can never
+        # abort a match (this check is only roster QA, not gameplay).
+        print(f"Could not verify name '{name}' ({e}); assuming valid.")
+        return True
+
     search_results = data.get("query", {}).get("search", [])
     for result in search_results:
         result_title = result.get("title", "")

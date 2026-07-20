@@ -11,6 +11,7 @@ venue_data = os.path.join(data_path, 'venue_data.json')
 
 from functions.Initiate import *
 import functions.SaveGame as SaveGame
+import functions.Tournament as Tournament
 from functions.utilities import ChooseFromOptions, IsWebMode
 
 # Define commentary_enabled as a global variable
@@ -33,30 +34,65 @@ def _resume_saved_match(save_id=None, save_blob=None):
     return None
 
 
-def _offer_console_resume():
+def _resume_saved_tournament(save_id):
+    """Load a saved tournament for resume, or None if it can't be loaded."""
+    try:
+        return SaveGame.load_tournament(save_id)
+    except SaveGame.SaveLoadError as exc:
+        PrintInColor("Could not load that series: %s" % exc, Style.BRIGHT)
+    return None
+
+
+def _play_match(match, save_owner, commentary_enabled, resume=False):
+    match.fast = match.fast or False
+    match.save_enabled = True
+    match.save_client_id = save_owner
+    match.commentary_enabled = commentary_enabled
+    if resume:
+        match.autoplay = False
+        match.ResumeMatch(ScriptPath)
+    else:
+        match.PlayMatch(ScriptPath)
+
+
+def _play_series(t, fast, save_owner, resume=False):
+    t.autoplay = False
+    t.fast = fast
+    t.save_enabled = True
+    t.save_client_id = save_owner
+    t.resuming = resume
+    if not t.save_id:
+        t.save_id = SaveGame.new_save_id()
+    t.play(ScriptPath)
+
+
+def _console_start_menu():
     """
-    Console-only startup menu: if any saved games exist, ask whether to start
-    a new match or resume one, and let the player pick from the list. Returns
-    a reconstructed Match to resume, or None to start a fresh match.
+    Console startup menu: New game / New series, plus one entry per resumable
+    saved match and saved series. Returns (action, save_id) where action is
+    one of new_match, new_series, resume_match, resume_series.
     """
-    saves = SaveGame.list_saves()
-    if not saves:
-        return None
-    choice = ChooseFromOptions(
-        ["New game", "Resume a saved game"], "Start a new game or resume a saved one?", 5
-    )
-    if choice != "Resume a saved game":
-        return None
-    labels = [SaveGame.describe(m) for m in saves] + ["Back (start a new game)"]
-    picked = ChooseFromOptions(labels, "Pick a saved game to resume", 5)
-    if picked is None or picked.startswith("Back"):
-        return None
-    save_id = saves[labels.index(picked)]["id"]
-    return _resume_saved_match(save_id=save_id)
+    matches = SaveGame.list_saves(kind="match")
+    tours = SaveGame.list_saves(kind="tournament")
+    options = ["New game", "New series/tournament"]
+    targets = [("new_match", None), ("new_series", None)]
+    for m in matches:
+        options.append("Resume match - " + SaveGame.describe(m))
+        targets.append(("resume_match", m["id"]))
+    for t in tours:
+        options.append("Resume series - " + SaveGame.describe(t))
+        targets.append(("resume_series", t["id"]))
+    if len(options) == 2:
+        # nothing to resume: still offer new game vs new series
+        pick = ChooseFromOptions(options, "What would you like to do?", 5)
+        return targets[options.index(pick)]
+    pick = ChooseFromOptions(options, "What would you like to do?", 5)
+    return targets[options.index(pick)]
 
 
 def run_game(autoplay=False, overs=None, format_override=None, fast=False,
-             resume_id=None, resume_blob=None, save_owner=None):
+             resume_id=None, resume_blob=None, save_owner=None,
+             series=False, resume_kind="match"):
     """
     Play interactive rounds of BookCricket until the player chooses to stop.
 
@@ -71,13 +107,18 @@ def run_game(autoplay=False, overs=None, format_override=None, fast=False,
             use only - a real Test match's day budget makes that sleep add
             up to many minutes otherwise).
         resume_id: id of a server-side save to resume (web resume). Consumed
-            once, on the first match; later "play again" rounds start fresh.
+            once, on the first round; later "play again" rounds start fresh.
         resume_blob: raw pickle bytes of an uploaded save to resume, taking
             precedence over resume_id.
+        series: start a new series/tournament (web "Series" choice).
+        resume_kind: "match" or "tournament" - which kind resume_id refers to.
     """
-    # a resume requested by the caller (web) applies only to the first match
+    # a resume/series requested by the caller (web) applies only to the first
+    # round; later "play again" rounds fall back to a fresh single match
     pending_resume_id = resume_id
     pending_resume_blob = resume_blob
+    pending_resume_kind = resume_kind
+    pending_series = series
 
     while True:
         # commentary (text-to-speech) prompt removed for now - always off
@@ -87,27 +128,46 @@ def run_game(autoplay=False, overs=None, format_override=None, fast=False,
         # previous one's scorecard/innings/run-rate (no-op in console mode)
         PushMatchReset()
 
-        # resume path: caller-supplied save (web), or the console resume menu.
-        # Autoplay never resumes (CI plays fresh matches deterministically).
-        resume_match = None
+        handled = False
         if not autoplay:
-            if pending_resume_id or pending_resume_blob is not None:
-                resume_match = _resume_saved_match(pending_resume_id, pending_resume_blob)
+            if pending_series:
+                t = Tournament.SetupSeries()
+                if t is not None:
+                    _play_series(t, fast, save_owner)
+                    handled = True
+            elif pending_resume_id or pending_resume_blob is not None:
+                if pending_resume_kind == "tournament":
+                    t = _resume_saved_tournament(pending_resume_id)
+                    if t is not None:
+                        _play_series(t, fast, save_owner, resume=True)
+                        handled = True
+                else:
+                    rm = _resume_saved_match(pending_resume_id, pending_resume_blob)
+                    if rm is not None:
+                        _play_match(rm, save_owner, commentary_enabled, resume=True)
+                        handled = True
             elif not IsWebMode():
-                resume_match = _offer_console_resume()
+                action, sid = _console_start_menu()
+                if action == "new_series":
+                    t = Tournament.SetupSeries()
+                    if t is not None:
+                        _play_series(t, fast, save_owner)
+                        handled = True
+                elif action == "resume_series":
+                    t = _resume_saved_tournament(sid)
+                    if t is not None:
+                        _play_series(t, fast, save_owner, resume=True)
+                        handled = True
+                elif action == "resume_match":
+                    rm = _resume_saved_match(save_id=sid)
+                    if rm is not None:
+                        _play_match(rm, save_owner, commentary_enabled, resume=True)
+                        handled = True
+        pending_series = False
         pending_resume_id = None
         pending_resume_blob = None
 
-        if resume_match is not None:
-            resume_match.autoplay = False
-            resume_match.fast = fast
-            resume_match.save_enabled = True
-            # (re)tag ownership to the current browser so its future saves stay
-            # in that browser's resume list
-            resume_match.save_client_id = save_owner
-            resume_match.commentary_enabled = commentary_enabled
-            resume_match.ResumeMatch(ScriptPath)
-        else:
+        if not handled:
             teams, venue, match_format = ReadData(autoplay, format_override)
             match = GetMatchInfo(teams, venue, autoplay, overs, format_override, fast, match_format)
             match.commentary_enabled = commentary_enabled

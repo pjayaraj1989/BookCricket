@@ -347,3 +347,174 @@ def GetMatchInfo(list_of_teams, venue, autoplay, overs, format_override=None, fa
     if not autoplay:
         PushLineupCountdown(match)
     return match
+
+
+# ---------------------------------------------------------------------------
+# Tournament/series support: load individual teams and venues by name and
+# build a match between two specific teams, bypassing the interactive
+# league/team/venue selection that ReadData/GetMatchInfo do for single games.
+# ---------------------------------------------------------------------------
+
+import copy  # noqa: E402
+
+# league file -> [Team templates]; teams are deep-copied per match so each
+# fixture gets fresh, independent Player/Team objects
+_LEAGUE_TEAM_CACHE = {}
+
+
+def ListLeagues():
+    """League names available (base rosters, not the _test variants)."""
+    files = [
+        f for f in os.listdir(data_path)
+        if f.startswith("teams_") and f.endswith(".json") and not f.endswith("_test.json")
+    ]
+    return sorted(f[len("teams_"):-len(".json")] for f in files)
+
+
+def _LeagueFile(league, is_test):
+    """Resolve a league to its roster file, preferring the Test squad file
+    (teams_<league>_test.json) for Test matches when it exists."""
+    if is_test:
+        test_file = os.path.join(data_path, "teams_%s_test.json" % league)
+        if os.path.exists(test_file):
+            return test_file
+    return os.path.join(data_path, "teams_%s.json" % league)
+
+
+def LoadLeagueTeams(league, is_test=False):
+    """Team templates for a league (cached). Callers must deep-copy before
+    playing, since a match mutates its Team/Player objects."""
+    path = _LeagueFile(league, is_test)
+    if path not in _LEAGUE_TEAM_CACHE:
+        _LEAGUE_TEAM_CACHE[path] = ReadTeams(path)
+    return _LEAGUE_TEAM_CACHE[path]
+
+
+def LeagueTeamNames(league, is_test=False):
+    """Team display names available in a league."""
+    return [t.name for t in LoadLeagueTeams(league, is_test)]
+
+
+def LoadTeam(league, name, is_test=False):
+    """A fresh (deep-copied) Team for `name` in `league`, ready to play."""
+    for t in LoadLeagueTeams(league, is_test):
+        if t.name == name:
+            return copy.deepcopy(t)
+    return None
+
+
+def LoadVenueByName(country, name):
+    """Build a Venue for a stadium by country + name (no weather yet -
+    assign that per match with AssignWeather)."""
+    with open(venue_data) as f:
+        data = json.load(f)
+    countries = data["Venues"]
+    entry = None
+    if country in countries:
+        entry = next((v for v in countries[country]["places"] if v["name"] == name), None)
+    if entry is None:  # fall back to a name search across all countries
+        for c in countries.values():
+            entry = next((v for v in c["places"] if v["name"] == name), None)
+            if entry:
+                break
+    if entry is None:
+        return None
+    venue_obj = Venue(name=entry["name"], run_prob=entry["run_prob"])
+    venue_obj.run_prob_t20 = data["run_prob_t20"]
+    return venue_obj
+
+
+def VenueChoices():
+    """(country, [stadium names]) pairs for interactive venue selection."""
+    with open(venue_data) as f:
+        data = json.load(f)
+    out = {}
+    for country, c in data["Venues"].items():
+        out[country] = [v["name"] for v in c["places"]]
+    return out
+
+
+def AssignWeather(venue, announce=False):
+    """Roll fresh weather for a venue (used per tournament match so rain can
+    strike some games and not others). Pushes a weather card when announcing."""
+    weather = choice(
+        list(resources.weathers.keys()), 1, p=resources.weather_prob, replace=False
+    )[0]
+    venue.weather = weather
+    if announce:
+        PrintInColor(resources.weathers[weather], Style.BRIGHT)
+        PushEvent("weather", {"weather": weather, "text": resources.weathers[weather]})
+    return weather
+
+
+def BuildMatch(team1, team2, venue, overs, is_test, fast=False, autoplay=False,
+               announce=True):
+    """
+    Construct a Match between two already-chosen teams at a venue - the
+    non-interactive core of GetMatchInfo, for tournament fixtures.
+
+    Args:
+        announce: when True, do the pre-match intro/commentators/umpires/
+            playing-XI/countdown build-up; tournament "simulate" fixtures pass
+            False (and detach the web channel) to run silently.
+
+    Returns:
+        Match
+    """
+    commentator = random.choices(list(resources.commentators), k=3)
+    umpire = random.choices(list(resources.umpires), k=2)
+
+    if is_test:
+        overs = None
+        bowler_max_overs = 999
+        match_type = "Test"
+    else:
+        overs = int(overs)
+        bowler_max_overs = overs / 5
+        match_type = str(overs) + " overs"
+        if overs == 50:
+            match_type = "ODI"
+        elif overs == 20:
+            match_type = "T20"
+        elif overs == 5:
+            match_type = "Exhibition"
+
+    match = Match(
+        team1=team1,
+        team2=team2,
+        overs=overs,
+        match_type=match_type,
+        venue=venue,
+        bowler_max_overs=bowler_max_overs,
+        umpire=umpire[0],
+        result=None,
+        fast=fast,
+    )
+    match.autoplay = autoplay
+    # tournament matches run autoplay only for auto-decisions when simulated;
+    # never make the autoplay roster-name web check (dozens of blocking
+    # requests per fixture would stall a series)
+    match.skip_name_check = True
+
+    for t in [match.team1, match.team2]:
+        t.total_overs = match.overs
+
+    if announce:
+        PushEvent("teams_selected", {"names": [team1.name, team2.name]})
+        PrintInColor(
+            "%s, at %s - the %s match between %s and %s"
+            % (
+                Randomize(commentary.intro_dialogues),
+                venue.name,
+                match.match_type,
+                team1.name,
+                team2.name,
+            ),
+            Fore.LIGHTCYAN_EX,
+        )
+        PushEvent("commentators", {"names": list(commentator)})
+        PushEvent("umpires", {"names": [umpire[0], umpire[1]]})
+        match.DisplayPlayingXI()
+        if not autoplay:
+            PushLineupCountdown(match)
+    return match
