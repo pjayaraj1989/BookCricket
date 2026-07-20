@@ -61,6 +61,7 @@ class Match:
             "autoplay": False,
             "fast": False,  # skip PlayOver's per-ball sleep even outside autoplay; dev/test use only
             "skip_name_check": False,  # bypass the autoplay Wikipedia roster check (tournament sims)
+            "defer_super_over": False,  # leave a tie unresolved for the caller (tournament) to play the super over interactively
             "batting_team": None,
             "bowling_team": None,
             # every completed innings of this match, in the order they were
@@ -374,6 +375,7 @@ class Match:
             not self.rain_ended_match
             and self.result.winner is None
             and self.result.result_str.startswith("Match Tied")
+            and not self.defer_super_over
         ):
             super_winner = self._PlaySuperOver()
             if super_winner is not None:

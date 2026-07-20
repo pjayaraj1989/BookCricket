@@ -242,6 +242,12 @@ class Tournament:
         # tournament owns resume
         match.save_enabled = False
 
+        # a match the user chose to simulate (not a whole-tournament autoplay)
+        # should still hand a tie to the player: defer the super over so it's
+        # played interactively/visibly after the silent simulation.
+        interactive_super = simulate and not self.autoplay and not self.is_test
+        match.defer_super_over = interactive_super
+
         if simulate or self.autoplay:
             # a full-screen "simulating" overlay stays up for the whole (silent)
             # simulation; the match_result event clears it. Pushed before the
@@ -258,7 +264,36 @@ class Tournament:
         else:
             match.PlayMatch(self.ScriptPath)
 
+        # a simulated match that finished level: play the decider now, in the
+        # open (channel attached, not silenced), so the player gets the super over
+        if (
+            interactive_super
+            and match.result is not None
+            and match.result.winner is None
+            and match.result.result_str.startswith("Match Tied")
+        ):
+            self._play_deferred_super_over(match, fx)
+
         self._record_result(fx, match)
+
+    def _play_deferred_super_over(self, match, fx):
+        """Play the super over for a simulated match that ended level, out loud
+        (the sim itself was silent). Updates match.result with the winner."""
+        # clear the "simulating" overlay and announce the tie
+        utilities.PushEvent(
+            "series",
+            {"stage": "tie", "home": fx["home"], "away": fx["away"]},
+        )
+        PrintInColor(
+            "%s vs %s ended level - it's a SUPER OVER!" % (fx["home"], fx["away"]),
+            Style.BRIGHT,
+        )
+        match.autoplay = False        # play it interactively
+        match.defer_super_over = False
+        winner = match._PlaySuperOver()
+        if winner is not None:
+            match.result.winner = winner
+            match.result.result_str = "Match Tied - %s won the Super Over" % winner.name
 
     def _record_result(self, fx, match):
         result = match.result

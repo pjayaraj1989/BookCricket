@@ -1201,6 +1201,11 @@ function renderEvent(kind, data) {
         (data && data.label) || "Match",
         ((data && data.home) || "") + "  v  " + ((data && data.away) || "")
       );
+    } else if (stage === "tie") {
+      showEventPane(
+        buildMiscCard("misc/super_over", "⚡", "Match tied!",
+          "Super Over: " + (data.home || "") + " v " + (data.away || "")),
+        3000, "takeover");
     } else if (stage === "final_set") {
       showEventPane(
         buildMiscCard("misc/series_final", "🏆", "Final set!",
