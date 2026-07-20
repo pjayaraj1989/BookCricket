@@ -370,6 +370,53 @@ main {
   to { transform: scale(1.02); opacity: 1; }
 }
 
+/* start menu (New game / resume a save / upload), shown in the controls
+   footer before a match begins */
+.start-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  align-items: stretch;
+  width: min(560px, 92vw);
+  margin: 0 auto;
+}
+.start-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #e6f2ea;
+  text-align: center;
+  margin-bottom: 0.2rem;
+}
+.start-saves-title {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6fbf8f;
+  margin-top: 0.4rem;
+}
+.start-saves {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 34vh;
+  overflow-y: auto;
+}
+.start-menu .save-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  text-align: left;
+}
+.save-row .save-main { font-weight: 700; }
+.save-row .save-sub { font-size: 0.78rem; color: #9fc7b1; }
+.start-menu .start-new { font-weight: 800; }
+.start-menu .upload-btn {
+  text-align: center;
+  cursor: pointer;
+  border-style: dashed;
+}
+
 /* right rail: run-rate graph on top, the event pop-up dock beneath it */
 .right-rail {
   flex: 0 0 260px;

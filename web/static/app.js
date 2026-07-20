@@ -12,6 +12,20 @@ const runRateSvgEl = document.getElementById("runRateSvg");
 
 const socket = io();
 
+// persistent per-browser id: ties a resumed game back to the same browser's
+// save list, even after a disconnect or a server restart
+function getClientId() {
+  let id = null;
+  try { id = localStorage.getItem("bc_client_id"); } catch (e) {}
+  if (!id) {
+    id = "c-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    try { localStorage.setItem("bc_client_id", id); } catch (e) {}
+  }
+  return id;
+}
+const clientId = getClientId();
+let gameStarted = false;
+
 // intro splash: prefer a user-supplied cover (resources/misc/intro.png/jpg/
 // ...), fall back to the built-in vector art; fades out on its own or on click
 const introEl = document.getElementById("introSplash");
@@ -149,6 +163,8 @@ function renderInput(prompt) {
 socket.on("connect", () => {
   statusEl.textContent = "connected";
   statusEl.className = "status ok";
+  // handshake: the server replies with this browser's start menu
+  socket.emit("hello", { clientId: clientId });
 });
 
 // the stop-server button only makes sense when you own the server (local
@@ -157,13 +173,109 @@ socket.on("server_config", (config) => {
   killBtn.style.display = config && config.allowShutdown ? "" : "none";
 });
 
+// start menu: New game, or resume one of this browser's saved games, or
+// upload a save file. The game thread only begins once we emit "start_game".
+socket.on("start_menu", (data) => {
+  if (gameStarted) return;
+  renderStartMenu((data && data.saves) || [], !!(data && data.canUpload));
+});
+
+function beginGame(payload) {
+  if (gameStarted) return;
+  gameStarted = true;
+  clearControls();
+  socket.emit("start_game", payload);
+}
+
+function renderStartMenu(saves, canUpload) {
+  clearControls();
+  const wrap = document.createElement("div");
+  wrap.className = "start-menu";
+
+  const heading = document.createElement("div");
+  heading.className = "start-title";
+  heading.textContent = "Welcome to BookCricket";
+  wrap.appendChild(heading);
+
+  const newBtn = document.createElement("button");
+  newBtn.className = "choice-btn start-new";
+  newBtn.textContent = "🏏 New game";
+  newBtn.addEventListener("click", () => beginGame({ mode: "new" }));
+  wrap.appendChild(newBtn);
+
+  if (saves.length) {
+    const title = document.createElement("div");
+    title.className = "start-saves-title";
+    title.textContent = "Resume a saved game";
+    wrap.appendChild(title);
+
+    const list = document.createElement("div");
+    list.className = "start-saves";
+    saves.forEach((s) => {
+      const row = document.createElement("button");
+      row.className = "choice-btn save-row";
+      row.innerHTML = describeSave(s);
+      row.addEventListener("click", () => beginGame({ mode: "resume", id: s.id }));
+      list.appendChild(row);
+    });
+    wrap.appendChild(list);
+  }
+
+  if (canUpload) {
+    const label = document.createElement("label");
+    label.className = "choice-btn upload-btn";
+    label.textContent = "📂 Upload a save file";
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".pkl,application/octet-stream";
+    input.style.display = "none";
+    input.addEventListener("change", () => {
+      if (input.files && input.files[0]) uploadSave(input.files[0]);
+    });
+    label.appendChild(input);
+    wrap.appendChild(label);
+  }
+
+  controlsEl.appendChild(wrap);
+}
+
+function describeSave(s) {
+  const score = (s.score != null ? s.score : 0) + "/" + (s.wickets != null ? s.wickets : 0);
+  const main = escapeHtml((s.team1 || "?") + " v " + (s.team2 || "?")) +
+    "  ·  " + escapeHtml(s.match_type || s.format || "");
+  const sub = escapeHtml((s.battingTeam || s.batting_team || "") + " " + score +
+    "  ·  " + (s.situation || ""));
+  return '<span class="save-main">' + main + '</span>' +
+    '<span class="save-sub">' + sub + '</span>';
+}
+
+function uploadSave(file) {
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("clientId", clientId);
+  appendLine("Uploading save…", null);
+  fetch("upload_save", { method: "POST", body: fd })
+    .then((r) => r.json().then((j) => ({ ok: r.ok, j })))
+    .then(({ ok, j }) => {
+      if (!ok) {
+        appendLine("Upload failed: " + (j.error || "unknown error"), "fore-lightred_ex");
+        return;
+      }
+      beginGame({ mode: "resume", id: j.id });
+    })
+    .catch((e) => appendLine("Upload failed: " + e, "fore-lightred_ex"));
+}
+
 socket.on("disconnect", () => {
   statusEl.textContent = "disconnected";
   statusEl.className = "status err";
+  // a reconnect gets a fresh server session and start menu, so allow the
+  // menu to show again (the auto-saved game can be resumed from it)
+  gameStarted = false;
   clearControls();
   const p = document.createElement("p");
   p.className = "hint";
-  p.textContent = "Connection lost. Refresh the page to start a new match.";
+  p.textContent = "Connection lost. Reconnecting…";
   controlsEl.appendChild(p);
 });
 
@@ -1007,6 +1119,15 @@ function renderEvent(kind, data) {
     showEventPane(
       buildMiscCard(cfg[0], cfg[1], cfg[2], (data && data.text) || ""),
       3500,
+      "takeover"
+    );
+  } else if (kind === "resume") {
+    const bt = data && data.battingTeam ? String(data.battingTeam) : "";
+    const score = data ? (data.score + "/" + data.wickets) : "";
+    showEventPane(
+      buildMiscCard("misc/resume", "⏮️", "Resuming your game",
+        bt ? (bt + " " + score) : ""),
+      3000,
       "takeover"
     );
   } else if (kind === "validating_teams") {

@@ -25,6 +25,7 @@ from functions.utilities import (
 )
 import functions.utilities as utilities
 from functions.DuckworthLewis import ResourcesRemaining, RevisedTarget, ParScore, G50
+import functions.SaveGame as SaveGame
 
 
 class Match:
@@ -99,8 +100,74 @@ class Match:
             "team_score_milestone_shown": 0,  # highest team-total 100 popped
             "partnership_milestone_shown": 0,  # highest 50 popped, current stand
             "partnership_tracked_wkt": 0,  # wickets_fell the stand is tracked at
+            # save/resume state (see functions/SaveGame.py). save_slot is the
+            # index of the innings currently in progress (limited-overs: 0/1;
+            # Test: 0-3); save_started/save_done bracket that innings; the
+            # over to resume at is derived from the batting side's total_balls.
+            "save_enabled": False,  # only real (non-autoplay) games auto-save
+            "save_id": None,  # file id, set once the match starts
+            "save_client_id": None,  # owning browser (web), for save isolation
+            "save_slot": 0,
+            "save_started": False,
+            "save_done": False,
+            "resuming": False,  # this run was reconstructed from a save file
+            "test_follow_on": None,  # Test: None until the follow-on is decided
         }
         self = FillAttributes(self, attrs, kwargs)
+
+    def __getstate__(self):
+        # the logger (a logging.Logger with an open FileHandler) can't be
+        # pickled and is rebuilt on resume, so drop it from the saved state
+        state = dict(self.__dict__)
+        state.pop("logger", None)
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.logger = None
+
+    def _SetupLogger(self, ScriptPath):
+        """
+        Build the per-match file logger and attach it as self.logger. Shared
+        by PlayMatch and ResumeMatch (the logger is not part of the saved
+        state - see Match.__getstate__ - so a resumed match rebuilds it).
+
+        Returns:
+            logging.FileHandler: the handler, so the caller can close it.
+        """
+        log_file = "log_%s_v_%s_%s_%s_overs.log" % (
+            self.team1.name,
+            self.team2.name,
+            self.venue.name.replace(" ", "_"),
+            str(self.overs),
+        )
+        log_folder = os.path.join(ScriptPath, "logs")
+        if not os.path.exists(log_folder):
+            os.makedirs(log_folder)
+        log = os.path.join(log_folder, log_file)
+        # a resumed match appends to its existing log rather than wiping it
+        if os.path.isfile(log) and not self.resuming:
+            os.remove(log)
+
+        logger = logging.getLogger("%s.%s" % (__name__, self.save_id or "console"))
+        logger.setLevel(logging.INFO)
+        logger.handlers = []  # avoid duplicate handlers on a resumed logger
+        handler = logging.FileHandler(log)
+        logger.addHandler(handler)
+        self.logger = logger
+        return handler
+
+    def _PostPlay(self):
+        """Victory card + persistent highlights, once the result is final.
+        Shared tail of PlayMatch/ResumeMatch."""
+        result = getattr(self, "result", None)
+        if result is not None and getattr(result, "winner", None) is not None:
+            utilities.PushEvent(
+                "victory",
+                {"team": result.winner.name, "result": result.result_str},
+            )
+        # persistent post-match highlights card; no-op in console mode
+        utilities.PushMatchHighlights(self)
 
     def PlayMatch(self, ScriptPath):
         """
@@ -112,27 +179,7 @@ class Match:
         Returns:
             None
         """
-        # logging
-        log_file = "log_%s_v_%s_%s_%s_overs.log" % (
-            self.team1.name,
-            self.team2.name,
-            self.venue.name.replace(" ", "_"),
-            str(self.overs),
-        )
-        log_folder = os.path.join(ScriptPath, "logs")
-        if not os.path.exists(log_folder):
-            os.makedirs(log_folder)
-        log = os.path.join(log_folder, log_file)
-        if os.path.isfile(log):
-            os.remove(log)
-
-        logger = logging.getLogger(__name__)
-        logger.setLevel(logging.INFO)
-        handler = logging.FileHandler(log)
-        logger.addHandler(handler)
-
-        # add logger to match
-        self.logger = logger
+        handler = self._SetupLogger(ScriptPath)
 
         # see if teams are valid
         self.ValidateMatchTeams()
@@ -140,6 +187,11 @@ class Match:
         # toss, select who is batting first
         self.Toss()
         self.team1, self.team2 = self.batting_first, self.batting_second
+
+        # teams are finalized: give this match a save-file id so every over
+        # boundary can persist it for resume (real games only, not autoplay)
+        if self.save_enabled and self.save_id is None:
+            self.save_id = SaveGame.new_save_id()
 
         # match start
         self.status = True
@@ -151,23 +203,108 @@ class Match:
         else:
             self._PlayLimitedOversMatch()
 
-        # pop the victory card when someone actually won (skip draws/ties -
-        # no one to celebrate there)
-        result = getattr(self, "result", None)
-        if result is not None and getattr(result, "winner", None) is not None:
-            utilities.PushEvent(
-                "victory",
-                {"team": result.winner.name, "result": result.result_str},
-            )
-
-        # once the result/summary/player-of-the-match are all finalized,
-        # send a persistent highlights card to the web UI; no-op in
-        # console mode
-        utilities.PushMatchHighlights(self)
+        self._PostPlay()
 
         # close log handler
         handler.close()
         return
+
+    def ResumeMatch(self, ScriptPath):
+        """
+        Continue a match reconstructed from a save file. Teams, scores,
+        batting pair, bowler spells, targets and the save cursor were all
+        restored by unpickling; only the logger has to be rebuilt. The
+        format-specific orchestrators (_PlayLimitedOversMatch / _PlayTestMatch)
+        see self.resuming = True and skip fresh setup, picking up from the
+        saved cursor instead.
+
+        Returns:
+            None
+        """
+        handler = self._SetupLogger(ScriptPath)
+        self.resuming = True
+        self.status = True
+
+        PrintInColor(
+            "Resuming saved match - %s vs %s at %s"
+            % (self.team1.name, self.team2.name, self.venue.name),
+            Style.BRIGHT,
+        )
+        utilities.PushEvent(
+            "resume",
+            {
+                "team1": self.team1.name,
+                "team2": self.team2.name,
+                "battingTeam": self.batting_team.name,
+                "score": int(self.batting_team.total_score),
+                "wickets": int(self.batting_team.wickets_fell),
+                "overs": float(BallsToOvers(self.batting_team.total_balls)),
+            },
+        )
+
+        if self.is_test:
+            self._PlayTestMatch()
+        else:
+            self._PlayLimitedOversMatch()
+
+        self._PostPlay()
+        handler.close()
+        return
+
+    def _SaveGame(self):
+        """Persist the match at the current over/innings boundary (no-op for
+        autoplay or if saving is disabled)."""
+        if not self.save_enabled or self.autoplay or not self.save_id:
+            return
+        try:
+            SaveGame.save_match(self)
+        except Exception as exc:  # never let a save error interrupt play
+            if self.logger:
+                self.logger.info("save failed: %s" % exc)
+
+    def _DeleteSave(self):
+        """Remove this match's save files (called when the match finishes)."""
+        if self.save_id:
+            SaveGame.delete_save(self.save_id)
+
+    def _MarkInningsStart(self, slot):
+        """Enter a fresh innings `slot`: reset the save cursor and persist so
+        a crash before the first over still resumes into this innings."""
+        self.save_slot = slot
+        self.save_started = False
+        self.save_done = False
+
+    def SaveMeta(self):
+        """Human-readable metadata for the resume picker (see SaveGame)."""
+        bt = self.batting_team
+        fmt = "Test" if self.is_test else "Limited overs"
+        if self.is_test:
+            situation = "Day %s, innings %s" % (
+                str(self.day),
+                str(self.save_slot + 1),
+            )
+        else:
+            situation = "Innings %s, %s ov" % (
+                str(self.save_slot + 1),
+                str(BallsToOvers(bt.total_balls) if bt else 0),
+            )
+        target = int(bt.target) if bt and bt.batting_second and bt.target else None
+        return {
+            "format": fmt,
+            "match_type": self.match_type,
+            "overs": self.overs,
+            "venue": self.venue.name if self.venue else "",
+            "team1": self.team1.name if self.team1 else "?",
+            "team2": self.team2.name if self.team2 else "?",
+            "battingTeam": bt.name if bt else "?",
+            "batting_team": bt.name if bt else "?",
+            "score": int(bt.total_score) if bt else 0,
+            "wickets": int(bt.wickets_fell) if bt else 0,
+            "situation": situation,
+            "target": target,
+            "clientId": self.save_client_id,
+            "created": getattr(self, "_save_created", None) or time.time(),
+        }
 
     def _PlayLimitedOversMatch(self):
         """
@@ -178,54 +315,42 @@ class Match:
         Returns:
             None
         """
-        self.original_overs = self.overs
+        if not self.resuming:
+            self.original_overs = self.overs
 
-        # a rainy venue gets one rain event, in either innings, at a random
-        # over - it may shorten the innings (D/L revised target) or wash out
-        # the rest of the match (D/L par decides the result)
-        if self.venue.weather == "rainy" and self.overs:
-            self.lo_rain_innings = random.choice([1, 2])
-            self.lo_rain_over = random.randint(
-                max(3, self.overs // 4), self.overs - 1
-            )
+            # a rainy venue gets one rain event, in either innings, at a random
+            # over - it may shorten the innings (D/L revised target) or wash out
+            # the rest of the match (D/L par decides the result)
+            if self.venue.weather == "rainy" and self.overs:
+                self.lo_rain_innings = random.choice([1, 2])
+                self.lo_rain_over = random.randint(
+                    max(3, self.overs // 4), self.overs - 1
+                )
+            self._MarkInningsStart(0)
 
-        # play 1st innings
-        self.Play()
+        # INNINGS 1 (save slot 0). Skipped entirely on a resume that was saved
+        # during the second innings (save_slot == 1).
+        if self.save_slot == 0:
+            if not self.save_done:
+                self.Play(resume=self.save_started)
 
-        # display batting and bowling scorecard
-        self.DisplayScore()
-        self.DisplayBowlingStats()
+            # display batting and bowling scorecard
+            self.DisplayScore()
+            self.DisplayBowlingStats()
 
-        # say something about the first innings
-        self.batting_team.SummarizeBatting(self.autoplay)
-        # summarize about bowling performance
-        self.bowling_team.SummarizeBowling(self.autoplay)
+            # say something about the first innings
+            self.batting_team.SummarizeBatting(self.autoplay)
+            self.bowling_team.SummarizeBowling(self.autoplay)
 
-        # play second inns with target: straight score+1 normally, or the
-        # Duckworth-Lewis revised target if rain shortened the first innings
-        if self.dls_lost_inn1 > 0:
-            self.team2.target = RevisedTarget(
-                self.team1.total_score,
-                self._DLSResourcesTeam1(),
-                ResourcesRemaining(self.overs, 0),
-                self._DLSAvgScore(),
-            )
-            self.dls_target = self.team2.target
-            msg = "D/L revised target for %s: %s from %s overs" % (
-                self.team2.name,
-                str(self.team2.target),
-                str(self.overs),
-            )
-            PrintInColor(msg, Style.BRIGHT)
-            self.logger.info(msg)
-        else:
-            self.team2.target = self.team1.total_score + 1
+            # set the second-innings target (straight, or D/L revised) and swap
+            self._SetSecondInningsTarget()
+            self.batting_team, self.bowling_team = self.team2, self.team1
+            self._MarkInningsStart(1)
+            self._SaveGame()
 
-        # swap teams now
-        self.batting_team, self.bowling_team = self.team2, self.team1
-
-        # play second innings
-        self.Play()
+        # INNINGS 2 (save slot 1)
+        if not self.save_done:
+            self.Play(resume=self.save_started)
 
         # show batting and bowling scores
         self.DisplayScore()
@@ -262,7 +387,32 @@ class Match:
 
         self.MatchSummary()
         self.FindPlayerOfTheMatch()
+        # match is over: drop the save file so it no longer shows up to resume
+        self._DeleteSave()
         return
+
+    def _SetSecondInningsTarget(self):
+        """Set team2's chase target between innings: the first innings score
+        plus one, or the Duckworth-Lewis revised target if rain shortened the
+        first innings."""
+        if self.dls_lost_inn1 > 0:
+            self.team2.target = RevisedTarget(
+                self.team1.total_score,
+                self._DLSResourcesTeam1(),
+                ResourcesRemaining(self.overs, 0),
+                self._DLSAvgScore(),
+            )
+            self.dls_target = self.team2.target
+            msg = "D/L revised target for %s: %s from %s overs" % (
+                self.team2.name,
+                str(self.team2.target),
+                str(self.overs),
+            )
+            PrintInColor(msg, Style.BRIGHT)
+            if self.logger:
+                self.logger.info(msg)
+        else:
+            self.team2.target = self.team1.total_score + 1
 
     # A super-over ball: high risk, high reward. Indexes SUPER_OVER_RUNS
     # (-1 is a wicket); no fives, they don't happen off the bat.
@@ -571,6 +721,7 @@ class Match:
         )
         self.MatchSummaryTest()
         self.FindPlayerOfTheMatchTest()
+        self._DeleteSave()
         return True
 
     def _DecideFollowOn(self, team_a, team_b, a_inn1, b_inn1):
@@ -626,6 +777,7 @@ class Match:
         self.result = result
         self.MatchSummaryTest()
         self.FindPlayerOfTheMatchTest()
+        self._DeleteSave()
 
     def _FinalizeChase(self, chasing, defending, target):
         """
@@ -665,37 +817,48 @@ class Match:
         """
         team_a, team_b = self.team1, self.team2
 
-        # a rainy venue gets a live rain sequence later in the day (once per
-        # match): flag it and greet the players with brooding rain clouds
-        if self.venue.weather == "rainy":
-            self.rain_enabled = True
-            # build-up begins after ~30+ overs of play
-            self.rain_buildup_over = 30 + random.randint(0, 25)
-            utilities.PushEvent("rain", {"stage": "clouds"})
-            PrintInColor(
-                "Dark rain clouds hang over the ground as the players take the field.",
-                Style.BRIGHT,
-            )
+        if not self.resuming:
+            # a rainy venue gets a live rain sequence later in the day (once per
+            # match): flag it and greet the players with brooding rain clouds
+            if self.venue.weather == "rainy":
+                self.rain_enabled = True
+                # build-up begins after ~30+ overs of play
+                self.rain_buildup_over = 30 + random.randint(0, 25)
+                utilities.PushEvent("rain", {"stage": "clouds"})
+                PrintInColor(
+                    "Dark rain clouds hang over the ground as the players take the field.",
+                    Style.BRIGHT,
+                )
+            self._MarkInningsStart(0)
 
-        # innings 1: A bats
-        self._SetupTestInnings(team_a, team_b, chase=False)
-        self.Play()
-        if self._FinalizeIfDrawn():
-            return
+        # The 4 Test innings are numbered save slots 0-3 so a resume can jump
+        # back to the exact one in progress. Each slot: set it up (deterministic,
+        # safe to repeat on resume), play it (fresh, or continuing from the
+        # saved over), then handle the between-innings logic and advance.
 
-        # innings 1: B bats
-        self._SetupTestInnings(team_b, team_a, chase=False)
-        self.Play()
-        if self._FinalizeIfDrawn():
-            return
-        self._ShowLeadOrTrail(team_b, team_a)
+        # SLOT 0: A's first innings
+        if self.save_slot == 0:
+            if not self.save_done:
+                self._SetupTestInnings(team_a, team_b, chase=False)
+                self.Play(resume=self.save_started)
+            if self._FinalizeIfDrawn():
+                return
+            self._TestAdvanceSlot(1)
 
-        a_inn1 = team_a.innings_history[-1]
-        b_inn1 = team_b.innings_history[-1]
+        # SLOT 1: B's first innings
+        if self.save_slot == 1:
+            if not self.save_done:
+                self._SetupTestInnings(team_b, team_a, chase=False)
+                self.Play(resume=self.save_started)
+            if self._FinalizeIfDrawn():
+                return
+            self._ShowLeadOrTrail(team_b, team_a)
+            self._TestAdvanceSlot(2)
 
-        # follow-on can be enforced by whichever team is actually leading
-        # after both first innings - not necessarily team_a (whoever batted
-        # chronologically first), which is a distinct thing from who's ahead
+        # both first innings are complete: work out who leads (deterministic
+        # from innings_history, so it recomputes identically on resume)
+        a_inn1 = team_a.innings_history[0]
+        b_inn1 = team_b.innings_history[0]
         if a_inn1.score >= b_inn1.score:
             lead_team, trail_team = team_a, team_b
             lead_inn1, trail_inn1 = a_inn1, b_inn1
@@ -703,58 +866,88 @@ class Match:
             lead_team, trail_team = team_b, team_a
             lead_inn1, trail_inn1 = b_inn1, a_inn1
 
-        follow_on_available = (lead_inn1.score - trail_inn1.score) >= self.follow_on_margin
-        enforce_follow_on = False
-        if follow_on_available:
-            enforce_follow_on = self._DecideFollowOn(lead_team, trail_team, lead_inn1, trail_inn1)
-
-        if enforce_follow_on:
-            utilities.PushEvent(
-                "follow_on",
-                {"team": lead_team.name, "opponent": trail_team.name},
+        # decide the follow-on exactly once, then persist it so a resume never
+        # re-prompts the captain (None = not yet decided)
+        if self.test_follow_on is None:
+            available = (lead_inn1.score - trail_inn1.score) >= self.follow_on_margin
+            self.test_follow_on = bool(
+                available
+                and self._DecideFollowOn(lead_team, trail_team, lead_inn1, trail_inn1)
             )
-            # trailing team bats again immediately
-            self._SetupTestInnings(trail_team, lead_team, chase=False)
-            self.Play()
-            if self._FinalizeIfDrawn():
-                return
-            self._ShowLeadOrTrail(trail_team, lead_team)
-            trail_inn2 = trail_team.innings_history[-1]
-            trail_combined = trail_inn1.score + trail_inn2.score
-            if trail_combined <= lead_inn1.score:
-                # leading team wins by an innings, never bats again
-                margin = lead_inn1.score - trail_combined
-                self._FinalizeTestResult(
-                    winner=lead_team, loser=trail_team, kind="innings", margin=margin
-                )
-                return
-            # leading team must bat a 4th, chase innings
-            target = trail_combined - lead_inn1.score + 1
-            self._SetupTestInnings(lead_team, trail_team, chase=True, target=target)
-            self.Play()
+            self._SaveGame()
+
+        if self.test_follow_on:
+            # SLOT 2 (follow-on): the trailing team bats again immediately
+            if self.save_slot == 2:
+                if not self.save_started:
+                    utilities.PushEvent(
+                        "follow_on",
+                        {"team": lead_team.name, "opponent": trail_team.name},
+                    )
+                if not self.save_done:
+                    self._SetupTestInnings(trail_team, lead_team, chase=False)
+                    self.Play(resume=self.save_started)
+                if self._FinalizeIfDrawn():
+                    return
+                self._ShowLeadOrTrail(trail_team, lead_team)
+                trail_combined = trail_inn1.score + trail_team.innings_history[1].score
+                if trail_combined <= lead_inn1.score:
+                    # leading team wins by an innings, never bats again
+                    margin = lead_inn1.score - trail_combined
+                    self._FinalizeTestResult(
+                        winner=lead_team, loser=trail_team, kind="innings", margin=margin
+                    )
+                    return
+                self._TestAdvanceSlot(3)
+
+            # SLOT 3 (follow-on): leading team chases
+            target = (
+                trail_inn1.score + trail_team.innings_history[1].score
+            ) - lead_inn1.score + 1
+            if not self.save_done:
+                self._SetupTestInnings(lead_team, trail_team, chase=True, target=target)
+                self.Play(resume=self.save_started)
             self._FinalizeChase(chasing=lead_team, defending=trail_team, target=target)
             return
 
         # normal order (no follow-on): team_a always bats innings 2 next
         # regardless of who's ahead - follow-on is the only thing that
         # changes the natural batting order
-        self._SetupTestInnings(team_a, team_b, chase=False)
-        self.Play()
-        if self._FinalizeIfDrawn():
-            return
-        self._ShowLeadOrTrail(team_a, team_b)
-        a_inn2 = team_a.innings_history[-1]
-        target = (a_inn1.score + a_inn2.score) - b_inn1.score + 1
+        # SLOT 2 (normal): A's second innings
+        if self.save_slot == 2:
+            if not self.save_done:
+                self._SetupTestInnings(team_a, team_b, chase=False)
+                self.Play(resume=self.save_started)
+            if self._FinalizeIfDrawn():
+                return
+            self._ShowLeadOrTrail(team_a, team_b)
+            self._TestAdvanceSlot(3)
 
-        # B bats innings 2, chasing
-        self._SetupTestInnings(team_b, team_a, chase=True, target=target)
-        self.Play()
+        # SLOT 3 (normal): B bats innings 2, chasing
+        a_inn2 = team_a.innings_history[1]
+        target = (a_inn1.score + a_inn2.score) - b_inn1.score + 1
+        if not self.save_done:
+            self._SetupTestInnings(team_b, team_a, chase=True, target=target)
+            self.Play(resume=self.save_started)
         self._FinalizeChase(chasing=team_b, defending=team_a, target=target)
         return
 
-    def Play(self):
+    def _TestAdvanceSlot(self, slot):
+        """Move the Test save cursor to the next innings slot and persist, so
+        a crash in the gap between innings resumes cleanly into the new one."""
+        self._MarkInningsStart(slot)
+        self._SaveGame()
+
+    def Play(self, resume=False):
         """
         Play the innings.
+
+        Args:
+            resume: True when continuing an innings that was interrupted and
+                reloaded from a save - the openers intro, milestone-tracker
+                reset and per-innings figure reset are all skipped, and the
+                over loop picks up from the saved position (derived from the
+                batting side's ball count) with the saved batting pair.
 
         Returns:
             None
@@ -762,34 +955,59 @@ class Match:
         batting_team = self.batting_team
         bowling_team = self.bowling_team
         logger = self.logger
-        # a new list, not a reference to opening_pair itself: GetNextBatsman
-        # mutates this pair in place (pair[ind] = ...) as wickets fall, and
-        # that mutation must never bleed back into Team.opening_pair - a
-        # pre-existing aliasing bug that was harmless when a team only ever
-        # batted once, but corrupted the record of who the real openers are
-        # once a team can bat a second time in a Test match
-        pair = list(batting_team.opening_pair)
 
-        utilities.PushEvent(
-            "openers",
-            {
-                "names": [p.name for p in pair],
-                "caption": Randomize(commentary.commentary_openers_intro)
-                % (pair[0].name, pair[1].name),
-            },
-        )
+        if resume:
+            # continue an in-progress innings: the batting pair, strike flags,
+            # scores and bowler spells are all as they were at the last over
+            # boundary; don't reset anything.
+            pair = list(batting_team.current_pair)
+            start_over = int(batting_team.total_balls // 6)
+            PrintInColor(
+                "Resuming %s's innings at %s/%s (%s overs)."
+                % (
+                    batting_team.name,
+                    str(batting_team.total_score),
+                    str(batting_team.wickets_fell),
+                    str(BallsToOvers(batting_team.total_balls)),
+                ),
+                batting_team.color,
+            )
+        else:
+            # a new list, not a reference to opening_pair itself: GetNextBatsman
+            # mutates this pair in place (pair[ind] = ...) as wickets fall, and
+            # that mutation must never bleed back into Team.opening_pair - a
+            # pre-existing aliasing bug that was harmless when a team only ever
+            # batted once, but corrupted the record of who the real openers are
+            # once a team can bat a second time in a Test match
+            pair = list(batting_team.opening_pair)
+            start_over = 0
 
-        # fresh milestone tracking for this innings (team-total and stand pop-ups)
-        self.team_score_milestone_shown = 0
-        self.partnership_milestone_shown = 0
-        self.partnership_tracked_wkt = 0
+            utilities.PushEvent(
+                "openers",
+                {
+                    "names": [p.name for p in pair],
+                    "caption": Randomize(commentary.commentary_openers_intro)
+                    % (pair[0].name, pair[1].name),
+                },
+            )
 
-        # reset accumulators for this innings. For limited-overs matches this
-        # is a no-op in effect (each team only ever calls it once, and fields
-        # already start at their __init__ defaults) - it's what lets a team
-        # bat a *second* time in a Test match without old figures bleeding in.
-        batting_team.StartBattingInnings()
-        bowling_team.StartBowlingInnings()
+            # fresh milestone tracking for this innings (team-total and stand pop-ups)
+            self.team_score_milestone_shown = 0
+            self.partnership_milestone_shown = 0
+            self.partnership_tracked_wkt = 0
+
+            # reset accumulators for this innings. For limited-overs matches this
+            # is a no-op in effect (each team only ever calls it once, and fields
+            # already start at their __init__ defaults) - it's what lets a team
+            # bat a *second* time in a Test match without old figures bleeding in.
+            batting_team.StartBattingInnings()
+            bowling_team.StartBowlingInnings()
+            # make the pair reachable immediately, so a crash during the very
+            # first over resumes with a valid current_pair
+            batting_team.current_pair = pair
+            # the innings has now begun; mark the cursor and persist
+            self.save_started = True
+            self._SaveGame()
 
         if batting_team.batting_second is True:
             msg = "Target for %s: %s" % (batting_team.name, str(batting_team.target))
@@ -810,9 +1028,15 @@ class Match:
         self._PushInningsSituation()
 
         if self.is_test:
-            self._PlayTestInningsOvers(pair)
+            self._PlayTestInningsOvers(pair, start_over)
         else:
-            self._PlayLimitedOversInnings(pair)
+            self._PlayLimitedOversInnings(pair, start_over)
+
+        # the innings' over loop has ended (all out / overs up / chase won /
+        # declared / days out): mark it complete and persist, so resume never
+        # replays this final, possibly decisive over with fresh dice
+        self.save_done = True
+        self._SaveGame()
 
         # innings just finished: snapshot it first so the "innings over" card
         # can carry a quick summary (top scorer / best bowler)
@@ -857,11 +1081,14 @@ class Match:
         utilities.PushInningsScorecard(self, summary)
         return
 
-    def _PlayLimitedOversInnings(self, pair):
+    def _PlayLimitedOversInnings(self, pair, start_over=0):
         """
         Play a fixed-length (Exhibition/T20/ODI/custom) innings, over by
-        over, for exactly self.overs overs. Unmodified extraction of the
-        original Play() loop body - Test matches never call this.
+        over, for exactly self.overs overs.
+
+        Args:
+            start_over: over to begin at (non-zero when resuming a saved
+                innings that was interrupted partway through).
 
         Returns:
             None
@@ -870,7 +1097,7 @@ class Match:
 
         # loop over-by-over; a while (not a for) because a rain interruption
         # can revise self.overs downwards mid-innings
-        over = 0
+        over = start_over
         while over < self.overs:
             # rain build-up/stoppage; True means the innings (maybe the
             # match) ends right here
@@ -910,6 +1137,10 @@ class Match:
 
             self._PostOverDisplay(pair)
             over += 1
+            # over boundary: persist so a crash loses at most this partial over
+            self.save_started = True
+            self.save_done = False
+            self._SaveGame()
         return
 
     def _MaybeLimitedOversRain(self, over):
@@ -1162,16 +1393,22 @@ class Match:
         """
         return G50 * self.original_overs / 50.0
 
-    def _PlayTestInningsOvers(self, pair):
+    def _PlayTestInningsOvers(self, pair, start_over=0):
         """
         Play an open-ended Test innings: continues until all-out, declared,
         or the match runs out of days - never a fixed overs count.
+
+        Args:
+            start_over: over to begin at (non-zero when resuming a saved
+                innings). The session/day counters that actually govern a
+                Test innings live on the Match and are restored from the save,
+                so this only re-seeds the local over counter.
 
         Returns:
             None
         """
         batting_team = self.batting_team
-        over = 0
+        over = start_over
         # discard a Declare press left over from a previous innings (or one
         # made while it wasn't applicable) so it can't trigger a surprise
         # confirmation prompt at the first over of this innings
@@ -1223,6 +1460,10 @@ class Match:
 
             self._PostOverDisplay(pair)
             over += 1
+            # over boundary: persist so a crash loses at most this partial over
+            self.save_started = True
+            self.save_done = False
+            self._SaveGame()
         return
 
     def _MaybeRain(self):
@@ -3581,7 +3822,9 @@ class Match:
             available_numbers = [n for n in range(100) if n not in used_numbers]
             for player in t.team_array:
                 if player.no is None:
-                    player.no = np.random.choice(available_numbers)
+                    # plain int, not a numpy scalar, so it pickles cleanly
+                    # into save files (see functions/SaveGame.py)
+                    player.no = int(np.random.choice(available_numbers))
                     available_numbers.remove(player.no)
         print("Validated teams")
         
