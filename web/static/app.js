@@ -1014,6 +1014,17 @@ function renderEvent(kind, data) {
       card.appendChild(tw);
     }
     showEventPane(card, 4500, "takeover");
+  } else if (kind === "match_decided") {
+    // the instant, punchy "victory moment" popup - right after the ball
+    // that decided the chase, well before the later factual result/trophy
+    // card ("victory", below) that follows the scorecards and summaries
+    const team = data && data.team ? String(data.team) : "";
+    const text = data && data.text ? String(data.text) : "";
+    showEventPane(
+      team ? buildVictoryCard(team, text) : buildMiscCard("misc/victory", "🏆", text),
+      4200,
+      "takeover"
+    );
   } else if (kind === "victory") {
     const caption = data && data.result ? String(data.result) : "Victory!";
     const team = data && data.team ? String(data.team) : "";
@@ -1255,7 +1266,12 @@ function renderEvent(kind, data) {
     const text = data && data.text ? String(data.text) : "";
     // no dedicated cricket-ball emoji exists, baseball is the stand-in
     const emoji =
-      { batting: "🏏", bowling: "⚾", fielding: "🧤", hattrick: "🎩" }[data && data.type] || "🌟";
+      {
+        batting: "🏏", bowling: "⚾", fielding: "🧤",
+        hattrick: "🎩",            // the hat-trick itself (3 in 3)
+        hattrick_building: "⏳",   // tension: 2 down, 1 more for the hat-trick
+        hattrick_streak: "🔥",     // the streak keeps going beyond 3 (4-in-4, 5-in-5, ...)
+      }[data && data.type] || "🌟";
     if (name && text) {
       const card = buildPlayerCard(name);
       const badge = document.createElement("div");
@@ -1263,7 +1279,10 @@ function renderEvent(kind, data) {
       badge.textContent = emoji + " " + text;
       // badge sits between the photo and the name
       card.insertBefore(badge, card.lastChild);
-      showEventPane(card, 4000, "takeover");
+      // the "on a hat-trick" tension card is shorter (a beat, not a
+      // celebration) - the actual milestone popups linger longer
+      const holdMs = (data && data.type) === "hattrick_building" ? 2200 : 4000;
+      showEventPane(card, holdMs, "takeover");
     }
   } else if (kind === "umpires") {
     const names = ((data && data.names) || []).map(String).filter(Boolean);

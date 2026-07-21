@@ -57,7 +57,7 @@
 	"EoinMorganXI": {
       "players": [
         {"name": "Aaron Finch","batting": 8,"opener1":  1},
-        {"name": "Shikher Dhawan","batting": 8,"bowling": 5, "opener2": 1},
+        {"name": "Shikhar Dhawan","batting": 8,"bowling": 5, "opener2": 1},
 		{"name": "Joe Root","batting": 8, "bowling":6, "spinner":1},
         {"name": "Eoin Morgan", "batting": 8,"bowling": 5, "captain":1},
         {"name": "Ross Taylor", "batting": 8,"bowling" : 6},

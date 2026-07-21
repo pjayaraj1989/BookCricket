@@ -130,6 +130,12 @@ class Tournament:
         self.ScriptPath = ScriptPath
         if not self.resuming and not self.fixtures:
             self.generate_fixtures()
+            # persist right away, before fixture 1 is even played - otherwise
+            # a crash during the very first match loses the whole series
+            # (teams, venue, format, fixture list) with nothing to resume
+            # into, since a tournament match itself never writes its own
+            # single-match save (the tournament owns resume).
+            self._save()
 
         while True:
             # once the league phase is complete, seed the final before doing
@@ -144,6 +150,9 @@ class Tournament:
             if not self.autoplay:
                 while True:
                     action = self._between_matches_menu()
+                    if action == "schedule":
+                        self.show_schedule()
+                        continue
                     if action == "standings":
                         self.show_standings()
                         continue
@@ -198,12 +207,13 @@ class Tournament:
         PrintInColor(
             "%s next: %s vs %s" % (label, fx["home"], fx["away"]), Style.BRIGHT
         )
-        options = ["Play this match", "Simulate this match", "Show standings",
-                   "Show tournament stats", "Quit (resume later)"]
+        options = ["Play this match", "Simulate this match", "Show schedule",
+                   "Show standings", "Show tournament stats", "Quit (resume later)"]
         choice = ChooseFromOptions(options, "What next?", 5)
         return {
             "Play this match": "play",
             "Simulate this match": "simulate",
+            "Show schedule": "schedule",
             "Show standings": "standings",
             "Show tournament stats": "stats",
             "Quit (resume later)": "quit",
@@ -274,7 +284,49 @@ class Tournament:
         ):
             self._play_deferred_super_over(match, fx)
 
+        # record the result first (this clears the "simulating" overlay), then
+        # show the simulated match's scorecard and summary
         self._record_result(fx, match)
+        if simulate or self.autoplay:
+            self._show_simulated_scorecard(match)
+
+    def _show_simulated_scorecard(self, match):
+        """After a silent simulation, surface the match's scorecard + summary:
+        the full innings cards in the web side pane (exactly as a played match
+        shows them) plus the match highlights, and a concise text version for
+        the console/log."""
+        # web side pane: a clean scorecard for this match - both innings'
+        # full cards, then the highlights (result / top performers / MoM)
+        utilities.PushMatchReset()
+        for summary in match.innings_log:
+            utilities.PushInningsScorecard(match, summary)
+        utilities.PushMatchHighlights(match)
+        # console/log: a short text scorecard + result
+        for summary in match.innings_log:
+            self._print_innings_text(summary)
+        if match.result:
+            PrintInColor("Result: %s" % match.result.result_str, Fore.LIGHTCYAN_EX)
+
+    def _print_innings_text(self, s):
+        """A compact text scorecard for one innings (top run-scorers and
+        wicket-takers), for the console and the web log."""
+        PrintInColor(
+            "%s - %s/%s (%s ov)" % (s.batting_team, s.score, s.wickets, s.overs),
+            Fore.LIGHTCYAN_EX,
+        )
+        bats = sorted((b for b in s.batting_card if b["balls"] > 0),
+                      key=lambda b: -b["runs"])
+        for b in bats[:5]:
+            star = "*" if b["dismissal"] == "not out" else ""
+            PrintInColor("  %-18s %3d%s (%d)" %
+                         (GetShortName(b["name"]), b["runs"], star, b["balls"]),
+                         Style.BRIGHT)
+        bowls = sorted((b for b in s.bowling_card if b["wickets"] > 0),
+                       key=lambda b: -b["wickets"])
+        for b in bowls[:3]:
+            PrintInColor("  %-18s %s/%s (%s ov)" %
+                         (GetShortName(b["name"]), b["wickets"], b["runs"], b["overs"]),
+                         Style.BRIGHT)
 
     def _play_deferred_super_over(self, match, fx):
         """Play the super over for a simulated match that ended level, out loud
@@ -395,6 +447,33 @@ class Tournament:
         rows.sort(key=lambda r: (-r["points"], -r["nrr"], -r["won"], r["team"]))
         return rows
 
+    def show_schedule(self):
+        """List every fixture: completed ones with their result, the next up,
+        and the rest as upcoming (plus a placeholder final for a round robin
+        whose final isn't seeded yet)."""
+        PrintInColor("\n=== Schedule ===", Style.BRIGHT)
+        rows = []
+        for i, f in enumerate(self.fixtures):
+            label = "FINAL" if f["kind"] == "final" else "Match %s" % str(f["round"])
+            if f["played"] and f["result"]:
+                status = f["result"]["result_str"]
+            elif i == self.fixture_index:
+                status = "next up"
+            else:
+                status = "upcoming"
+            PrintInColor(
+                "%-8s %s vs %s  -  %s" % (label, f["home"], f["away"], status),
+                Fore.LIGHTGREEN_EX if f["played"] else Style.BRIGHT,
+            )
+            rows.append({"label": label, "home": f["home"], "away": f["away"],
+                         "kind": f["kind"], "played": f["played"], "status": status})
+        # a round robin's final is only fixed once the league table is settled
+        if self.is_round_robin and not self._final_exists():
+            PrintInColor("FINAL    top 2 on points  -  to be decided", Style.BRIGHT)
+            rows.append({"label": "FINAL", "home": "TBD", "away": "TBD",
+                         "kind": "final", "played": False, "status": "to be decided"})
+        utilities.PushEvent("series", {"stage": "schedule", "fixtures": rows})
+
     def show_standings(self):
         rows = self.standings_table()
         lines = ["", "%-22s %3s %3s %3s %3s %4s %7s" %
@@ -426,7 +505,8 @@ class Tournament:
         return rows[:n]
 
     def player_of_the_tournament(self):
-        # simple all-round metric: runs plus a premium per wicket
+        # simple all-round metric: runs plus a premium per wicket. Returns a
+        # dict {name, runs, wickets, team} for the best, or None.
         best, best_score = None, -1
         names = set(self.batting_agg) | set(self.bowling_agg)
         for name in names:
@@ -434,7 +514,9 @@ class Tournament:
             wkts = self.bowling_agg.get(name, {}).get("wickets", 0)
             score = runs + 25 * wkts
             if score > best_score:
-                best, best_score = name, score
+                best = {"name": name, "runs": runs, "wickets": wkts,
+                        "team": self.player_team.get(name, "")}
+                best_score = score
         return best
 
     def show_stats(self, final=True):
@@ -456,7 +538,13 @@ class Tournament:
                              Fore.LIGHTGREEN_EX)
         potm = self.player_of_the_tournament()
         if final and potm:
-            PrintInColor("Player of the tournament: %s" % potm, Fore.LIGHTCYAN_EX)
+            PrintInColor(
+                "Player of the tournament: %s - %d run%s, %d wicket%s" % (
+                    potm["name"],
+                    potm["runs"], "" if potm["runs"] == 1 else "s",
+                    potm["wickets"], "" if potm["wickets"] == 1 else "s"),
+                Fore.LIGHTCYAN_EX,
+            )
         utilities.PushEvent("series", {
             "stage": "stats", "final": final,
             "topBatters": bats, "topBowlers": bowls,
@@ -559,20 +647,23 @@ def SetupSeries():
         if overs == 5 and not (str(raw).isdigit() and int(raw) == 5):
             PrintInColor("Using %s overs." % overs, Style.BRIGHT)
 
-    leagues = ListLeagues()
+    # one league per tournament: pick it once, then all teams come from it
+    league = ChooseFromOptions(ListLeagues(), "Pick the league/season for this tournament", 5)
+    available = LeagueTeamNames(league, is_test)
+    PrintInColor("Adding teams from %s." % league, Style.BRIGHT)
+
     specs = []
     chosen = set()
     while len(specs) < MAX_TEAMS:
-        league = ChooseFromOptions(leagues, "Pick a league/season to add a team from", 5)
-        names = [n for n in LeagueTeamNames(league, is_test) if n not in chosen]
-        if not names:
-            PrintInColor("No more teams available in that league.", Style.BRIGHT)
-        else:
-            name = ChooseFromOptions(names, "Add which team?", 5)
-            specs.append({"league": league, "name": name, "is_test": is_test})
-            chosen.add(name)
-            PrintInColor("Added %s (%d team%s so far)." %
-                         (name, len(specs), "" if len(specs) == 1 else "s"), Fore.LIGHTGREEN_EX)
+        remaining = [n for n in available if n not in chosen]
+        if not remaining:
+            PrintInColor("All teams from %s have been added." % league, Style.BRIGHT)
+            break
+        name = ChooseFromOptions(remaining, "Add which team?", 5)
+        specs.append({"league": league, "name": name, "is_test": is_test})
+        chosen.add(name)
+        PrintInColor("Added %s (%d team%s so far)." %
+                     (name, len(specs), "" if len(specs) == 1 else "s"), Fore.LIGHTGREEN_EX)
         if len(specs) >= 2:
             more = ChooseFromOptions(
                 ["Add another team", "Done - start the series"],
