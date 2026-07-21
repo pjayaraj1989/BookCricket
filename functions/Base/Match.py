@@ -1273,6 +1273,9 @@ class Match:
             )
             self.result = result
             PrintInColor(result.result_str, batting_team.color)
+            # the revised target is already beaten - this IS the winning
+            # moment, same as an ordinary chase decision
+            self._PushChaseDecided(chasing_won=True)
             return True
         return False
 
@@ -1344,6 +1347,11 @@ class Match:
                 "" if margin == 1 else "s",
             )
         self.result = result
+        # no further play is possible, so this par-score comparison IS the
+        # winning moment - unless it's a tie (no winner to celebrate, and no
+        # super over follows a rain-decided match either)
+        if result.winner is not None:
+            self._PushChaseDecided(chasing_won=(result.winner is batting_team))
 
         msg = (
             "No further play is possible! At %s/%s after %s overs, "
@@ -1642,6 +1650,55 @@ class Match:
             "boundary_streak",
             {"name": batsman.name, "count": len(streak), "text": text},
         )
+
+    def _BowlerWicketStreak(self, bowler):
+        """
+        This bowler's currently-live streak of consecutive wicket-taking
+        deliveries, for hat-trick / N-in-a-row detection: walk backward
+        through their ball history, skipping wides (not a delivery faced,
+        so they can neither extend nor break the streak), and stop at the
+        first entry that isn't a bowler-credited wicket - a run scored, a
+        no-ball, or a run-out (never credited to the bowler, and itself a
+        real delivery that breaks the sequence).
+
+        Returns:
+            int: the streak length (0 if the last delivery wasn't a wicket).
+        """
+        streak = 0
+        for entry in reversed(bowler.ball_history):
+            if entry == "WD":
+                continue
+            if entry == "Wkt":
+                streak += 1
+                continue
+            break
+        return streak
+
+    def _PushChaseDecided(self, chasing_won):
+        """
+        Fire a big, immediate full-screen "victory moment" popup right after
+        the ball that decides a limited-overs run-chase (won or lost) - a
+        punchy flavor line, shown well before the later, factual result/
+        trophy card that only appears at the very end of PlayMatch (after
+        the scorecards, summaries, and player-of-the-match).
+
+        Args:
+            chasing_won: True if the chasing side reached the target, False
+                if it fell short (the defending side held on).
+
+        Returns:
+            None
+        """
+        batting_team, bowling_team = self.batting_team, self.bowling_team
+        winner = batting_team if chasing_won else bowling_team
+        pool = (
+            commentary.commentary_chase_success
+            if chasing_won
+            else commentary.commentary_chase_failed
+        )
+        line = Randomize(pool)
+        PrintInColor(line, winner.color)
+        utilities.PushEvent("match_decided", {"team": winner.name, "text": line})
 
     def _PushLastOverTension(self, ball):
         """
@@ -2120,8 +2177,9 @@ class Match:
                         Randomize(commentary.commentary_all_out), Fore.LIGHTRED_EX
                     )
                     # "bowled out in under 1.2x the innings overs" framing
-                    # only makes sense for a fixed-length innings
-                    if self.overs:
+                    # only makes sense for a fixed-length innings with runs on
+                    # the board (an all-out-for-a-duck would divide by zero)
+                    if self.overs and batting_team.total_score > 0:
                         if (self.overs * 6) / batting_team.total_score <= 1.2:
                             PrintInColor(
                                 Randomize(commentary.commentary_all_out_good_score),
@@ -2142,6 +2200,9 @@ class Match:
                     # update last partnership
                     self.UpdateLastPartnership()
                     self.status = False
+                    # tied scores go to a super over, not a win/loss - the
+                    # decisive-moment popup only fires on an actual result
+                    is_tie = batting_team.total_score == batting_team.target - 1
                     # if won in the last ball
                     if batting_team.total_score >= batting_team.target:
                         PrintInColor(
@@ -2149,12 +2210,15 @@ class Match:
                             % batting_team.name,
                             Style.BRIGHT,
                         )
+                        self._PushChaseDecided(chasing_won=True)
                     else:
                         PrintInColor(
                             Randomize(commentary.commentary_lost_chasing)
                             % (batting_team.name, bowling_team.name),
                             Style.BRIGHT,
                         )
+                        if not is_tie:
+                            self._PushChaseDecided(chasing_won=False)
                     if not self.autoplay:
                         input("press enter to continue...")
                     break
@@ -2167,6 +2231,7 @@ class Match:
                         Randomize(commentary.commentary_match_won_chasing),
                         Fore.LIGHTGREEN_EX,
                     )
+                    self._PushChaseDecided(chasing_won=True)
                     self.status = False
                     self.UpdateLastPartnership()
                     if not self.autoplay: input("press enter to continue...")
@@ -2176,6 +2241,9 @@ class Match:
                     PrintInColor(
                         Randomize(commentary.commentary_all_out), Fore.LIGHTRED_EX
                     )
+                    # tied scores go to a super over, not a loss
+                    if batting_team.total_score != batting_team.target - 1:
+                        self._PushChaseDecided(chasing_won=False)
                     if not self.autoplay: input("press enter to continue...")
                     break
 
@@ -2591,21 +2659,43 @@ class Match:
                 Randomize(commentary.commentary_captain_out), bowling_team.color
             )
 
-        # detect a hat-trick!
-        arr = [x for x in bowler.ball_history if x != "WD" or x != "NB"]
-        # isOnAHattrick = CheckForConsecutiveElements(arr, 'Wkt', 2)
-        isHattrick = CheckForConsecutiveElements(arr, "Wkt", 3)
-
-        # if isOnAHattrick:
-        #    PrintInColor(Randomize(commentary.commentary_on_a_hattrick), bowling_team.color)
-
-        if isHattrick:
-            bowler.hattricks += 1
+        # hat-trick / N-wickets-in-N-balls detection. A run-out never reaches
+        # here with a live streak (it isn't a bowler-credited wicket, so
+        # _BowlerWicketStreak stops at it), so this only ever fires for the
+        # bowler's own dismissals.
+        streak = self._BowlerWicketStreak(bowler)
+        # a "he's on a hat-trick" tension line promises a next delivery from
+        # this bowler - not valid if this wicket was the innings' 10th and
+        # last: there's no next ball left for him to bowl here.
+        innings_over = batting_team.wickets_fell == 10
+        if streak == 2 and not innings_over:
+            # one more and it's a hat-trick - flag the tension before the
+            # very next ball is bowled
+            PrintInColor(Randomize(commentary.commentary_on_a_hattrick), bowling_team.color)
             utilities.PushEvent(
                 "achievement",
-                {"name": bowler.name, "type": "hattrick", "text": "HAT-TRICK!"},
+                {
+                    "name": bowler.name,
+                    "type": "hattrick_building",
+                    "text": "ON A HAT-TRICK!",
+                },
             )
-            PrintInColor(Randomize(commentary.commentary_hattrick), bowling_team.color)
+        elif streak >= 3:
+            if streak == 3:
+                bowler.hattricks += 1
+                text = "HAT-TRICK!"
+                line = Randomize(commentary.commentary_hattrick)
+                achievement_type = "hattrick"
+            else:
+                text = "%s IN %s BALLS!" % (str(streak), str(streak))
+                line = Randomize(commentary.commentary_multi_wicket_streak) % streak
+                achievement_type = "hattrick_streak"
+            utilities.PushEvent(
+                "achievement",
+                {"name": bowler.name, "type": achievement_type, "text": text,
+                 "streak": streak},
+            )
+            PrintInColor(line, bowling_team.color)
             if not self.autoplay:   input("press enter to continue..")
         if bowler.wkts == 3:
             PrintInColor("Third wkt for %s !" % bowler.name, bowling_team.color)

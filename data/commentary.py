@@ -976,11 +976,108 @@ class commentary:
         "Hat-trick for the bowler!",
         "3 in 3! This man is on absolute fire!",
         "hat-trick for the bowler! what a performance from him!",
+        "the crowd is on its feet, what a hat-trick!",
+        "he has etched his name in the record books, a hat-trick!",
+        "pandemonium in the stands, that's a hat-trick!",
+        "the stuff dreams are made of, a hat-trick!",
+        "he has done it! a magical hat-trick!",
+        "three in a row, the batting side has no answers!",
+        "history made right here, a hat-trick!",
+        "he will dine out on this one for years, a hat-trick!",
+        "sheer magic! that's a hat-trick!",
+        "the perfect over just got a lot better, hat-trick!",
+        "a captain's dream, he's bagged his hat-trick!",
+        "what a spell, capped off with a hat-trick!",
     ]
     commentary_on_a_hattrick = [
         "he is on a hat-trick now!",
         "two in two and he is on a hat-trick here!",
         "hat-trick ball coming up.. crowd on their feet!",
+        "the tension is unbearable, he's on a hat-trick!",
+        "one more and he's into the history books!",
+        "the fielders are crowding round, hat-trick ball!",
+        "you could hear a pin drop, hat-trick ball coming up!",
+        "two down in two, can he make it three?",
+        "the crowd rises in anticipation, hat-trick ball!",
+        "everyone in the ground knows what's at stake, hat-trick ball!",
+        "he smells blood, one more for the hat-trick!",
+        "the captain has packed the slips, hat-trick ball incoming!",
+    ]
+    # each line takes exactly one %s: the wicket-streak count (N wickets off
+    # N consecutive balls - the ball count is always the same number, so it
+    # never needs its own placeholder)
+    commentary_multi_wicket_streak = [
+        "SENSATIONAL! %s WICKETS IN AS MANY BALLS!",
+        "THIS IS CARNAGE - %s IN A ROW!",
+        "UNPLAYABLE! %s STRAIGHT WICKETS!",
+        "IS THIS EVEN LEGAL?! %s ON THE TROT!",
+        "THE STUFF OF LEGEND - %s WICKETS IN AS MANY BALLS!",
+        "HE HAS TORN THIS INNINGS APART - %s IN A ROW!",
+        "SCENES! %s CONSECUTIVE WICKETS!",
+        "A SPELL FOR THE AGES - %s STRAIGHT WICKETS!",
+        "THE BATTING SIDE IS IN FREEFALL - %s IN A ROW!",
+        "HISTORY IS BEING REWRITTEN - %s WICKETS IN AS MANY BALLS!",
+        "ABSOLUTE DEMOLITION - %s ON THE BOUNCE!",
+        "NOBODY HAS SEEN ANYTHING LIKE THIS - %s IN A ROW!",
+        "HE IS UNSTOPPABLE - %s WICKETS IN AS MANY BALLS!",
+        "THE CROWD CANNOT BELIEVE WHAT THEY JUST SAW - %s IN A ROW!",
+        "A ONE-MAN WRECKING CREW - %s STRAIGHT WICKETS!",
+        "SURELY THIS HAS NEVER HAPPENED BEFORE - %s IN A ROW!",
+        "HE HAS LOST ALL SENSE OF MERCY - %s WICKETS IN AS MANY BALLS!",
+        "THE OPPOSITION DRESSING ROOM IS STUNNED - %s ON THE TROT!",
+        "PURE DEVASTATION - %s WICKETS AND COUNTING!",
+        "THIS BOWLER IS WRITING HIS OWN CHAPTER TONIGHT - %s IN A ROW!",
+    ]
+
+    # big-screen "victory moment" flavor lines, shown immediately after the
+    # ball that decides a run-chase - before the later, factual result/trophy
+    # card. commentary_chase_success: the chasing side got there.
+    # commentary_chase_failed: the chasing side came up short (the defending
+    # side held on) - covers both "failed to chase" and "failed to defend"
+    # framings, since they're the same outcome from opposite sides.
+    commentary_chase_success = [
+        "THEY'VE CHASED IT DOWN!",
+        "TARGET OVERHAULED - WHAT A CHASE!",
+        "THEY'VE GOT THERE!",
+        "CHASE COMPLETE - JOB DONE!",
+        "THEY'VE RUN DOWN THE TARGET!",
+        "A CHASE FOR THE AGES - COMPLETED!",
+        "THEY'VE PULLED IT OFF!",
+        "MISSION ACCOMPLISHED - THE CHASE IS DONE!",
+        "THEY'VE HUNTED DOWN THE TARGET!",
+        "OVER THE LINE - WHAT A RUN CHASE!",
+        "THEY'VE GOTTEN THE JOB DONE!",
+        "TARGET CHASED, GAME OVER!",
+        "THEY'VE SURGED PAST THE TARGET!",
+        "A NERVELESS CHASE, COMPLETED!",
+        "THEY'VE REELED IN THE TARGET!",
+        "CHASE MASTERED - THEY'VE DONE IT!",
+        "CLINICAL CHASE - TARGET DOWN!",
+        "THEY'VE MADE LIGHT WORK OF THE CHASE!",
+        "THE TARGET FALLS - CHASE COMPLETE!",
+        "THEY'VE GOT OVER THE LINE!",
+    ]
+    commentary_chase_failed = [
+        "THEY'VE FAILED TO CHASE IT DOWN!",
+        "THE CHASE FALLS AGONISINGLY SHORT!",
+        "DEFENDED TO PERFECTION!",
+        "THEY'VE FAILED TO GET THERE!",
+        "A TARGET SUCCESSFULLY DEFENDED!",
+        "THE CHASE COMES UP SHORT!",
+        "THEY COULDN'T GET OVER THE LINE!",
+        "HELD ON - THE DEFENSE HOLDS!",
+        "THE RUN CHASE UNRAVELS!",
+        "THEY'VE FALLEN SHORT OF THE TARGET!",
+        "A TOTAL SUCCESSFULLY DEFENDED!",
+        "THE CHASE IS DERAILED!",
+        "THEY COULDN'T FINISH THE JOB!",
+        "DEFENDED - THE TARGET WAS JUST TOO MUCH!",
+        "THE CHASING SIDE COMES UP EMPTY!",
+        "A GALLANT CHASE FALLS SHORT!",
+        "THE TARGET PROVES JUST OUT OF REACH!",
+        "THE DEFENSE STANDS TALL!",
+        "SO CLOSE, YET SO FAR - THE CHASE FAILS!",
+        "THEY JUST COULDN'T FIND THE RUNS NEEDED!",
     ]
 
     commentary_match_won = [
