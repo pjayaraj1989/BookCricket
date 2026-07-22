@@ -11,6 +11,8 @@ const runRateLegendEl = document.getElementById("runRateLegend");
 const runRateSvgEl = document.getElementById("runRateSvg");
 const simOverlayEl = document.getElementById("simOverlay");
 const triviaPanelEl = document.getElementById("triviaPanel");
+const nextBatsmenCardEl = document.getElementById("nextBatsmenCard");
+const nextBatsmenListEl = document.getElementById("nextBatsmenList");
 
 function showSimOverlay(title, teams) {
   if (!simOverlayEl) return;
@@ -393,6 +395,8 @@ function resetSidePane() {
   runRateGraphEl.style.display = "none";
   runRateLegendEl.innerHTML = "";
   runRateSvgEl.innerHTML = "";
+  if (nextBatsmenCardEl) nextBatsmenCardEl.style.display = "none";
+  if (nextBatsmenListEl) nextBatsmenListEl.innerHTML = "";
   if (triviaHideTimer) {
     clearTimeout(triviaHideTimer);
     triviaHideTimer = null;
@@ -508,7 +512,21 @@ function renderScorecard(state) {
 
   liveScorecardEl.innerHTML = parts.join("");
   renderRunRateGraph(state);
+  renderNextBatsmen(state);
   updateDeclareButton(state);
+}
+
+function renderNextBatsmen(state) {
+  if (!nextBatsmenCardEl || !nextBatsmenListEl) return;
+  const upcoming = state.nextBatsmen || [];
+  if (!upcoming.length) {
+    nextBatsmenCardEl.style.display = "none";
+    return;
+  }
+  nextBatsmenCardEl.style.display = "";
+  nextBatsmenListEl.innerHTML = upcoming
+    .map((p) => "<li>" + escapeHtml(p.name) + "</li>")
+    .join("");
 }
 
 const RUN_RATE_COLOR_CURRENT = "#7fe3a3";
