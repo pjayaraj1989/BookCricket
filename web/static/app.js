@@ -11,8 +11,6 @@ const runRateLegendEl = document.getElementById("runRateLegend");
 const runRateSvgEl = document.getElementById("runRateSvg");
 const simOverlayEl = document.getElementById("simOverlay");
 const triviaPanelEl = document.getElementById("triviaPanel");
-const nextBatsmenCardEl = document.getElementById("nextBatsmenCard");
-const nextBatsmenListEl = document.getElementById("nextBatsmenList");
 
 function showSimOverlay(title, teams) {
   if (!simOverlayEl) return;
@@ -395,8 +393,6 @@ function resetSidePane() {
   runRateGraphEl.style.display = "none";
   runRateLegendEl.innerHTML = "";
   runRateSvgEl.innerHTML = "";
-  if (nextBatsmenCardEl) nextBatsmenCardEl.style.display = "none";
-  if (nextBatsmenListEl) nextBatsmenListEl.innerHTML = "";
   if (triviaHideTimer) {
     clearTimeout(triviaHideTimer);
     triviaHideTimer = null;
@@ -512,21 +508,7 @@ function renderScorecard(state) {
 
   liveScorecardEl.innerHTML = parts.join("");
   renderRunRateGraph(state);
-  renderNextBatsmen(state);
   updateDeclareButton(state);
-}
-
-function renderNextBatsmen(state) {
-  if (!nextBatsmenCardEl || !nextBatsmenListEl) return;
-  const upcoming = state.nextBatsmen || [];
-  if (!upcoming.length) {
-    nextBatsmenCardEl.style.display = "none";
-    return;
-  }
-  nextBatsmenCardEl.style.display = "";
-  nextBatsmenListEl.innerHTML = upcoming
-    .map((p) => "<li>" + escapeHtml(p.name) + "</li>")
-    .join("");
 }
 
 const RUN_RATE_COLOR_CURRENT = "#7fe3a3";
@@ -779,6 +761,34 @@ function buildPartnershipCard(names, runs) {
   const row = document.createElement("div");
   row.className = "event-openers";
   names.forEach((n) => row.appendChild(buildPlayerCard(String(n))));
+  wrap.appendChild(row);
+  return wrap;
+}
+
+// "Next In" preview: up to 3 upcoming batsmen with photos, numbered in
+// batting order. Popped occasionally (milestones/summary moments - see
+// Match.py's _PushNextBatsmenPreview), not on every ball.
+function buildNextBatsmenCard(names) {
+  const wrap = document.createElement("div");
+  wrap.className = "event-player";
+
+  const badge = document.createElement("div");
+  badge.className = "event-achievement-badge";
+  badge.textContent = "🏏 Next in";
+  wrap.appendChild(badge);
+
+  const row = document.createElement("div");
+  row.className = "event-openers";
+  names.forEach((n, i) => {
+    const col = document.createElement("div");
+    col.className = "next-batsman-col";
+    const order = document.createElement("div");
+    order.className = "next-batsman-order";
+    order.textContent = String(i + 1);
+    col.appendChild(order);
+    col.appendChild(buildPlayerCard(String(n)));
+    row.appendChild(col);
+  });
   wrap.appendChild(row);
   return wrap;
 }
@@ -1107,6 +1117,11 @@ function renderEvent(kind, data) {
     const runs = data && data.runs;
     if (names.length && runs) {
       showEventPane(buildPartnershipCard(names, runs), 4000, "takeover roster");
+    }
+  } else if (kind === "next_batsmen") {
+    const names = ((data && data.names) || []).map(String).filter(Boolean);
+    if (names.length) {
+      showEventPane(buildNextBatsmenCard(names), 4000, "takeover roster");
     }
   } else if (kind === "team_score") {
     if (data && data.score) {
@@ -1439,8 +1454,15 @@ function renderPlayingXI(xi) {
 
       const label = document.createElement("span");
       let name = p.name;
-      if (p.captain) name += " (c)";
-      if (p.keeper) name += " (wk)";
+      const roles = [];
+      // 🧢 captain, 🧤 keeper, 🏏 recognized batter, ⚾ recognized bowler
+      // (no dedicated cricket-ball emoji exists, baseball stands in - same
+      // convention used elsewhere, e.g. the achievement pop-up badges)
+      if (p.captain) roles.push("🧢");
+      if (p.keeper) roles.push("🧤");
+      if ((p.batting || 0) > 6) roles.push("🏏");
+      if ((p.bowling || 0) > 6) roles.push("⚾");
+      if (roles.length) name += " " + roles.join(" ");
       label.textContent = name;
 
       row.appendChild(img);

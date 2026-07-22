@@ -465,36 +465,20 @@ main {
   gap: 1rem;
 }
 
-/* "Next In" batting order preview: lives in whatever space the right rail
-   has free below the event pane, so it's always available without taking
-   anything else's room. Same card language as the run-rate graph. */
-.next-batsmen-card {
-  flex: 0 0 auto;
-  background: #0f2c1e;
-  border: 1px solid #1e4530;
-  border-radius: 10px;
-  padding: 0.8rem 1rem;
-  font-size: 0.8rem;
-}
-
-.next-batsmen-card h3 {
-  margin: 0 0 0.5rem;
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #6fbf8f;
-}
-
-.next-batsmen-card ol {
-  margin: 0;
-  padding-left: 1.2rem;
+/* "Next In" preview: an occasional full-screen pop-up (milestones/summary
+   moments only, not every ball - see buildNextBatsmenCard) showing the next
+   few batsmen with their photos, numbered in batting order. */
+.next-batsman-col {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.3rem;
 }
 
-.next-batsmen-card li {
-  color: #dcece3;
+.next-batsman-order {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #7fe3a3;
 }
 
 /* "highlight" pane docked under the run-rate graph: brief pop-ups for

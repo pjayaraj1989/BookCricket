@@ -39,7 +39,7 @@
 	"SouthAfrica": {
       "players": [
         {"name": "Temba Bavuma","batting": 8, "captain":1, "opener1": 1},
-        {"name": "Quinton de Kock","batting": 8,"opener2":  1,"keeper": 1},
+        {"name": "Quinton deKock","batting": 8,"opener2":  1,"keeper": 1},
         {"name": "Aiden Markram","batting": 7 ,"bowling": 6, "spinner": 1},
         {"name": "Rassie van der Dussen","batting": 8},
         {"name": "David Miller","batting": 8 },
