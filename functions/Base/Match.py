@@ -1880,6 +1880,7 @@ class Match:
                 "team_score",
                 {"team": bt.name, "score": hundred, "wickets": int(bt.wickets_fell)},
             )
+            self._PushNextBatsmenPreview()
 
         # partnership milestone: every 50 runs for the current stand. A new
         # stand (a wicket has fallen) resets the tracked milestone.
@@ -1896,6 +1897,27 @@ class Match:
                 utilities.PushEvent(
                     "partnership_milestone", {"runs": fifty, "names": names}
                 )
+                self._PushNextBatsmenPreview()
+
+    def _PushNextBatsmenPreview(self):
+        """
+        Pop up a quick preview of the next few batsmen due in, with their
+        photos - fired only at milestone/summary moments (a team-score or
+        partnership milestone, or the periodic match-status check), never on
+        every ball. Same not-out/not-already-in-the-middle filter
+        AssignBatsman uses to pick the next man in, just read here as a
+        preview rather than a selection.
+
+        Returns:
+            None
+        """
+        bt = self.batting_team
+        current_pair = bt.current_pair or []
+        upcoming = [
+            p.name for p in bt.team_array if p.status and p not in current_pair
+        ][:3]
+        if upcoming:
+            utilities.PushEvent("next_batsmen", {"names": upcoming})
 
     def _AdvanceSessionIfNeeded(self):
         """
@@ -4476,6 +4498,9 @@ class Match:
 
         print(msg)
         logger.info(msg)
+        # a periodic status summary is exactly the "some summary happens"
+        # moment for a Next In preview - not every ball, just here
+        self._PushNextBatsmenPreview()
         msg = "%s %s from %s overs now " % (
             batting_team.name,
             str(batting_team.total_score),

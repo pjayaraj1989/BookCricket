@@ -108,7 +108,7 @@
       "color": "green"
     },
 	
-	"West-Indies": {
+	"WestIndies": {
       "players": [
         {"name": "Chris Gayle","batting": 8, "opener1":  1, "bowling":7, "spinner":1},
         {"name": "Devon Smith","batting": 8,"opener2": 1, "bowling":5},

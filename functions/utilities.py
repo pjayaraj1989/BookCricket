@@ -334,6 +334,8 @@ def PushPlayingXI(match):
                     "name": p.name,
                     "captain": bool(p.attr.iscaptain),
                     "keeper": bool(p.attr.iskeeper),
+                    "batting": _int(p.attr.batting) if p.attr.batting else 0,
+                    "bowling": _int(p.attr.bowling) if p.attr.bowling else 0,
                 }
                 for p in team.team_array
             ],
@@ -430,16 +432,6 @@ def PushScorecard(match):
         {"name": p.name, "runs": _int(p.runs), "balls": _int(p.balls), "onStrike": bool(p.onstrike)}
         for p in (batting.current_pair or [])
     ]
-
-    # next up to bat, in batting-order position - same not-out/not-already-
-    # in-the-middle filter AssignBatsman uses to pick the next man in, just
-    # read here without touching anything (a preview, not a selection)
-    current_pair = batting.current_pair or []
-    next_batsmen = [
-        {"name": p.name, "no": _int(p.no) if p.no is not None else None}
-        for p in batting.team_array
-        if p.status and p not in current_pair
-    ][:3]
 
     bowler = bowling.current_bowler
     bowler_state = None
@@ -558,7 +550,6 @@ def PushScorecard(match):
         "firstInningsTeam": bowling.name if first_innings_over_history is not None else None,
         "batsmen": batsmen,
         "bowler": bowler_state,
-        "nextBatsmen": next_batsmen,
     })
 
 

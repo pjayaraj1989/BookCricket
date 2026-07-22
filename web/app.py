@@ -38,6 +38,12 @@ PIC_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp")
 
 app = Flask(__name__, static_folder=STATIC_DIR, static_url_path="")
 app.config["SECRET_KEY"] = os.urandom(24)
+# static files (app.js/style.css/...) default to a long browser cache
+# lifetime otherwise, so an edit here can silently keep serving a stale
+# cached copy to an already-open tab until the user hard-refreshes; forcing
+# revalidation on every load means a normal refresh always picks up the
+# latest frontend code
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
 socketio = SocketIO(app, async_mode="threading")
 
 # public mode: set PUBLIC=1 (done in render.yaml; RENDER is set automatically
