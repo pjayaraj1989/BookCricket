@@ -41,7 +41,7 @@
         {"name": "Hashim Amla","batting": 8,"bowling": 4,"opener1":  1},
         {"name": "Quinton de Kock","batting": 8,"keeper": 1},
         {"name": "Faf du Plessis", "nickname": "Fabulous Faf","batting": 8, "captain":1},
-		{"name": "AB deVilliers", "nickname": "Mr.360","batting": 8,"bowling":5},
+		{"name": "A.B deVilliers", "nickname": "Mr.360","batting": 8,"bowling":5},
 		{"name": "David Wiese","batting": 8,"bowling": 6},
 		{"name": "David Miller","batting": 7,"bowling": 7, "spinner":1},
         {"name": "J.P Duminy","batting": 7,"bowling": 7, "spinner":1},

@@ -172,9 +172,10 @@ class Match:
         return handler
 
     # trivia refresh cadence, in seconds - loose jitter so it doesn't feel
-    # mechanical; long enough to stay well clear of Wikipedia rate limits
-    TRIVIA_FIRST_DELAY = 12
-    TRIVIA_INTERVAL_RANGE = (30, 55)
+    # mechanical; two independent free sources (DuckDuckGo + Wikipedia)
+    # comfortably tolerate this pace without rate-limiting
+    TRIVIA_FIRST_DELAY = 6
+    TRIVIA_INTERVAL_RANGE = (15, 25)
 
     def _StartTriviaThread(self):
         """

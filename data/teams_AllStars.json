@@ -42,7 +42,7 @@
         {"name": "Jonny Bairstow","batting": 8, "opener2": 1},
         {"name": "Babar Azam","batting": 8,"bowling": 5},
         {"name": "Kane Williamson", "batting": 8,"bowling" : 6,  "spinner" : 1, "captain":  1},
-        {"name": "Faf du Plessis", "batting": 8},
+        {"name": "Faf duPlessis", "batting": 8},
         {"name": "Rishabh Pant","batting": 8,"keeper": 1},
 		{"name": "Hardik Pandya", "batting": 7,"bowling": 7, "spinner":1},
         {"name": "Chris Morris","batting": 7,"bowling": 8, "pacer":1},
