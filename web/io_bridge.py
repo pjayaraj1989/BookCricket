@@ -64,6 +64,13 @@ class WebChannel:
         # has just finished.
         self._emit("server_event", {"type": "innings", "data": data})
 
+    def trivia(self, data):
+        # a persistent corner-panel snippet (see functions/Trivia.py), pushed
+        # from the match's own background trivia thread - fire-and-forget,
+        # like state()/innings() above, and NOT routed through event()'s
+        # pop-up/ack machinery (there's no pop-up here to wait on).
+        self._emit("server_event", {"type": "trivia", "data": data})
+
     # how long event() will wait for the browser's pop-up ack before giving
     # up and letting the game continue (a missed ack - old cached app.js,
     # a wedged tab - must never stall the match)

@@ -1,6 +1,7 @@
 import logging
 import os
 import random
+import threading
 import time
 from operator import attrgetter
 from colorama import Style, Fore
@@ -26,6 +27,7 @@ from functions.utilities import (
 import functions.utilities as utilities
 from functions.DuckworthLewis import ResourcesRemaining, RevisedTarget, ParScore, G50
 import functions.SaveGame as SaveGame
+import functions.Trivia as Trivia
 
 
 class Match:
@@ -49,6 +51,7 @@ class Match:
             "loser": None,
             "venue": None,
             "umpire": None,
+            "umpires": [],  # both umpires' names (self.umpire is just the on-field one used in commentary); for trivia
             "commentators": None,
             "drs": False,
             "review_upheld": False,  # last DRS review was taken and OUT stood
@@ -114,19 +117,28 @@ class Match:
             "save_done": False,
             "resuming": False,  # this run was reconstructed from a save file
             "test_follow_on": None,  # Test: None until the follow-on is decided
+            # background trivia thread (web UI only - see _StartTriviaThread);
+            # neither is picklable, so both are stripped in __getstate__
+            "_trivia_stop": None,
+            "_trivia_thread": None,
         }
         self = FillAttributes(self, attrs, kwargs)
 
     def __getstate__(self):
-        # the logger (a logging.Logger with an open FileHandler) can't be
-        # pickled and is rebuilt on resume, so drop it from the saved state
+        # the logger (a logging.Logger with an open FileHandler) and the
+        # trivia thread/stop-event (threading primitives) can't be pickled
+        # and are rebuilt/restarted on resume, so drop them from saved state
         state = dict(self.__dict__)
         state.pop("logger", None)
+        state.pop("_trivia_stop", None)
+        state.pop("_trivia_thread", None)
         return state
 
     def __setstate__(self, state):
         self.__dict__.update(state)
         self.logger = None
+        self._trivia_stop = None
+        self._trivia_thread = None
 
     def _SetupLogger(self, ScriptPath):
         """
@@ -158,6 +170,74 @@ class Match:
         logger.addHandler(handler)
         self.logger = logger
         return handler
+
+    # trivia refresh cadence, in seconds - loose jitter so it doesn't feel
+    # mechanical; long enough to stay well clear of Wikipedia rate limits
+    TRIVIA_FIRST_DELAY = 12
+    TRIVIA_INTERVAL_RANGE = (30, 55)
+
+    def _StartTriviaThread(self):
+        """
+        Start a background thread that periodically fetches a short
+        Wikipedia snippet - about either team, a player currently out in the
+        middle, the venue, or an umpire (see functions/Trivia.py) - and pushes
+        it to the web UI's corner panel. Runs on its own thread so a slow or
+        failed network call never stalls actual gameplay; a no-op outside
+        web mode (console has no such panel).
+
+        Returns:
+            None
+        """
+        channel = utilities.get_channel()
+        if channel is None:
+            return
+        self._trivia_stop = threading.Event()
+        thread = threading.Thread(
+            target=self._TriviaLoop, args=(channel,), daemon=True
+        )
+        self._trivia_thread = thread
+        thread.start()
+
+    def _TriviaLoop(self, channel):
+        """
+        Background body of _StartTriviaThread. Takes the channel as an
+        explicit argument rather than looking it up via get_channel(): that
+        lookup is thread-local, keyed to whichever thread called
+        set_channel() (the main game thread), and would resolve to nothing
+        on this separate thread.
+
+        Returns:
+            None
+        """
+        stop = self._trivia_stop
+        if stop.wait(self.TRIVIA_FIRST_DELAY):
+            return
+        while not stop.is_set():
+            # this is pure decoration - nothing here may ever be allowed to
+            # kill the thread or (far worse) escape into the game thread
+            try:
+                item = Trivia.GetTrivia(self)
+                if item:
+                    channel.trivia(item)
+            except Exception:
+                pass
+            try:
+                wait_s = random.randint(*self.TRIVIA_INTERVAL_RANGE)
+            except Exception:
+                wait_s = self.TRIVIA_INTERVAL_RANGE[0]
+            if stop.wait(wait_s):
+                break
+
+    def _StopTriviaThread(self):
+        """Signal the trivia thread to stop. It's a daemon thread (so it can
+        never keep the process alive on its own), but this lets it exit
+        promptly rather than lingering until its next sleep expires.
+
+        Returns:
+            None
+        """
+        if self._trivia_stop is not None:
+            self._trivia_stop.set()
 
     def _PostPlay(self):
         """Victory card + persistent highlights, once the result is final.
@@ -199,13 +279,17 @@ class Match:
         self.status = True
         self.batting_team, self.bowling_team = self.team1, self.team2
 
-        if self.match_type == "Test":
-            self.is_test = True
-            self._PlayTestMatch()
-        else:
-            self._PlayLimitedOversMatch()
+        self._StartTriviaThread()
+        try:
+            if self.match_type == "Test":
+                self.is_test = True
+                self._PlayTestMatch()
+            else:
+                self._PlayLimitedOversMatch()
 
-        self._PostPlay()
+            self._PostPlay()
+        finally:
+            self._StopTriviaThread()
 
         # close log handler
         handler.close()
@@ -244,12 +328,16 @@ class Match:
             },
         )
 
-        if self.is_test:
-            self._PlayTestMatch()
-        else:
-            self._PlayLimitedOversMatch()
+        self._StartTriviaThread()
+        try:
+            if self.is_test:
+                self._PlayTestMatch()
+            else:
+                self._PlayLimitedOversMatch()
 
-        self._PostPlay()
+            self._PostPlay()
+        finally:
+            self._StopTriviaThread()
         handler.close()
         return
 
