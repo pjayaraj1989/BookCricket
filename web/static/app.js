@@ -10,6 +10,7 @@ const runRateGraphEl = document.getElementById("runRateGraph");
 const runRateLegendEl = document.getElementById("runRateLegend");
 const runRateSvgEl = document.getElementById("runRateSvg");
 const simOverlayEl = document.getElementById("simOverlay");
+const triviaPanelEl = document.getElementById("triviaPanel");
 
 function showSimOverlay(title, teams) {
   if (!simOverlayEl) return;
@@ -377,6 +378,8 @@ socket.on("server_event", (data) => {
     renderPlayingXI(data.data);
   } else if (data.type === "reset") {
     resetSidePane();
+  } else if (data.type === "trivia") {
+    renderTrivia(data.data);
   }
 });
 
@@ -390,6 +393,47 @@ function resetSidePane() {
   runRateGraphEl.style.display = "none";
   runRateLegendEl.innerHTML = "";
   runRateSvgEl.innerHTML = "";
+  if (triviaHideTimer) {
+    clearTimeout(triviaHideTimer);
+    triviaHideTimer = null;
+  }
+  if (triviaPanelEl) {
+    triviaPanelEl.classList.remove("visible");
+    triviaPanelEl.innerHTML = "";
+  }
+}
+
+// bottom-right "did you know?" card: a short Wikipedia snippet about a
+// team/player/venue/umpire or general cricket, pushed every 30-55s while a
+// match is live (see functions/Trivia.py). Best-effort/decorative only - no
+// data means the server couldn't reach Wikipedia this round, so the panel
+// just quietly keeps showing whatever it last had (or stays hidden).
+const TRIVIA_LABELS = {
+  team: "🏏 About the team",
+  player: "🧢 About the player",
+  venue: "🏟️ About the venue",
+  umpire: "🤍 About the umpire",
+  general: "💡 Did you know?",
+};
+
+const TRIVIA_SHOW_MS = 5000; // flash briefly, then hide until the next one arrives
+let triviaHideTimer = null;
+
+function renderTrivia(data) {
+  if (!triviaPanelEl || !data || !data.text) return;
+  const label = TRIVIA_LABELS[data.category] || TRIVIA_LABELS.general;
+  const subject = data.subject ? escapeHtml(String(data.subject)) : "";
+  triviaPanelEl.innerHTML =
+    '<div class="trivia-label">' + label + "</div>" +
+    (subject ? '<div class="trivia-subject">' + subject + "</div>" : "") +
+    '<div class="trivia-text">' + escapeHtml(String(data.text)) + "</div>";
+  triviaPanelEl.classList.add("visible");
+
+  if (triviaHideTimer) clearTimeout(triviaHideTimer);
+  triviaHideTimer = setTimeout(() => {
+    triviaPanelEl.classList.remove("visible");
+    triviaHideTimer = null;
+  }, TRIVIA_SHOW_MS);
 }
 
 function escapeHtml(s) {

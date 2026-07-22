@@ -207,8 +207,10 @@ def GetMatchInfo(list_of_teams, venue, autoplay, overs, format_override=None, fa
         A Match object with the match details.
     """
     intro = Randomize(commentary.intro_dialogues)
-    commentator = random.choices(list(resources.commentators), k=3)
-    umpire = random.choices(list(resources.umpires), k=2)
+    # sample() not choices(): choices() draws WITH replacement, which was
+    # letting the same commentator/umpire get picked twice for one match
+    commentator = random.sample(list(resources.commentators), k=3)
+    umpire = random.sample(list(resources.umpires), k=2)
 
     # get list of teams
     teams = [team.key for team in list_of_teams]
@@ -302,6 +304,7 @@ def GetMatchInfo(list_of_teams, venue, autoplay, overs, format_override=None, fa
         result=None,
         fast=fast,
     )
+    match.umpires = list(umpire)  # both names, for trivia (self.umpire stays the single on-field one)
 
     match_descriptions = [
         "exciting",
@@ -461,8 +464,10 @@ def BuildMatch(team1, team2, venue, overs, is_test, fast=False, autoplay=False,
     Returns:
         Match
     """
-    commentator = random.choices(list(resources.commentators), k=3)
-    umpire = random.choices(list(resources.umpires), k=2)
+    # sample() not choices(): choices() draws WITH replacement, which was
+    # letting the same commentator/umpire get picked twice for one match
+    commentator = random.sample(list(resources.commentators), k=3)
+    umpire = random.sample(list(resources.umpires), k=2)
 
     if is_test:
         overs = None
@@ -490,6 +495,7 @@ def BuildMatch(team1, team2, venue, overs, is_test, fast=False, autoplay=False,
         result=None,
         fast=fast,
     )
+    match.umpires = list(umpire)  # both names, for trivia (self.umpire stays the single on-field one)
     match.autoplay = autoplay
     # tournament matches run autoplay only for auto-decisions when simulated;
     # never make the autoplay roster-name web check (dozens of blocking
