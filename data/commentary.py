@@ -25,6 +25,30 @@ class commentary:
         "Warm welcome to everybody, to ",
     ]
 
+    # comment shown on the "Team A vs Team B" pop-up right after teams are picked
+    commentary_contest_preview = [
+        "it's going to be a high-class contest!",
+        "this promises to be a cracker of a game!",
+        "two evenly matched sides - buckle up!",
+        "this has all the makings of a classic!",
+        "expect fireworks out there today!",
+        "a mouth-watering contest on the cards!",
+        "this one could go right down to the wire!",
+        "a real heavyweight clash coming up!",
+        "the stage is set for a thriller!",
+        "this is the contest everyone's been waiting for!",
+        "both sides will fancy their chances here!",
+        "get ready for a cracking contest!",
+        "this rivalry always produces a good game!",
+        "a blockbuster contest awaits!",
+        "this could be one for the ages!",
+        "two quality sides going head to head!",
+        "the crowd is in for a treat today!",
+        "this fixture never disappoints!",
+        "all set for an enthralling battle!",
+        "this looks like a proper contest!",
+    ]
+
     # Run rates
     commentary_less_req_rate = [
         "looks easily gettable for %s",
@@ -308,6 +332,21 @@ class commentary:
         "that's how you lead your team! bravo skipper!",
         "he is a perfect example of a brave leader!",
         "the skipper leading from the front here",
+        "this is what leadership looks like!",
+        "the captain shows the way!",
+        "true leaders lead by example, and there it is!",
+        "the skipper putting the team on his shoulders!",
+        "a captain's knock if there ever was one!",
+        "leading from the front, exactly when the team needs it!",
+        "that's a captain's innings right there!",
+        "the armband means more today - what an effort from the skipper!",
+        "the leader delivers when it matters most!",
+        "textbook captaincy - inspire the team by doing it yourself!",
+        "the skipper answers the call in style!",
+        "that's why he wears the armband!",
+        "the captain sets the tone for the whole side!",
+        "leading with the bat/ball, exactly as a captain should!",
+        "a champion leader, delivering a champion moment!",
     ]
 
     # comments for wkts
@@ -719,6 +758,65 @@ class commentary:
         "take a bow %s, %s, one of the best partnerships ever!",
         "ends a terrific partnership between these two.. good work %s, %s!",
     ]
+
+    # a big (50+) partnership finally broken - shown with the bowler's pic,
+    # or the fielder's pic if it was a run-out
+    commentary_breakthrough = [
+        "a breakthrough which %s badly wanted!",
+        "that's the breakthrough %s were desperate for!",
+        "finally, the breakthrough %s craved!",
+        "the partnership is broken - exactly what %s needed!",
+        "a huge breakthrough for %s!",
+        "%s finally get the breakthrough they were chasing!",
+        "that's a massive wicket for %s!",
+        "the stand is finally broken - big moment for %s!",
+        "%s will be delighted to have finally broken through!",
+        "a much-needed breakthrough for %s!",
+        "that partnership had to be broken, and %s have done it!",
+        "%s have finally found a way through!",
+        "the pressure finally tells - a big breakthrough for %s!",
+        "%s break the stand at just the right time!",
+        "a vital breakthrough for %s!",
+        "%s have been waiting for this one!",
+        "that's the moment %s needed!",
+        "the deadlock is broken - great news for %s!",
+        "%s finally prise them apart!",
+        "a game-changing breakthrough for %s!",
+    ]
+
+    # "how's the chase going" verdict pop-up (see Match._ClassifyChase /
+    # _PushChaseAssessment) - one tier per difficulty read on the chase
+    commentary_chase_cruising = [
+        "%s are cruising towards this target!",
+        "this chase looks like a formality for %s!",
+        "%s in complete control of this chase!",
+        "%s coasting home from here!",
+    ]
+    commentary_chase_on_track = [
+        "%s right on top of the chase!",
+        "%s ticking along nicely - right where they want to be!",
+        "the chase is very much alive and well for %s!",
+        "%s in good shape to get this done!",
+    ]
+    commentary_chase_in_balance = [
+        "this chase is delicately poised for %s!",
+        "could go either way from here for %s!",
+        "%s need something special from here!",
+        "the pressure is building on %s!",
+    ]
+    commentary_chase_tough = [
+        "a real uphill battle for %s now!",
+        "%s facing a stiff task from here!",
+        "the required rate is climbing fast for %s!",
+        "%s need a minor miracle from here!",
+    ]
+    commentary_chase_improbable = [
+        "this is looking almost impossible for %s now!",
+        "%s staring down the barrel here!",
+        "the equation has gotten away from %s!",
+        "%s need something extraordinary to pull this off!",
+    ]
+
     commentary_out_first_ball = [
         "Out first ball.. %s has to go!!",
         "gone! %s is out without tickling the scoreboard!",

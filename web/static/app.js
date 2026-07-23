@@ -390,6 +390,9 @@ function resetSidePane() {
     '<p class="hint">Scorecard will appear after the first over.</p>';
   inningsSummariesEl.innerHTML = "";
   currentLiveInningsBlockEl = null;
+  playerTeamMap = {};
+  currentBattingTeam = null;
+  currentBowlingTeam = null;
   runRateGraphEl.style.display = "none";
   runRateLegendEl.innerHTML = "";
   runRateSvgEl.innerHTML = "";
@@ -443,6 +446,11 @@ function escapeHtml(s) {
 }
 
 function renderScorecard(state) {
+  // kept current so team-wide pop-ups with no specific named player (a
+  // wicket decision, a tension beat, DRS, ...) can still show the right flag
+  currentBattingTeam = state.battingTeam || null;
+  currentBowlingTeam = state.bowlingTeam || null;
+
   const parts = [];
 
   parts.push(
@@ -602,6 +610,41 @@ function renderRunRateGraph(state) {
 // next innings starts a fresh block instead of continuing to update this one
 let currentLiveInningsBlockEl = null;
 
+// player name -> team name, built once from the "xi" push at match start
+// (see renderPlayingXI) so any pop-up naming a specific player can show
+// that player's team flag without the server having to repeat it on every
+// single event. currentBattingTeam/currentBowlingTeam (kept up to date on
+// every scorecard push) are the fallback for pop-ups about a team-wide
+// moment rather than a named player (a wicket decision, a tension beat, ...).
+let playerTeamMap = {};
+let currentBattingTeam = null;
+let currentBowlingTeam = null;
+
+function teamForPlayer(name) {
+  return playerTeamMap[name] || null;
+}
+
+// a small team flag badge, reusable both as a corner overlay on a photo
+// (wrap the photo in .event-photo-wrap, which is position:relative) and as
+// a plain inline element where there's no photo to pin it to.
+function teamFlagBadge(teamName, inline) {
+  // "corner" mode (default) is position:absolute, meant to be pinned to a
+  // photo/number wrapped in .event-photo-wrap; "inline" mode is a plain
+  // small flag for cards with nothing to pin it to (e.g. a text-only line)
+  const cls = inline ? "team-flag-inline" : "team-flag-badge";
+  const badge = document.createElement("img");
+  badge.className = cls;
+  badge.alt = teamName;
+  badge.src = "teams/flags/" + encodeURIComponent(teamName);
+  badge.addEventListener("error", () => {
+    const fallback = document.createElement("span");
+    fallback.className = cls + " team-flag-fallback";
+    fallback.textContent = teamName.slice(0, 3).toUpperCase();
+    badge.replaceWith(fallback);
+  });
+  return badge;
+}
+
 function buildInningsCardHtml(innings) {
   const parts = [];
   parts.push(
@@ -679,6 +722,15 @@ const STUMPS_SVG =
   '<line x1="30" y1="9" x2="46" y2="14" stroke="#f2d16b" stroke-width="4" stroke-linecap="round"/>' +
   "</svg>";
 
+// dismissal kinds sent alongside a DRS/third-umpire review (drs_pending,
+// drs_result, third_umpire) - what's actually being checked upstairs
+const DISMISSAL_KIND_LABELS = {
+  lbw: "LBW",
+  caught: "CATCH",
+  runout: "RUN OUT",
+  stumped: "STUMPED",
+};
+
 function buildFlagCard(teamName) {
   const card = document.createElement("div");
   card.className = "event-player";
@@ -718,9 +770,12 @@ function buildVictoryCard(teamName, resultStr) {
 
 // caption + image fetched from srcPath (misc/<kind>, venues/<name>, ...),
 // with an emoji stand-in when no image has been saved there
-function buildMiscCard(srcPath, fallbackEmoji, caption, subtitle) {
+function buildMiscCard(srcPath, fallbackEmoji, caption, subtitle, teamName) {
   const card = document.createElement("div");
   card.className = "event-player";
+
+  const picWrap = document.createElement("div");
+  picWrap.className = "event-photo-wrap";
 
   const img = document.createElement("img");
   img.className = "event-misc-pic";
@@ -732,7 +787,9 @@ function buildMiscCard(srcPath, fallbackEmoji, caption, subtitle) {
     fallback.textContent = fallbackEmoji;
     img.replaceWith(fallback);
   });
-  card.appendChild(img);
+  picWrap.appendChild(img);
+  if (teamName) picWrap.appendChild(teamFlagBadge(teamName));
+  card.appendChild(picWrap);
 
   const label = document.createElement("div");
   label.className = "event-player-name";
@@ -765,43 +822,19 @@ function buildPartnershipCard(names, runs) {
   return wrap;
 }
 
-// "Next In" preview: up to 3 upcoming batsmen with photos, numbered in
-// batting order. Popped occasionally (milestones/summary moments - see
-// Match.py's _PushNextBatsmenPreview), not on every ball.
-function buildNextBatsmenCard(names) {
-  const wrap = document.createElement("div");
-  wrap.className = "event-player";
-
-  const badge = document.createElement("div");
-  badge.className = "event-achievement-badge";
-  badge.textContent = "🏏 Next in";
-  wrap.appendChild(badge);
-
-  const row = document.createElement("div");
-  row.className = "event-openers";
-  names.forEach((n, i) => {
-    const col = document.createElement("div");
-    col.className = "next-batsman-col";
-    const order = document.createElement("div");
-    order.className = "next-batsman-order";
-    order.textContent = String(i + 1);
-    col.appendChild(order);
-    col.appendChild(buildPlayerCard(String(n)));
-    row.appendChild(col);
-  });
-  wrap.appendChild(row);
-  return wrap;
-}
-
 // team total milestone: big score number with team name and wickets
 function buildTeamScoreCard(team, score, wickets) {
   const card = document.createElement("div");
   card.className = "event-player";
 
+  const numWrap = document.createElement("div");
+  numWrap.className = "event-photo-wrap";
   const num = document.createElement("div");
   num.className = "event-countdown-num";
   num.textContent = String(score);
-  card.appendChild(num);
+  numWrap.appendChild(num);
+  numWrap.appendChild(teamFlagBadge(team));
+  card.appendChild(numWrap);
 
   const label = document.createElement("div");
   label.className = "event-player-name";
@@ -816,7 +849,8 @@ function buildTeamScoreCard(team, score, wickets) {
 }
 
 // umpire giving a decision (LBW / run out): umpire photo, a "wickets hit"
-// stumps symbol, and the decision label
+// stumps symbol, and the decision label. Umpires are neutral, so this card
+// never shows a team logo, even though a team is at stake in the decision.
 function buildUmpireDecisionCard(umpireName, label) {
   const card = buildPlayerCard(umpireName || "Umpire", label, "umpires/");
   const nameEl = card.querySelector(".event-player-name");
@@ -956,6 +990,9 @@ function buildPlayerCard(name, role, srcPath) {
   const card = document.createElement("div");
   card.className = "event-player";
 
+  const picWrap = document.createElement("div");
+  picWrap.className = "event-photo-wrap";
+
   const img = document.createElement("img");
   img.className = "event-player-pic";
   img.alt = name;
@@ -969,12 +1006,20 @@ function buildPlayerCard(name, role, srcPath) {
     fallback.textContent = initials || "🏏";
     img.replaceWith(fallback);
   });
+  picWrap.appendChild(img);
+
+  // team flag corner badge - only for an actual player (srcPath is unset),
+  // never for an umpire/commentator card (they're not on either team)
+  if (!srcPath) {
+    const team = teamForPlayer(name);
+    if (team) picWrap.appendChild(teamFlagBadge(team));
+  }
 
   const label = document.createElement("div");
   label.className = "event-player-name";
   label.textContent = name;
 
-  card.appendChild(img);
+  card.appendChild(picWrap);
   card.appendChild(label);
   if (role) {
     const roleEl = document.createElement("div");
@@ -987,7 +1032,18 @@ function buildPlayerCard(name, role, srcPath) {
 
 function renderEvent(kind, data) {
   if (kind === "toss") {
-    showEventPane('<span class="event-coin">🪙</span>', 2500, "takeover");
+    const wrap = document.createElement("div");
+    wrap.className = "event-player";
+    const row = document.createElement("div");
+    row.className = "event-toss-row";
+    if (data && data.team1) row.appendChild(teamFlagBadge(data.team1, true));
+    const coin = document.createElement("span");
+    coin.className = "event-coin";
+    coin.textContent = "🪙";
+    row.appendChild(coin);
+    if (data && data.team2) row.appendChild(teamFlagBadge(data.team2, true));
+    wrap.appendChild(row);
+    showEventPane(wrap, 2500, "takeover");
   } else if (kind === "wicket") {
     showEventPane('<span class="event-stumps">' + STUMPS_SVG + "</span>", 2500);
   } else if (kind === "four") {
@@ -1037,6 +1093,8 @@ function renderEvent(kind, data) {
   } else if (kind === "teams_selected") {
     const names = ((data && data.names) || []).map(String).filter(Boolean);
     if (names.length) {
+      const wrap = document.createElement("div");
+      wrap.className = "event-teams-selected";
       const row = document.createElement("div");
       row.className = "event-openers";
       names.forEach((n, i) => {
@@ -1048,7 +1106,15 @@ function renderEvent(kind, data) {
         }
         row.appendChild(buildFlagCard(n));
       });
-      showEventPane(row, 4000, "takeover roster");
+      wrap.appendChild(row);
+      const comment = data && data.comment ? String(data.comment) : "";
+      if (comment) {
+        const commentEl = document.createElement("div");
+        commentEl.className = "event-contest-comment";
+        commentEl.textContent = comment;
+        wrap.appendChild(commentEl);
+      }
+      showEventPane(wrap, 4000, "takeover roster");
     }
   } else if (kind === "session_break") {
     const isLunch = data && data.interval === "Lunch";
@@ -1060,7 +1126,8 @@ function renderEvent(kind, data) {
       "takeover"
     );
   } else if (kind === "innings_over") {
-    const card = buildMiscCard("misc/innings_over", "🏏", "Innings over", "");
+    const card = buildMiscCard("misc/innings_over", "🏏", "Innings over", "",
+      data && data.team);
     if (data && data.team) {
       const score = document.createElement("div");
       score.className = "event-innings-score";
@@ -1108,20 +1175,59 @@ function renderEvent(kind, data) {
   } else if (kind === "declare") {
     const sub = data && data.team ? data.score + "/" + data.wickets : "";
     const cap = data && data.team ? data.team + " declared" : "Declared";
-    showEventPane(buildMiscCard("misc/declare", "✋", cap, sub), 4000, "takeover");
+    showEventPane(
+      buildMiscCard("misc/declare", "✋", cap, sub, data && data.team),
+      4000, "takeover"
+    );
   } else if (kind === "follow_on") {
     const sub = data && data.opponent ? data.opponent + " to bat again" : "";
-    showEventPane(buildMiscCard("misc/follow_on", "🔁", "Follow-on enforced!", sub), 4000, "takeover");
+    showEventPane(
+      buildMiscCard("misc/follow_on", "🔁", "Follow-on enforced!", sub, data && data.opponent),
+      4000, "takeover"
+    );
   } else if (kind === "partnership_milestone") {
     const names = ((data && data.names) || []).map(String).filter(Boolean);
     const runs = data && data.runs;
     if (names.length && runs) {
       showEventPane(buildPartnershipCard(names, runs), 4000, "takeover roster");
     }
+  } else if (kind === "partnership_broken") {
+    // a 50+ stand ends: the bowler's pic, or the fielder's pic on a run-out
+    const runs = data && data.runs;
+    const comment = data && data.comment ? String(data.comment) : "";
+    const name = String(
+      (data && data.kind) === "runout" ? (data && data.fielder) : (data && data.bowler)
+    );
+    if (name && comment) {
+      const card = buildPlayerCard(name);
+      const badge = document.createElement("div");
+      badge.className = "event-achievement-badge";
+      badge.textContent = "💥 " + runs + "-run stand broken!";
+      card.insertBefore(badge, card.lastChild);
+      const commentEl = document.createElement("div");
+      commentEl.className = "event-breakthrough-comment";
+      commentEl.textContent = comment;
+      card.appendChild(commentEl);
+      showEventPane(card, 4000, "takeover");
+    }
   } else if (kind === "next_batsmen") {
+    // full-screen photo pop-up, popped occasionally (milestones/summary
+    // moments - see Match.py's _PushNextBatsmenPreview), not every ball
     const names = ((data && data.names) || []).map(String).filter(Boolean);
     if (names.length) {
-      showEventPane(buildNextBatsmenCard(names), 4000, "takeover roster");
+      const wrap = document.createElement("div");
+      wrap.className = "event-player";
+      const cap = document.createElement("div");
+      cap.className = "event-achievement-badge";
+      cap.textContent = "🏏 Next in";
+      wrap.appendChild(cap);
+      const row = document.createElement("div");
+      row.className = "event-openers";
+      names.forEach((n, i) => {
+        row.appendChild(buildPlayerCard(n, (i + 1) + "."));
+      });
+      wrap.appendChild(row);
+      showEventPane(wrap, 4500, "takeover roster");
     }
   } else if (kind === "team_score") {
     if (data && data.score) {
@@ -1144,7 +1250,7 @@ function renderEvent(kind, data) {
         buildMiscCard(
           "misc/super_over", "⚡",
           data.team + " " + data.runs + "/" + data.wickets,
-          "super over"
+          "super over", data.team
         ),
         3000,
         "takeover"
@@ -1227,6 +1333,7 @@ function renderEvent(kind, data) {
           balls + (balls === 1 ? " ball!" : " balls!");
         card.appendChild(eq);
       }
+      if (currentBattingTeam) card.appendChild(teamFlagBadge(currentBattingTeam, true));
       // kept short so the pop-ups keep pace with the balls being bowled
       showEventPane(card, isFinal ? 2600 : 1600, "takeover");
     }
@@ -1256,7 +1363,65 @@ function renderEvent(kind, data) {
         : "in the final innings";
       if (data && data.dls) sub += " · D/L revised target";
     }
-    showEventPane(buildMiscCard("misc/target", "🎯", caption, sub), 4000, "takeover");
+    showEventPane(buildMiscCard("misc/target", "🎯", caption, sub, team), 4000, "takeover");
+  } else if (kind === "chase_update") {
+    const team = data && data.team ? String(data.team) : "";
+    const comment = data && data.comment ? String(data.comment) : "";
+    if (team && comment) {
+      const tierInfo = {
+        cruising: ["CRUISING", "cruising"],
+        on_track: ["ON TRACK", "on-track"],
+        in_balance: ["IN THE BALANCE", "in-balance"],
+        tough: ["TOUGH ASK", "tough"],
+        improbable: ["ALMOST IMPOSSIBLE", "improbable"],
+      }[data && data.tier] || ["HOW'S THE CHASE GOING?", "in-balance"];
+
+      const card = document.createElement("div");
+      card.className = "event-player";
+      card.appendChild(teamFlagBadge(team, true));
+
+      const verdict = document.createElement("div");
+      verdict.className = "event-chase-verdict event-chase-" + tierInfo[1];
+      verdict.textContent = tierInfo[0];
+      card.appendChild(verdict);
+
+      const label = document.createElement("div");
+      label.className = "event-player-name";
+      label.textContent = team;
+      card.appendChild(label);
+
+      const runsNeeded = data && data.runsNeeded;
+      const ballsLeft = data && data.ballsLeft;
+      if (runsNeeded != null && ballsLeft != null) {
+        const eq = document.createElement("div");
+        eq.className = "event-tension-eq";
+        eq.textContent =
+          runsNeeded + (runsNeeded === 1 ? " run" : " runs") + " needed from " +
+          ballsLeft + (ballsLeft === 1 ? " ball" : " balls");
+        card.appendChild(eq);
+      }
+
+      const crr = data && data.crr;
+      const rrr = data && data.rrr;
+      const wicketsInHand = data && data.wicketsInHand;
+      if (crr != null && rrr != null) {
+        const rates = document.createElement("div");
+        rates.className = "event-chase-rates";
+        rates.textContent =
+          "CRR " + Number(crr).toFixed(2) + "  ·  RRR " + Number(rrr).toFixed(2) +
+          (wicketsInHand != null
+            ? "  ·  " + wicketsInHand + (wicketsInHand === 1 ? " wkt" : " wkts") + " in hand"
+            : "");
+        card.appendChild(rates);
+      }
+
+      const commentEl = document.createElement("div");
+      commentEl.className = "event-captain-comment";
+      commentEl.textContent = comment;
+      card.appendChild(commentEl);
+
+      showEventPane(card, 4200, "takeover");
+    }
   } else if (kind === "weather") {
     const w = data && data.weather;
     const cfg = {
@@ -1276,7 +1441,7 @@ function renderEvent(kind, data) {
     const score = data ? (data.score + "/" + data.wickets) : "";
     showEventPane(
       buildMiscCard("misc/resume", "⏮️", "Resuming your game",
-        bt ? (bt + " " + score) : ""),
+        bt ? (bt + " " + score) : "", bt),
       3000,
       "takeover"
     );
@@ -1323,7 +1488,8 @@ function renderEvent(kind, data) {
     );
   } else if (kind === "free_hit") {
     const ump = data && data.umpire ? String(data.umpire) : "Umpire";
-    // umpire signalling the free hit: photo + big "FREE HIT!" badge
+    // umpire signalling the free hit: photo + big "FREE HIT!" badge (no team
+    // logo - umpires are neutral)
     const card = buildPlayerCard(ump, "", "umpires/");
     const nameEl = card.querySelector(".event-player-name");
     if (nameEl) nameEl.remove();
@@ -1356,6 +1522,14 @@ function renderEvent(kind, data) {
       badge.textContent = emoji + " " + text;
       // badge sits between the photo and the name
       card.insertBefore(badge, card.lastChild);
+      // captain hitting a batting/bowling milestone gets an extra cool line
+      const captainComment = data && data.captainComment ? String(data.captainComment) : "";
+      if (captainComment) {
+        const commentEl = document.createElement("div");
+        commentEl.className = "event-captain-comment";
+        commentEl.textContent = captainComment;
+        card.appendChild(commentEl);
+      }
       // the "on a hat-trick" tension card is shorter (a beat, not a
       // celebration) - the actual milestone popups linger longer
       const holdMs = (data && data.type) === "hattrick_building" ? 2200 : 4000;
@@ -1398,30 +1572,56 @@ function renderEvent(kind, data) {
     }
   } else if (kind === "third_umpire") {
     if (data && data.stage === "referred") {
+      const label = DISMISSAL_KIND_LABELS[data && data.kind];
+      const sub = label ? "checking the replay… (" + label + ")" : "checking the replay…";
       showEventPane(
-        buildMiscCard("misc/third_umpire", "📺", "Third umpire", "checking the replay…"),
+        buildMiscCard("misc/third_umpire", "📺", "Third umpire", sub),
         3000,
         "takeover"
       );
     } else {
       // given out on the spot by the on-field umpire
       const label = data && data.kind === "stumped" ? "STUMPED" : "RUN OUT";
-      showEventPane(buildUmpireDecisionCard(data && data.umpire, label), 3000, "takeover");
+      showEventPane(
+        buildUmpireDecisionCard(data && data.umpire, label),
+        3000, "takeover"
+      );
     }
   } else if (kind === "drs_pending") {
-    showEventPane(
-      '<div class="drs-lights blinking"><span class="drs-bulb red"></span><span class="drs-bulb green"></span></div>',
-      0,
-      "takeover"
-    );
+    const wrap = document.createElement("div");
+    wrap.className = "event-player";
+    const label = DISMISSAL_KIND_LABELS[data && data.kind];
+    if (label) {
+      const labelEl = document.createElement("div");
+      labelEl.className = "event-drs-checking";
+      labelEl.textContent = "Checking: " + label;
+      wrap.appendChild(labelEl);
+    }
+    const lights = document.createElement("div");
+    lights.className = "drs-lights blinking";
+    lights.innerHTML =
+      '<span class="drs-bulb red"></span><span class="drs-bulb green"></span>';
+    wrap.appendChild(lights);
+    if (currentBattingTeam) wrap.appendChild(teamFlagBadge(currentBattingTeam, true));
+    showEventPane(wrap, 0, "takeover");
   } else if (kind === "drs_result") {
     const out = !!(data && data.out);
-    showEventPane(
-      '<div class="drs-lights decided ' + (out ? "out" : "not-out") + '">' +
-        '<span class="drs-bulb red"></span><span class="drs-bulb green"></span></div>',
-      3000,
-      "takeover"
-    );
+    const wrap = document.createElement("div");
+    wrap.className = "event-player";
+    const label = DISMISSAL_KIND_LABELS[data && data.kind];
+    if (label) {
+      const labelEl = document.createElement("div");
+      labelEl.className = "event-drs-checking";
+      labelEl.textContent = "Checking: " + label;
+      wrap.appendChild(labelEl);
+    }
+    const lights = document.createElement("div");
+    lights.className = "drs-lights decided " + (out ? "out" : "not-out");
+    lights.innerHTML =
+      '<span class="drs-bulb red"></span><span class="drs-bulb green"></span>';
+    wrap.appendChild(lights);
+    if (currentBattingTeam) wrap.appendChild(teamFlagBadge(currentBattingTeam, true));
+    showEventPane(wrap, 3000, "takeover");
   }
 }
 
@@ -1438,6 +1638,9 @@ function renderPlayingXI(xi) {
     col.appendChild(heading);
 
     (team.players || []).forEach((p) => {
+      // build the name -> team lookup pop-ups use to show the right flag
+      playerTeamMap[p.name] = team.name;
+
       const row = document.createElement("div");
       row.className = "xi-row";
 
