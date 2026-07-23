@@ -279,7 +279,13 @@ def GetMatchInfo(list_of_teams, venue, autoplay, overs, format_override=None, fa
         if t.key == t2:
             team2 = t
 
-    PushEvent("teams_selected", {"names": [team1.name, team2.name]})
+    PushEvent(
+        "teams_selected",
+        {
+            "names": [team1.name, team2.name],
+            "comment": Randomize(commentary.commentary_contest_preview),
+        },
+    )
 
     if is_test:
         match_type = "Test"
@@ -506,7 +512,13 @@ def BuildMatch(team1, team2, venue, overs, is_test, fast=False, autoplay=False,
         t.total_overs = match.overs
 
     if announce:
-        PushEvent("teams_selected", {"names": [team1.name, team2.name]})
+        PushEvent(
+            "teams_selected",
+            {
+                "names": [team1.name, team2.name],
+                "comment": Randomize(commentary.commentary_contest_preview),
+            },
+        )
         PrintInColor(
             "%s, at %s - the %s match between %s and %s"
             % (

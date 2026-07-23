@@ -1694,6 +1694,15 @@ class Match:
         # milestone pop-ups (team total 100/200/..., current stand 50/100/...)
         self._CheckScoreMilestones()
 
+        # how's the chase going? every 10th completed over while chasing (the
+        # wicket-triggered check lives in UpdateDismissal) - a no-op outside
+        # a limited-overs run chase, so this is safe to call unconditionally
+        # from the Test over-loop too
+        if self.overs and self.batting_team.batting_second:
+            completed_overs = self.batting_team.total_balls // 6
+            if completed_overs > 0 and completed_overs % 10 == 0:
+                self._PushChaseAssessment()
+
         # rotate strike after an over
         RotateStrike(pair)
 
@@ -1918,6 +1927,87 @@ class Match:
         ][:3]
         if upcoming:
             utilities.PushEvent("next_batsmen", {"names": upcoming})
+
+    def _ClassifyChase(self, rrr, crr, wickets_in_hand, batting_strength):
+        """
+        Rough difficulty tier for a run chase: how the required rate
+        compares to the current rate (the "ask"), tempered by the resources
+        still available to answer it (wickets in hand and the average
+        batting quality of everyone still to come, attr.batting is 1-10).
+
+        Returns:
+            str: one of "cruising", "on_track", "in_balance", "tough",
+            "improbable".
+        """
+        if rrr <= 0:
+            return "cruising"
+        rate_ratio = rrr / max(crr, 0.5)
+        resource_score = (wickets_in_hand / 10.0) * 0.6 + (
+            min(batting_strength, 10) / 10.0
+        ) * 0.4
+
+        if rate_ratio <= 0.85:
+            return "cruising"
+        if rate_ratio <= 1.05:
+            return "on_track" if resource_score > 0.3 else "in_balance"
+        if rate_ratio <= 1.4:
+            return "in_balance" if resource_score > 0.4 else "tough"
+        if rate_ratio <= 2.0:
+            return "tough" if resource_score > 0.3 else "improbable"
+        return "improbable"
+
+    def _PushChaseAssessment(self):
+        """
+        Pop up a "how's the chase going" verdict while batting second in a
+        limited-overs run chase - on every wicket (see UpdateDismissal) and
+        every 10th completed over (see _PostOverDisplay). A no-op outside a
+        live limited-overs chase (Test matches, first innings, or once the
+        chase is already won/lost).
+
+        Returns:
+            None
+        """
+        bt = self.batting_team
+        if not (self.overs and bt.batting_second and bt.target):
+            return
+        balls_left = self.overs * 6 - bt.total_balls
+        if balls_left <= 0 or bt.wickets_fell >= 10:
+            return
+        runs_needed = bt.target - bt.total_score
+        if runs_needed <= 0:
+            return  # already won - the victory pop-up covers this moment
+
+        crr = bt.GetCurrentRate()
+        rrr = bt.GetRequiredRate()
+        wickets_in_hand = 10 - bt.wickets_fell
+        remaining = [p for p in bt.team_array if p.status]
+        batting_strength = (
+            sum(p.attr.batting for p in remaining) / len(remaining)
+            if remaining
+            else 0
+        )
+
+        tier = self._ClassifyChase(rrr, crr, wickets_in_hand, batting_strength)
+        lines = {
+            "cruising": commentary.commentary_chase_cruising,
+            "on_track": commentary.commentary_chase_on_track,
+            "in_balance": commentary.commentary_chase_in_balance,
+            "tough": commentary.commentary_chase_tough,
+            "improbable": commentary.commentary_chase_improbable,
+        }[tier]
+        utilities.PushEvent(
+            "chase_update",
+            {
+                "team": bt.name,
+                "tier": tier,
+                "comment": Randomize(lines) % bt.name,
+                "runsNeeded": int(runs_needed),
+                "ballsLeft": int(balls_left),
+                "crr": crr,
+                "rrr": rrr,
+                "wicketsInHand": int(wickets_in_hand),
+            },
+        )
 
     def _AdvanceSessionIfNeeded(self):
         """
@@ -2358,6 +2448,12 @@ class Match:
                     if not self.autoplay: input("press enter to continue...")
                     break
 
+        # the loop only reaches ball == 7 by exhausting "while ball <= 6"
+        # naturally (all 6 legal deliveries bowled); anything less means it
+        # was cut short by a break - the innings/match ending mid-over (e.g.
+        # the last wicket falling on ball 3) - so the over was never finished
+        over_completed = ball > 6
+
         # check total runs taken in over
         # if expensive over
         if total_runs_in_over > 14:
@@ -2368,7 +2464,7 @@ class Match:
                 Style.BRIGHT,
             )
         # check if maiden over only if over is finished
-        elif total_runs_in_over == 0:
+        elif total_runs_in_over == 0 and over_completed:
             PrintInColor(
                 Randomize(commentary.commentary_maiden_over) % bowler.name, Style.BRIGHT
             )
@@ -2813,10 +2909,14 @@ class Match:
             if not self.autoplay:   input("press enter to continue..")
         # check if bowler got 5 wkts
         if bowler.wkts == 5:
-            utilities.PushEvent(
-                "achievement",
-                {"name": bowler.name, "type": "bowling", "text": "5 wickets!"},
-            )
+            achievement_data = {
+                "name": bowler.name, "type": "bowling", "text": "5 wickets!"
+            }
+            if bowler.attr.iscaptain:
+                achievement_data["captainComment"] = Randomize(
+                    commentary.commentary_captain_leading
+                )
+            utilities.PushEvent("achievement", achievement_data)
             PrintInColor("That's 5 Wickets for %s !" % bowler.name, bowling_team.color)
             PrintInColor(Randomize(commentary.commentary_fifer), bowling_team.color)
             if not self.autoplay:   input("press enter to continue..")
@@ -2858,10 +2958,36 @@ class Match:
                 % (GetSurname(pair[0].name), GetSurname(pair[1].name)),
                 Style.BRIGHT,
             )
+            breakthrough_data = {
+                "runs": int(partnership.runs),
+                "comment": Randomize(commentary.commentary_breakthrough)
+                % bowling_team.name,
+            }
+            if "runout" in dismissal:
+                fielder_name = dismissal.replace("runout", "").strip()
+                fielder = next(
+                    (
+                        p
+                        for p in bowling_team.team_array
+                        if GetShortName(p.name) == fielder_name
+                    ),
+                    None,
+                )
+                breakthrough_data["kind"] = "runout"
+                breakthrough_data["fielder"] = fielder.name if fielder else fielder_name
+            else:
+                breakthrough_data["kind"] = "bowler"
+                breakthrough_data["bowler"] = bowler.name
+            utilities.PushEvent("partnership_broken", breakthrough_data)
 
         self.PrintCommentaryDismissal(dismissal)
         # show score
         self.CurrentMatchStatus()
+        # how's the chase going? (wicket-triggered; the every-10-overs
+        # trigger lives in _PostOverDisplay). Skipped if this very wicket
+        # already decided the match (all out) - _PushChaseDecided covers that
+        if self.status and batting_team.wickets_fell < 10:
+            self._PushChaseAssessment()
         # a new batsman only walks out if there is still an innings to bat:
         # not when the wicket fell on the last ball of the innings, and not
         # when it ended the match (GetNextBatsman itself handles all-out)
@@ -3141,12 +3267,12 @@ class Match:
             Fore.LIGHTGREEN_EX,
         )
         PrintInColor("Decision pending...", Style.BRIGHT)
-        utilities.PushEvent("drs_pending")
+        utilities.PushEvent("drs_pending", {"kind": kind})
         if not self.fast:
             time.sleep(5)
 
         overturned = random.choice([True, False])
-        utilities.PushEvent("drs_result", {"out": not overturned})
+        utilities.PushEvent("drs_result", {"out": not overturned, "kind": kind})
 
         if overturned:
             # on-field call was wrong: the batsman survives and, because the
@@ -3222,11 +3348,11 @@ class Match:
         PrintInColor(Randomize(referral), Style.BRIGHT)
         utilities.PushEvent("third_umpire", {"stage": "referred", "kind": kind})
         # green/red lights, just like DRS
-        utilities.PushEvent("drs_pending")
+        utilities.PushEvent("drs_pending", {"kind": kind})
         if not self.fast:
             time.sleep(4)
         out = random.choice([True, False])
-        utilities.PushEvent("drs_result", {"out": out})
+        utilities.PushEvent("drs_result", {"out": out, "kind": kind})
         if out:
             PrintInColor(
                 Randomize(commentary.commentary_third_umpire_out), Fore.LIGHTRED_EX
@@ -3897,7 +4023,7 @@ class Match:
                 ["Heads", "Tails"], "%s, Heads or Tails?" % t1.captain.name, 5
             )
         coin = Randomize(["Heads", "Tails"])
-        utilities.PushEvent("toss")
+        utilities.PushEvent("toss", {"team1": t1.name, "team2": t2.name})
         PrintInColor(
             "%s called %s.. and it's %s!" % (t1.captain.name, call, coin),
             Style.BRIGHT,
@@ -4187,9 +4313,12 @@ class Match:
             # first fifty
             if p.runs >= 50 and p.fifty == 0:
                 p.fifty += 1
-                utilities.PushEvent(
-                    "achievement", {"name": p.name, "type": "batting", "text": "50!"}
-                )
+                achievement_data = {"name": p.name, "type": "batting", "text": "50!"}
+                if p.attr.iscaptain:
+                    achievement_data["captainComment"] = Randomize(
+                        commentary.commentary_captain_leading
+                    )
+                utilities.PushEvent("achievement", achievement_data)
                 msg = "50 for %s!" % name
                 PrintInColor(msg, batting_team.color)
                 logger.info(msg)
@@ -4220,9 +4349,12 @@ class Match:
                 # after first fifty is done
                 p.hundred += 1
                 p.fifty += 1
-                utilities.PushEvent(
-                    "achievement", {"name": p.name, "type": "batting", "text": "100!"}
-                )
+                achievement_data = {"name": p.name, "type": "batting", "text": "100!"}
+                if p.attr.iscaptain:
+                    achievement_data["captainComment"] = Randomize(
+                        commentary.commentary_captain_leading
+                    )
+                utilities.PushEvent("achievement", achievement_data)
                 msg = "100 for %s!" % name
                 PrintInColor(msg, batting_team.color)
                 logger.info(msg)
@@ -4243,9 +4375,12 @@ class Match:
             elif p.runs >= 200 and (p.hundred == 1):
                 # after first fifty is done
                 p.hundred += 1
-                utilities.PushEvent(
-                    "achievement", {"name": p.name, "type": "batting", "text": "200!"}
-                )
+                achievement_data = {"name": p.name, "type": "batting", "text": "200!"}
+                if p.attr.iscaptain:
+                    achievement_data["captainComment"] = Randomize(
+                        commentary.commentary_captain_leading
+                    )
+                utilities.PushEvent("achievement", achievement_data)
                 msg = "200 for %s! What a superman!" % name
                 PrintInColor(msg, batting_team.color)
                 logger.info(msg)
