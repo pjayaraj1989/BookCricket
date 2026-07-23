@@ -2152,6 +2152,14 @@ class Match:
                 continue
             overs = float(BallsToOvers(bowler.balls_bowled))
             economy = round(int(bowler.runs_given) / overs, 2) if overs > 0 else 0.0
+            # per-wicket quality (batting rating + runs of everyone this
+            # bowler dismissed) - snapshotted now, before StartBowlingInnings
+            # resets wickets_taken for the next innings. Used by the Test
+            # player-of-the-match impact score (see FindPlayerOfTheMatchTest);
+            # harmless extra field for every other consumer of this dict.
+            wicket_quality = sum(
+                d.attr.batting * 1.5 + d.runs * 0.5 for d in bowler.wickets_taken
+            )
             bowling_card.append(
                 {
                     "name": bowler.name,
@@ -2160,6 +2168,8 @@ class Match:
                     "runs": int(bowler.runs_given),
                     "wickets": int(bowler.wkts),
                     "economy": float(economy),
+                    "ballsBowled": int(bowler.balls_bowled),
+                    "wicketQuality": float(round(wicket_quality, 2)),
                 }
             )
 
@@ -3819,9 +3829,51 @@ class Match:
 
         return result
 
+    def _PlayerImpactScore(self, p):
+        """
+        How much this player actually contributed to the winning team's win
+        - not just raw runs or wickets. Batting rewards runs scored at a
+        good strike rate, with a bonus for finishing the innings not out
+        (closed the game out rather than just padding a total). Bowling
+        rewards each wicket in proportion to the quality of the batter
+        dismissed - their batting rating and how many runs they'd already
+        made - so 5 wickets against tailenders who never got going is worth
+        less than 4 wickets that broke through a well-set top order, plus a
+        bonus for bowling economically (enough overs bowled to mean
+        something). Summing both halves for the same player is what lets a
+        genuine all-rounder's contribution outweigh a one-dimensional spell.
+
+        Returns:
+            float: impact score for this player (higher = bigger contribution).
+        """
+        batting_score = 0.0
+        if p.balls > 0:
+            # a quick contribution counts for more than a slow one of the
+            # same size; a stodgy strike rate below 100 gets no bonus, just
+            # the raw runs
+            sr_bonus = max(0.0, (p.strikerate - 100) / 100.0) * p.runs * 0.5
+            batting_score = p.runs + sr_bonus
+            if p.status and p.runs >= 20:
+                batting_score += 10  # unbeaten and made it count
+
+        bowling_score = 0.0
+        if p.balls_bowled > 0:
+            for dismissed in p.wickets_taken:
+                # a wicket is worth more the better the batter (their rating)
+                # and the more damage they'd already done (their runs) -
+                # removing a set, dangerous batsman matters far more than a
+                # tailender who nicks off cheaply
+                bowling_score += 8 + dismissed.attr.batting * 1.5 + dismissed.runs * 0.5
+            if p.balls_bowled >= 12:  # at least 2 overs - a real sample
+                bowling_score += max(0.0, 7.0 - p.eco) * 3
+
+        return batting_score + bowling_score
+
     def FindPlayerOfTheMatch(self):
         """
-        Find the player of the match.
+        Find the player of the match: the winning team's biggest contributor
+        to the win, by impact score (see _PlayerImpactScore) rather than
+        raw runs/wickets.
 
         Returns:
             None
@@ -3837,72 +3889,9 @@ class Match:
                 [self.team1, self.team2], key=attrgetter("total_score")
             ), min([self.team1, self.team2], key=attrgetter("total_score"))
 
-        # find best batsman, bowler from winning team
-        # always two batsmen will play
-        best_batsmen = sorted(
-            self.winner.team_array, key=attrgetter("runs"), reverse=True
+        best_player = max(
+            self.winner.team_array, key=lambda p: self._PlayerImpactScore(p)
         )
-        best_bowlers = sorted(self.winner.bowlers, key=attrgetter("wkts"), reverse=True)
-
-        # we need only two best batters
-        if len(best_batsmen) > 2:
-            best_batsmen = best_batsmen[:2]
-        if len(best_bowlers) > 2:
-            best_bowlers = best_bowlers[:2]
-
-        # if both of them have same runs,
-        if best_batsmen[0].runs == best_batsmen[1].runs:
-            # find who is not out among these
-            # if neither one is not out, get best SR
-            if not [plr for plr in best_batsmen if plr.status]:
-                best_batsman = sorted(
-                    best_batsmen, key=attrgetter("strikerate"), reverse=True
-                )[0]
-            # if there is one not out among them
-            else:
-                best_batsmen = [plr for plr in best_batsmen if plr.status]
-                # if both are not out, select randomly
-                if len(best_batsmen) == 2:
-                    best_batsman = sorted(
-                        best_batsmen, key=attrgetter("strikerate"), reverse=True
-                    )[0]
-                elif len(best_batsmen) == 1:
-                    best_batsman = best_batsmen[0]
-
-        else:
-            best_batsman = best_batsmen[0]
-
-        # if same wkts, get best economy bowler
-        if best_bowlers[0].wkts == best_bowlers[1].wkts:
-            best_bowler = sorted(best_bowlers, key=attrgetter("eco"), reverse=False)[0]
-        else:
-            best_bowler = best_bowlers[0]
-
-        # check if mom is best batsman or bowler
-        mom_is_batsman = 1
-        mom_is_bowler = 1
-
-        # check if win margin is >50% or if bowler took 5 wkts, if so, give credit to bowlers, else batsmen
-        margin = float(self.winner.total_score / self.loser.total_score)
-        if margin >= 1.2:
-            mom_is_bowler += 1
-
-        # if losing team is bowled out
-        if self.loser.wickets_fell >= 8:
-            # if there is a 5 or 3 wkt haul;
-            if best_bowler.wkts >= 3:
-                mom_is_bowler += 1
-
-        best_player = best_batsman
-        # check points
-        if mom_is_bowler > mom_is_batsman:
-            best_player = best_bowler
-
-        # override
-        # if a player is found in both top batsmen and bowler list he is my MOM
-        common_players = list(set(best_bowlers).intersection(best_batsmen))
-        if len(common_players) != 0:
-            best_player = common_players[0]
 
         self.result.mom = best_player
         msg = "Player of the match: %s (%s)" % (
@@ -3914,11 +3903,15 @@ class Match:
 
     def FindPlayerOfTheMatchTest(self):
         """
-        Simplified Test player-of-the-match: aggregates each player's
-        batting/bowling figures across their (up to 2) innings_history
-        entries, then picks a standout from the winning team. Silently
-        skips (no MOM) for a draw or if the winning team never got to bat -
-        both real possibilities in a Test match.
+        Test player-of-the-match: aggregates each player's batting/bowling
+        figures across their (up to 2) innings_history entries, then picks
+        the winning team's biggest contributor by the same impact-score idea
+        as the limited-overs version (_PlayerImpactScore) - runs weighted by
+        strike rate and a not-out bonus for batting; wickets weighted by the
+        quality of the batter dismissed (via each innings' bowling_card
+        "wicketQuality", snapshotted in BuildInningsSummary) plus an economy
+        bonus for bowling. Silently skips (no MOM) for a draw or if the
+        winning team never got to bat - both real possibilities in a Test.
 
         Returns:
             None
@@ -3935,10 +3928,12 @@ class Match:
         for inn in winner.innings_history:
             for b in inn.batting_card:
                 entry = bat_totals.setdefault(
-                    b["name"], {"runs": 0, "balls": 0}
+                    b["name"], {"runs": 0, "balls": 0, "notOut": False}
                 )
                 entry["runs"] += b["runs"]
                 entry["balls"] += b["balls"]
+                if b["dismissal"] == "not out":
+                    entry["notOut"] = True
 
         # a team's own bowling figures for an innings get attached to the
         # OPPONENT's innings_history entry (BuildInningsSummary snapshots
@@ -3949,45 +3944,51 @@ class Match:
         for inn in loser.innings_history:
             for bw in inn.bowling_card:
                 entry = bowl_totals.setdefault(
-                    bw["name"], {"wickets": 0, "runs": 0}
+                    bw["name"],
+                    {"wickets": 0, "runs": 0, "ballsBowled": 0, "wicketQuality": 0.0},
                 )
                 entry["wickets"] += bw["wickets"]
                 entry["runs"] += bw["runs"]
+                entry["ballsBowled"] += bw.get("ballsBowled", 0)
+                entry["wicketQuality"] += bw.get("wicketQuality", 0.0)
 
         if not bat_totals and not bowl_totals:
             return
 
-        best_batsman_name, best_batsman = (
-            max(bat_totals.items(), key=lambda kv: kv[1]["runs"])
-            if bat_totals
-            else (None, None)
-        )
-        best_bowler_name, best_bowler = (
-            max(bowl_totals.items(), key=lambda kv: (kv[1]["wickets"], -kv[1]["runs"]))
-            if bowl_totals
-            else (None, None)
-        )
+        def impact(name):
+            score = 0.0
+            bat = bat_totals.get(name)
+            if bat and bat["balls"] > 0:
+                sr = (bat["runs"] / bat["balls"]) * 100
+                sr_bonus = max(0.0, (sr - 100) / 100.0) * bat["runs"] * 0.5
+                score += bat["runs"] + sr_bonus
+                if bat["notOut"] and bat["runs"] >= 20:
+                    score += 10
+            bowl = bowl_totals.get(name)
+            if bowl and bowl["ballsBowled"] > 0:
+                score += 8 * bowl["wickets"] + bowl["wicketQuality"]
+                overs = bowl["ballsBowled"] / 6.0
+                eco = bowl["runs"] / overs if overs > 0 else 0.0
+                if bowl["ballsBowled"] >= 12:
+                    score += max(0.0, 7.0 - eco) * 3
+            return score
 
-        # weight bowler vs batsman, echoing the limited-overs heuristic
-        mom_is_bowler = 1
-        mom_is_batsman = 1
-        if best_bowler and best_bowler["wickets"] >= 5:
-            mom_is_bowler += 1
-        loser_bowled_out = loser.innings_history and all(
-            inn.wickets == 10 for inn in loser.innings_history
-        )
-        if loser_bowled_out and best_bowler and best_bowler["wickets"] >= 3:
-            mom_is_bowler += 1
+        name = max(set(bat_totals) | set(bowl_totals), key=impact)
 
-        if best_batsman_name and (not best_bowler_name or mom_is_batsman >= mom_is_bowler):
-            name, stat = best_batsman_name, "scored %s runs in the match" % str(
-                best_batsman["runs"]
+        stat_parts = []
+        bat = bat_totals.get(name)
+        if bat and bat["runs"] > 0:
+            stat_parts.append(
+                "scored %s%s runs in the match"
+                % (str(bat["runs"]), "*" if bat["notOut"] else "")
             )
-        else:
-            name, stat = best_bowler_name, "took %s wickets for %s runs in the match" % (
-                str(best_bowler["wickets"]),
-                str(best_bowler["runs"]),
+        bowl = bowl_totals.get(name)
+        if bowl and bowl["wickets"] > 0:
+            stat_parts.append(
+                "took %s wickets for %s runs in the match"
+                % (str(bowl["wickets"]), str(bowl["runs"]))
             )
+        stat = " and ".join(stat_parts) if stat_parts else "was the standout performer"
 
         self.result.mom_name = name
         self.result.mom_stat = stat
