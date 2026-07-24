@@ -1928,33 +1928,52 @@ class Match:
         if upcoming:
             utilities.PushEvent("next_batsmen", {"names": upcoming})
 
+    # tier names in ascending order of difficulty - indices double as a
+    # comparable "how bad is it" scale for _ClassifyChase's rate/resource mix
+    _CHASE_TIERS = ["cruising", "on_track", "in_balance", "tough", "improbable"]
+
     def _ClassifyChase(self, rrr, crr, wickets_in_hand, batting_strength):
         """
         Rough difficulty tier for a run chase: how the required rate
-        compares to the current rate (the "ask"), tempered by the resources
+        compares to the current rate (the "ask"), floored by the resources
         still available to answer it (wickets in hand and the average
         batting quality of everyone still to come, attr.batting is 1-10).
+
+        The rate alone can look deceptively comfortable with wickets
+        tumbling and only the tail left - a low ask means little with no
+        one left to bat it out - so a thin/weak lower order puts a floor
+        under how good the verdict can be, regardless of how easy the rate
+        math looks.
 
         Returns:
             str: one of "cruising", "on_track", "in_balance", "tough",
             "improbable".
         """
         if rrr <= 0:
-            return "cruising"
-        rate_ratio = rrr / max(crr, 0.5)
-        resource_score = (wickets_in_hand / 10.0) * 0.6 + (
-            min(batting_strength, 10) / 10.0
-        ) * 0.4
+            rate_index = 0
+        else:
+            rate_ratio = rrr / max(crr, 0.5)
+            if rate_ratio <= 0.85:
+                rate_index = 0
+            elif rate_ratio <= 1.05:
+                rate_index = 1
+            elif rate_ratio <= 1.4:
+                rate_index = 2
+            elif rate_ratio <= 2.0:
+                rate_index = 3
+            else:
+                rate_index = 4
 
-        if rate_ratio <= 0.85:
-            return "cruising"
-        if rate_ratio <= 1.05:
-            return "on_track" if resource_score > 0.3 else "in_balance"
-        if rate_ratio <= 1.4:
-            return "in_balance" if resource_score > 0.4 else "tough"
-        if rate_ratio <= 2.0:
-            return "tough" if resource_score > 0.3 else "improbable"
-        return "improbable"
+        if wickets_in_hand <= 1:
+            floor_index = 3  # last-pair territory is never "cruising"
+        elif wickets_in_hand <= 3 and batting_strength < 5:
+            floor_index = 2
+        elif wickets_in_hand <= 5 and batting_strength < 4:
+            floor_index = 2
+        else:
+            floor_index = 0
+
+        return self._CHASE_TIERS[max(rate_index, floor_index)]
 
     def _PushChaseAssessment(self):
         """
