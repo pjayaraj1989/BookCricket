@@ -13,10 +13,6 @@ level on points are separated by net run rate (all-out innings count the full
 over quota, as in real cricket). Two teams play a fixed number of matches;
 three or more play a single round robin, then the top two contest a final.
 """
-import contextlib
-import os
-import sys
-
 import functions.utilities as utilities
 from functions.utilities import (
     PrintInColor,
@@ -30,7 +26,6 @@ from functions.Initiate import (
     LoadTeam, LoadVenueByName, AssignWeather, BuildMatch,
     ListLeagues, LeagueTeamNames, VenueChoices,
 )
-from web.io_bridge import get_channel, set_channel
 from colorama import Style, Fore
 
 WIN_POINTS = 2
@@ -269,7 +264,7 @@ class Tournament:
                 {"stage": "simulating", "label": label, "home": fx["home"],
                  "away": fx["away"]},
             )
-            with _silent_play():
+            with utilities.SilentPlay():
                 match.PlayMatch(self.ScriptPath)
         else:
             match.PlayMatch(self.ScriptPath)
@@ -706,32 +701,3 @@ def SetupSeries():
         Fore.LIGHTCYAN_EX,
     )
     return t
-
-
-@contextlib.contextmanager
-def _silent_play():
-    """
-    Run a simulated match without any of its ball-by-ball noise reaching the
-    player. In web mode this detaches the browser channel for the duration
-    (thread-local, so other sessions are unaffected, and event pop-ups neither
-    emit nor block on acks); in console mode it redirects stdout/stderr to
-    /dev/null (safe: console play is single-process, single-user).
-    """
-    was_web = utilities.IsWebMode()
-    saved = get_channel()
-    redirect = None
-    old_out = old_err = None
-    if was_web:
-        set_channel(None)
-    else:
-        redirect = open(os.devnull, "w")
-        old_out, old_err = sys.stdout, sys.stderr
-        sys.stdout = sys.stderr = redirect
-    try:
-        yield
-    finally:
-        if was_web:
-            set_channel(saved)
-        if redirect is not None:
-            sys.stdout, sys.stderr = old_out, old_err
-            redirect.close()

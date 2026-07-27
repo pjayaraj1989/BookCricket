@@ -302,6 +302,17 @@ def handle_declare_request():
         channel.request_declare()
 
 
+@socketio.on("simulate_innings_request")
+def handle_simulate_innings_request():
+    # the GUI's "Simulate rest of innings" button: flags the session's game
+    # thread, which fast-forwards at the next over boundary (Test innings only)
+    sid = request.sid
+    with _channels_lock:
+        channel = _channels.get(sid)
+    if channel is not None:
+        channel.request_simulate_innings()
+
+
 @socketio.on("disconnect")
 def handle_disconnect():
     sid = request.sid
