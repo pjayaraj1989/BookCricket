@@ -3,6 +3,7 @@ const controlsEl = document.getElementById("controls");
 const statusEl = document.getElementById("status");
 const killBtn = document.getElementById("killBtn");
 const declareBtn = document.getElementById("declareBtn");
+const simulateInningsBtn = document.getElementById("simulateInningsBtn");
 const liveScorecardEl = document.getElementById("liveScorecard");
 const inningsSummariesEl = document.getElementById("inningsSummaries");
 const eventPaneEl = document.getElementById("eventPane");
@@ -12,7 +13,7 @@ const runRateSvgEl = document.getElementById("runRateSvg");
 const simOverlayEl = document.getElementById("simOverlay");
 const triviaPanelEl = document.getElementById("triviaPanel");
 
-function showSimOverlay(title, teams) {
+function showSimOverlay(title, teams, subText) {
   if (!simOverlayEl) return;
   simOverlayEl.innerHTML = "";
   const spinner = document.createElement("div");
@@ -25,7 +26,7 @@ function showSimOverlay(title, teams) {
   who.textContent = teams;
   const sub = document.createElement("div");
   sub.className = "sim-sub";
-  sub.textContent = "playing out the match…";
+  sub.textContent = subText || "playing out the match…";
   simOverlayEl.append(spinner, t, who, sub);
   simOverlayEl.classList.add("visible");
 }
@@ -88,6 +89,26 @@ function updateDeclareButton(state) {
     declareBtn.textContent = "🏳️ Declare";
   } else {
     declareBtn.style.display = "none";
+  }
+}
+
+simulateInningsBtn.addEventListener("click", () => {
+  socket.emit("simulate_innings_request");
+  // the engine picks it up at the next over boundary; freeze the button
+  // until the next scorecard push so it can't be spammed meanwhile - the
+  // sim overlay (triggered by the "simulating_innings" event) takes over
+  // from here as the visible feedback
+  simulateInningsBtn.disabled = true;
+  simulateInningsBtn.textContent = "⏩ Simulating…";
+});
+
+function updateSimulateInningsButton(state) {
+  if (state.simulateEligible) {
+    simulateInningsBtn.style.display = "";
+    simulateInningsBtn.disabled = false;
+    simulateInningsBtn.textContent = "⏩ Simulate innings";
+  } else {
+    simulateInningsBtn.style.display = "none";
   }
 }
 
@@ -517,6 +538,7 @@ function renderScorecard(state) {
   liveScorecardEl.innerHTML = parts.join("");
   renderRunRateGraph(state);
   updateDeclareButton(state);
+  updateSimulateInningsButton(state);
 }
 
 const RUN_RATE_COLOR_CURRENT = "#7fe3a3";
@@ -1031,7 +1053,22 @@ function buildPlayerCard(name, role, srcPath) {
 }
 
 function renderEvent(kind, data) {
-  if (kind === "toss") {
+  // the sim overlay stays up across a silent simulation (tournament fixture
+  // or a fast-forwarded Test innings), since no events reach the browser
+  // while it's running - so whatever event fires *next*, of any kind, is
+  // the signal that play has resumed and the overlay should come down
+  const isSimShowing =
+    kind === "simulating_innings" ||
+    (kind === "series" && data && data.stage === "simulating");
+  if (!isSimShowing) hideSimOverlay();
+
+  if (kind === "simulating_innings") {
+    showSimOverlay(
+      "this innings",
+      (data && data.team) || "",
+      "fast-forwarding to the end of the innings…"
+    );
+  } else if (kind === "toss") {
     const wrap = document.createElement("div");
     wrap.className = "event-player";
     const row = document.createElement("div");
@@ -1447,8 +1484,7 @@ function renderEvent(kind, data) {
     );
   } else if (kind === "series") {
     const stage = data && data.stage;
-    // any series beat other than "simulating" means the sim (if any) is done
-    if (stage !== "simulating") hideSimOverlay();
+    // hideSimOverlay() for a non-"simulating" stage already happened above
     if (stage === "simulating") {
       showSimOverlay(
         (data && data.label) || "Match",

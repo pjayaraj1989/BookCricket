@@ -1,5 +1,6 @@
 import colorama
 from colorama import AnsiToWin32, init, Style
+import contextlib
 import time
 import sys
 from functions.Initiate import *
@@ -7,7 +8,7 @@ import random
 import os
 import pyttsx3
 from math import ceil
-from web.io_bridge import get_channel, GameAborted
+from web.io_bridge import get_channel, set_channel, GameAborted
 
 
 # function used to fill class attributes based on input arguments
@@ -282,6 +283,37 @@ def IsWebMode():
     return get_channel() is not None
 
 
+@contextlib.contextmanager
+def SilentPlay():
+    """
+    Run simulated play without any of its ball-by-ball noise reaching the
+    player. In web mode this detaches the browser channel for the duration
+    (thread-local, so other sessions are unaffected, and event pop-ups
+    neither emit nor block on acks); in console mode it redirects
+    stdout/stderr to /dev/null (safe: console play is single-process,
+    single-user). Used for tournament "Simulate this match" fixtures and
+    the GUI's "Simulate rest of innings" button.
+    """
+    was_web = IsWebMode()
+    saved = get_channel()
+    redirect = None
+    old_out = old_err = None
+    if was_web:
+        set_channel(None)
+    else:
+        redirect = open(os.devnull, "w")
+        old_out, old_err = sys.stdout, sys.stderr
+        sys.stdout = sys.stderr = redirect
+    try:
+        yield
+    finally:
+        if was_web:
+            set_channel(saved)
+        if redirect is not None:
+            sys.stdout, sys.stderr = old_out, old_err
+            redirect.close()
+
+
 def PushMatchReset():
     """
     Tell the web UI to clear the side pane (scorecard, innings summaries,
@@ -309,6 +341,20 @@ def ConsumeDeclareRequest():
     if channel is None:
         return False
     return channel.consume_declare_request()
+
+
+def ConsumeSimulateInningsRequest():
+    """
+    Check-and-clear the web GUI's "Simulate rest of innings" button flag for
+    this session. Always False in console mode (no channel set).
+
+    Returns:
+        bool
+    """
+    channel = get_channel()
+    if channel is None:
+        return False
+    return channel.consume_simulate_innings_request()
 
 
 def PushPlayingXI(match):
@@ -533,6 +579,12 @@ def PushScorecard(match):
             is_test
             and getattr(match, "declare_eligible", False)
             and batting.wickets_fell < 10
+        ),
+        # drives the GUI's "Simulate rest of innings" button: Test only,
+        # while there's still an innings in progress to fast-forward, and
+        # not already running the whole match on autoplay
+        "simulateEligible": bool(
+            is_test and batting.wickets_fell < 10 and not match.autoplay
         ),
         "crr": _float(batting.GetCurrentRate()),
         "target": _int(batting.target) if batting.batting_second else None,

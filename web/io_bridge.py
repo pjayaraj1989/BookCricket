@@ -37,6 +37,8 @@ class WebChannel:
         # the game thread consumes it at the next over boundary (single bool
         # flip, so no lock needed under the GIL)
         self._declare_requested = False
+        # same idea for the GUI's "Simulate rest of innings" button (Test only)
+        self._simulate_innings_requested = False
 
     def request_declare(self):
         self._declare_requested = True
@@ -44,6 +46,14 @@ class WebChannel:
     def consume_declare_request(self):
         requested = self._declare_requested
         self._declare_requested = False
+        return requested
+
+    def request_simulate_innings(self):
+        self._simulate_innings_requested = True
+
+    def consume_simulate_innings_request(self):
+        requested = self._simulate_innings_requested
+        self._simulate_innings_requested = False
         return requested
 
     def output(self, text, color=None):
