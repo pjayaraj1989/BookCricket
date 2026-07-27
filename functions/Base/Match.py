@@ -1510,61 +1510,97 @@ class Match:
         """
         batting_team = self.batting_team
         over = start_over
-        # discard a Declare press left over from a previous innings (or one
-        # made while it wasn't applicable) so it can't trigger a surprise
-        # confirmation prompt at the first over of this innings
+        # discard a Declare press (and a stale "simulate rest of innings"
+        # press) left over from a previous innings so neither can trigger a
+        # surprise at the first over of this innings
         utilities.ConsumeDeclareRequest()
-        while True:
-            if self._AdvanceSessionIfNeeded():
-                break
-            if self.status is False:
-                break
-            if batting_team.wickets_fell == 10:
-                break
-            if self._ShouldDeclare(over):
-                batting_team.declared = True
-                utilities.PushEvent(
-                    "declare",
-                    {
-                        "team": batting_team.name,
-                        "score": int(batting_team.total_score),
-                        "wickets": int(batting_team.wickets_fell),
-                    },
-                )
-                PrintInColor(
-                    "%s have declared their innings at %s/%s (%s overs)!"
-                    % (
-                        batting_team.name,
-                        str(batting_team.total_score),
-                        str(batting_team.wickets_fell),
-                        str(BallsToOvers(batting_team.total_balls)),
-                    ),
-                    Style.BRIGHT,
-                )
-                break
+        utilities.ConsumeSimulateInningsRequest()
+        # entered once the GUI's "Simulate rest of innings" button fires (see
+        # below); torn down in the finally so a crash/early return can never
+        # leave the browser channel detached. original_autoplay/fast are
+        # restored verbatim rather than to False - a tournament match can
+        # already be running with fast=True (or the whole thing on autoplay)
+        # before this innings even starts, and that must survive untouched.
+        original_autoplay, original_fast = self.autoplay, self.fast
+        silent_cm = None
+        try:
+            while True:
+                if self._AdvanceSessionIfNeeded():
+                    break
+                if self.status is False:
+                    break
+                if batting_team.wickets_fell == 10:
+                    break
 
-            if over > 1 and over % 20 == 0:
-                self.CurrentMatchStatus()
+                if (
+                    silent_cm is None
+                    and not self.autoplay
+                    and utilities.ConsumeSimulateInningsRequest()
+                ):
+                    # push the notice, THEN detach - once silenced nothing
+                    # reaches the browser until this innings ends
+                    utilities.PushEvent(
+                        "simulating_innings", {"team": batting_team.name}
+                    )
+                    PrintInColor(
+                        "Simulating the rest of %s's innings..." % batting_team.name,
+                        Style.BRIGHT,
+                    )
+                    self.autoplay, self.fast = True, True
+                    silent_cm = utilities.SilentPlay()
+                    silent_cm.__enter__()
 
-            self.batting_team.current_pair = pair
-            self.PlayOver(over)
-            self.overs_bowled_this_session += 1
-            self.match_overs_bowled += 1
+                if self._ShouldDeclare(over):
+                    batting_team.declared = True
+                    utilities.PushEvent(
+                        "declare",
+                        {
+                            "team": batting_team.name,
+                            "score": int(batting_team.total_score),
+                            "wickets": int(batting_team.wickets_fell),
+                        },
+                    )
+                    PrintInColor(
+                        "%s have declared their innings at %s/%s (%s overs)!"
+                        % (
+                            batting_team.name,
+                            str(batting_team.total_score),
+                            str(batting_team.wickets_fell),
+                            str(BallsToOvers(batting_team.total_balls)),
+                        ),
+                        Style.BRIGHT,
+                    )
+                    break
 
-            if self.status is False:
-                break
+                if over > 1 and over % 20 == 0:
+                    self.CurrentMatchStatus()
 
-            # rain may build up and eventually stop play, burning overs off
-            # the day/match clock (and drawing the match if days run out)
-            if self._MaybeRain():
-                break
+                self.batting_team.current_pair = pair
+                self.PlayOver(over)
+                self.overs_bowled_this_session += 1
+                self.match_overs_bowled += 1
 
-            self._PostOverDisplay(pair)
-            over += 1
-            # over boundary: persist so a crash loses at most this partial over
-            self.save_started = True
-            self.save_done = False
-            self._SaveGame()
+                if self.status is False:
+                    break
+
+                # rain may build up and eventually stop play, burning overs
+                # off the day/match clock (and drawing the match if days run out)
+                if self._MaybeRain():
+                    break
+
+                self._PostOverDisplay(pair)
+                over += 1
+                # over boundary: persist so a crash loses at most this partial over
+                self.save_started = True
+                self.save_done = False
+                self._SaveGame()
+        finally:
+            if silent_cm is not None:
+                silent_cm.__exit__(None, None, None)
+                # this innings only - hand back whatever mode was in effect
+                # before the button was pressed for whatever comes next
+                # (follow-on choice, next innings, etc.)
+                self.autoplay, self.fast = original_autoplay, original_fast
         return
 
     def _MaybeRain(self):
