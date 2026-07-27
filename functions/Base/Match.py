@@ -3107,7 +3107,7 @@ class Match:
                     [name, p.dismissal, "%s (%s)" % (str(p.runs), str(p.balls))]
                 )
 
-        PrintListFormatted(data_to_print, 0.01, logger)
+        PrintListFormatted(data_to_print, 0 if self.fast else 0.01, logger)
 
         msg = "Extras: %s" % str(batting_team.extras)
         print(msg)
@@ -4914,7 +4914,7 @@ class Match:
                     ]
                 )
 
-        PrintListFormatted(data_to_print, 0.01, logger)
+        PrintListFormatted(data_to_print, 0 if self.fast else 0.01, logger)
         print(char * 45)
         logger.info(char * 45)
         if not self.autoplay:
@@ -4950,7 +4950,7 @@ class Match:
 
             data_to_print.append([name1, name2])
         # now print it
-        PrintListFormatted(data_to_print, 0.1, None)
+        PrintListFormatted(data_to_print, 0 if self.fast else 0.1, None)
         utilities.PushPlayingXI(self)
 
     def MatchSummary(self):
@@ -5032,7 +5032,7 @@ class Match:
             )
 
         # print
-        PrintListFormatted(data_to_print, 0.01, logger)
+        PrintListFormatted(data_to_print, 0 if self.fast else 0.01, logger)
 
         data_to_print = []
         print(ch * 45)
@@ -5067,7 +5067,7 @@ class Match:
                 ]
             )
 
-        PrintListFormatted(data_to_print, 0.01, logger)
+        PrintListFormatted(data_to_print, 0 if self.fast else 0.01, logger)
         print("-" * 43)
         logger.info("-" * 43)
         if not self.autoplay:
