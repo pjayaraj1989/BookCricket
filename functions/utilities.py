@@ -267,7 +267,7 @@ def PushEvent(kind, data=None):
             "boundary_streak", "super_over", "free_hit", "weather", "target",
             "approaching", "first_ball_wicket", "validating_teams",
             "partnership_broken", "chase_update", "drinks_break",
-            "too_many_extras", "stumps").
+            "too_many_extras", "stumps", "innings_analysis").
         data: Optional dict of extra fields for the frontend to render.
 
     Returns:

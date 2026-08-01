@@ -976,6 +976,102 @@ function buildPartnershipCard(batsmen, runs) {
   return wrap;
 }
 
+// end-of-innings verdict: how the total rates, the shape of the innings, and
+// who stood out with bat and ball (see Match.py's _BuildInningsAnalysis)
+function buildInningsAnalysisCard(data) {
+  const wrap = document.createElement("div");
+  wrap.className = "innings-analysis";
+
+  const head = document.createElement("div");
+  head.className = "ia-head";
+  if (data.team) head.appendChild(teamFlagBadge(data.team, true));
+  const score = document.createElement("span");
+  score.className = "ia-score";
+  score.textContent =
+    data.team + " " + data.score + "/" + data.wickets +
+    " (" + Number(data.overs).toFixed(1) + " ov)";
+  head.appendChild(score);
+  const rr = document.createElement("span");
+  rr.className = "ia-rr";
+  rr.textContent = "RR " + Number(data.runRate).toFixed(2);
+  head.appendChild(rr);
+  wrap.appendChild(head);
+
+  if (data.headline) {
+    const h = document.createElement("div");
+    h.className = "ia-headline";
+    h.textContent = data.headline;
+    wrap.appendChild(h);
+  }
+
+  if (data.chase) {
+    const c = document.createElement("div");
+    c.className = "ia-chase " + (data.chase.successful ? "ok" : "fail");
+    c.textContent = data.chase.successful
+      ? "Target of " + data.chase.target + " chased down."
+      : "Fell " + data.chase.margin + " run" + (data.chase.margin === 1 ? "" : "s") +
+        " short of " + data.chase.target + ".";
+    wrap.appendChild(c);
+  }
+
+  // how the match was won/lost - thriller, routine, or a thrashing
+  if (data.verdict) {
+    const v = document.createElement("div");
+    v.className = "ia-verdict";
+    v.textContent = data.verdict;
+    wrap.appendChild(v);
+  }
+
+  (data.notes || []).forEach((n) => {
+    const line = document.createElement("div");
+    line.className = "ia-note";
+    line.textContent = n;
+    wrap.appendChild(line);
+  });
+
+  // a labelled row of name chips; skipped entirely when there's nothing to show
+  const addRow = (label, items, cls) => {
+    if (!items || !items.length) return;
+    const row = document.createElement("div");
+    row.className = "ia-row";
+    const lab = document.createElement("span");
+    lab.className = "ia-label";
+    lab.textContent = label;
+    row.appendChild(lab);
+    items.forEach((t) => {
+      const chip = document.createElement("span");
+      chip.className = "ia-chip " + cls;
+      chip.textContent = t;
+      row.appendChild(chip);
+    });
+    wrap.appendChild(row);
+  };
+
+  const bat = data.batting || {};
+  addRow(
+    "🏏 Did well",
+    (bat.good || []).map(
+      (b) => b.name + " " + b.runs + (b.notOut ? "*" : "") + " (" + b.balls + ")"
+    ),
+    "good"
+  );
+  addRow(
+    "😞 Disappointed",
+    (bat.poor || []).map((b) => b.name + " " + b.runs + " (" + b.balls + ")"),
+    "poor"
+  );
+
+  const bowl = data.bowling || {};
+  const figures = (b) => b.name + " " + b.wickets + "/" + b.runs + " (" + Number(b.overs).toFixed(1) + " ov)";
+  if (bowl.best) addRow("⚾ Best bowler", [figures(bowl.best)], "good");
+  if (bowl.economical)
+    addRow("🔒 Most economical", [figures(bowl.economical) + " · " + Number(bowl.economical.economy).toFixed(2) + " rpo"], "good");
+  if (bowl.expensive)
+    addRow("💸 Went for runs", [figures(bowl.expensive) + " · " + Number(bowl.expensive.economy).toFixed(2) + " rpo"], "poor");
+
+  return wrap;
+}
+
 // team total milestone: big score number with team name and wickets
 function buildTeamScoreCard(team, score, wickets) {
   const card = document.createElement("div");
@@ -1340,6 +1436,8 @@ function renderEvent(kind, data) {
       card.appendChild(tw);
     }
     showEventPane(card, 4500, "takeover");
+  } else if (kind === "innings_analysis") {
+    showEventPane(buildInningsAnalysisCard(data), 9000, "takeover analysis");
   } else if (kind === "match_decided") {
     // the instant, punchy "victory moment" popup - right after the ball
     // that decided the chase, well before the later factual result/trophy

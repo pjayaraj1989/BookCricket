@@ -108,7 +108,7 @@
       "color": "green"
     },
 	
-	"West-Indies": {
+	"WestIndies": {
       "players": [
         {"name": "Chris Gayle", "nickname": "the universe boss", "batting": 8, "opener1":  1, "bowling":7, "spinner":1},
         {"name": "Devon Smith","batting": 8,"opener2": 1, "bowling":5},
@@ -167,12 +167,12 @@
         {"name": "Tamim Iqbal","batting": 8, "opener1":  1},
         {"name": "Mohammed Nazimuddin","batting": 8,"opener2": 1, "bowling":5},
         {"name": "Aftab Ahmed", "batting": 8, "bowling":6,"spinner":1},
-		{"name": "Mohammad Ashraful","batting": 8, "spinner":1,"bowling":6, "captain":1},
+        {"name": "Mohammad Ashraful","batting": 8, "spinner":1,"bowling":6, "captain":1},
         {"name": "Shakib Al Hasan",  "batting": 8,"bowling":7, "spinner":1},
         {"name": "Alok Kapali","batting": 7,"bowling":5,"spinner":1},
         {"name": "Mushfiqur Rahim","batting": 6,"keeper":1},
         {"name": "Farhad Reza","batting": 6,"bowling":7, "spinner":1},
-		{"name": "Abdur Razzak","batting": 7, "bowling":7, "pacer":1},
+        {"name": "Abdur Razzak","batting": 7, "bowling":7, "pacer":1},
         {"name": "Mashrafe Mortaza","batting": 5,"bowling": 7, "pacer":1},
         {"name": "Syed Rasel","batting": 5,"bowling": 8,"openingbowler":1, "pacer":1}
       ],
