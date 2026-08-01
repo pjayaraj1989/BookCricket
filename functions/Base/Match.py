@@ -2797,6 +2797,16 @@ class Match:
                 self.UpdateDismissal(dismissal)
                 return
 
+        # no wicket was rolled, but on a dot ball the fielding side
+        # occasionally has a shout of their own - a plausible LBW/catch
+        # appeal the umpire turned down, reviewable on the bowling team's
+        # own DRS quota (separate from the batting side's)
+        if run == 0:
+            reprieve_dismissal = self._MaybeBowlingReview()
+            if reprieve_dismissal is not None:
+                self.UpdateDismissal(reprieve_dismissal)
+                return
+
         # appropriate commentary for 4s and 6s
         if run == 4:
             utilities.PushEvent("four")
@@ -3539,6 +3549,119 @@ class Match:
                 Style.BRIGHT,
             )
         return overturned
+
+    def _MaybeBowlingReview(self):
+        """
+        On a dot ball, occasionally the fielding side has a shout of their
+        own - an LBW or catch appeal the on-field umpire turned down - which
+        they can review using their own Team.drs_chances, separate from the
+        batting side's quota. A no-op when DRS isn't enabled for this match
+        or the bowling team has no chances left to spend.
+
+        Returns:
+            str or None: the dismissal string if the review overturns the
+            not-out call (the batter is out after all); None if no appeal
+            happened, or the not-out call stood.
+        """
+        if not self.drs or self.bowling_team.drs_chances <= 0:
+            return None
+        if random.random() > 0.04:  # a close shout on roughly 1 in 25 dot balls
+            return None
+
+        kind = random.choice(["lbw", "caught"])
+        PrintInColor(
+            Randomize(commentary.commentary_bowling_appeal) % self.umpire,
+            Fore.LIGHTRED_EX,
+        )
+        if not self._CheckBowlingReview(kind):
+            return None
+        return self._GenerateBowlingReviewDismissal(kind)
+
+    def _CheckBowlingReview(self, kind):
+        """
+        Mirror of CheckDRS, but the FIELDING side reviewing a NOT OUT call
+        (an LBW or catch appeal the umpire turned down), spending the
+        bowling team's own drs_chances. Unlike CheckDRS - where an overturn
+        means the batter SURVIVES - here an overturn means the not-out call
+        was wrong and the batter IS out after all.
+
+        Args:
+            kind: "lbw" or "caught".
+
+        Returns:
+            bool: True if the review overturns the not-out call (batter out).
+        """
+        team = self.bowling_team
+
+        opt = ChooseFromOptions(
+            ["y", "n"],
+            "%s review the not-out call? %s chance(s) left"
+            % (team.name, str(team.drs_chances)),
+            200000,
+        )
+        if opt == "n":
+            return False
+
+        PrintInColor("Decision pending...", Style.BRIGHT)
+        utilities.PushEvent("drs_pending", {"kind": kind})
+        if not self.fast:
+            time.sleep(5)
+
+        overturned = random.choice([True, False])
+        utilities.PushEvent("drs_result", {"out": overturned, "kind": kind})
+
+        if overturned:
+            PrintInColor(
+                Randomize(commentary.commentary_bowling_review_success) % team.name,
+                Fore.LIGHTRED_EX,
+            )
+            PrintInColor(
+                "Review successful - %s keep their %s review(s)."
+                % (team.name, str(team.drs_chances)),
+                Style.BRIGHT,
+            )
+        else:
+            team.drs_chances -= 1
+            PrintInColor(
+                Randomize(commentary.commentary_bowling_review_fail) % team.name,
+                Fore.LIGHTGREEN_EX,
+            )
+            PrintInColor(
+                "Review lost - %s have %s review(s) left."
+                % (team.name, str(team.drs_chances)),
+                Style.BRIGHT,
+            )
+        return overturned
+
+    def _GenerateBowlingReviewDismissal(self, kind):
+        """
+        Build the dismissal string for a bowling-side review that overturns
+        a not-out call, crediting the same fielding stats GenerateDismissal
+        would for an equivalent LBW/catch dismissal.
+
+        Args:
+            kind: "lbw" or "caught".
+
+        Returns:
+            str: the dismissal string.
+        """
+        bowling_team = self.bowling_team
+        bowler = bowling_team.current_bowler
+        if kind == "lbw":
+            return "lbw %s" % GetShortName(bowler.name)
+
+        fielder = Randomize(bowling_team.team_array)
+        fielder.catches += 1
+        if fielder.catches == 5:
+            utilities.PushEvent(
+                "achievement",
+                {"name": fielder.name, "type": "fielding", "text": "5 catches!"},
+            )
+        if fielder == bowler:
+            return "c&b %s" % GetShortName(bowler.name)
+        if fielder.attr.iskeeper:
+            return "c +%s b %s" % (GetShortName(fielder.name), GetShortName(bowler.name))
+        return "c %s b %s" % (GetShortName(fielder.name), GetShortName(bowler.name))
 
     def _CheckThirdUmpire(self, dismissal, kind):
         """

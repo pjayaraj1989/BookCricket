@@ -669,6 +669,43 @@ class commentary:
         "that's a clear edge, the on field call from %s stands.. he has to go",
     ]
 
+    # the bowling side appeals for a wicket (lbw/catch) and the on-field
+    # umpire gives it not out - a shout they can review on their own DRS quota
+    commentary_bowling_appeal = [
+        "huge appeal from the bowling side!.. but %s says not out!",
+        "they go up as one!.. turned down by %s!",
+        "that looked close, but %s is unmoved!",
+        "a big shout there, and %s shakes the head!",
+        "the fielding side can't believe it!.. not out says %s!",
+        "that's given not out by %s, much to the bowlers' disappointment!",
+        "a confident appeal, but %s isn't interested!",
+        "they were so sure of that one!.. %s says not out!",
+        "the whole team goes up!.. %s waves it away!",
+        "not given by %s - the bowling side look stunned!",
+    ]
+
+    # bowling-side review overturns the not-out call - the batsman is out after all
+    commentary_bowling_review_success = [
+        "the review shows they were right all along! %s get their wicket!",
+        "overturned! %s have their man after all!",
+        "the replay proves it - out! great review from %s!",
+        "%s were right to review that - the batsman has to go!",
+        "the technology backs the bowlers! %s celebrate!",
+        "that's out on review! superb call from %s!",
+        "the third umpire agrees with %s - he's got to go!",
+    ]
+
+    # bowling-side review fails - the not-out call stands, a chance is burnt
+    commentary_bowling_review_fail = [
+        "the review confirms it - not out! %s lose a review!",
+        "no joy for %s - the on-field call stands!",
+        "the replay backs the umpire! %s have burned a review!",
+        "not out, and %s pay the price for that review!",
+        "the technology sides with the batsman - %s lose a chance!",
+        "that's stayed not out - costly review from %s!",
+        "the umpire's call is upheld - %s down a review now!",
+    ]
+
     commentary_dropped = [
         "that's hit straight up in the air, %s says mine.. oh and put down!",
         "edged and dropped at first slip by %s! disappointment for the bowler.. oh dear!.. batsman is lucky !",
