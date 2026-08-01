@@ -888,6 +888,163 @@ main {
   z-index: 150;
 }
 
+/* end-of-innings verdict card (see buildInningsAnalysisCard). Denser and
+   left-aligned than the other takeovers - it is read, not glanced at. */
+.innings-analysis {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+  text-align: left;
+  max-width: min(760px, 92vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.ia-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.ia-score {
+  font-size: clamp(1.3rem, 3.6vw, 2rem);
+  font-weight: 900;
+  color: #f2d16b;
+}
+
+.ia-rr {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #9fd4b4;
+  border: 1px solid #2a6b45;
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+}
+
+/* the commentator delivering the analysis, and what they are saying */
+/* the commentator "calling" a full-screen announcement (see
+   attachCommentatorBadge). Centred on screen, below the announcement itself,
+   as though they were talking us through the situation - no name label, just
+   the face. */
+.event-commentator {
+  position: absolute;
+  /* centred via auto margins, not translateX: the event-pop animation below
+     drives `transform`, and a transform-based centring would be clobbered
+     mid-animation and snap the photo off-centre */
+  left: 0;
+  right: 0;
+  bottom: 8vh;
+  margin: 0 auto;
+  width: fit-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: event-pop 0.45s ease;
+  pointer-events: none;
+}
+
+.event-commentator-pic {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #3a8a5c;
+  background: #071510;
+  box-shadow: 0 0 22px rgba(58, 138, 92, 0.35);
+  flex: 0 0 auto;
+}
+
+.event-commentator-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #e6f2ea;
+}
+
+@media (max-width: 800px) {
+  .event-commentator { bottom: 5vh; }
+  .event-commentator-pic { width: 68px; height: 68px; }
+}
+
+.ia-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  width: 100%;
+}
+
+.ia-commentator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+  width: 96px;
+}
+
+.ia-commentator-pic {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #2a6b45;
+  background: #071510;
+}
+
+.ia-commentator-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #e6f2ea;
+}
+
+.ia-commentator-name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #9fd4b4;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* speech bubble, with a little tail pointing back at the commentator */
+.ia-speech {
+  position: relative;
+  flex: 1 1 auto;
+  background: #0d2a1c;
+  border: 1px solid #2a6b45;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+}
+
+.ia-speech::before {
+  content: "";
+  position: absolute;
+  left: -9px;
+  top: 28px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 9px solid #2a6b45;
+}
+
+.ia-para {
+  margin: 0 0 0.55rem 0;
+  font-size: clamp(0.95rem, 2.1vw, 1.1rem);
+  line-height: 1.5;
+  color: #e6f2ea;
+}
+.ia-para:last-child { margin-bottom: 0; }
+/* the opening line carries the verdict on the innings - give it weight */
+.ia-para:first-child { color: #f2e9c9; font-weight: 600; }
+
 .event-pane.takeover.visible {
   transform: none;
   /* block clicks on the controls behind it, only while actually shown */
