@@ -1242,6 +1242,12 @@ main {
   font-size: 0.85rem;
 }
 
+/* only populated when a typed choice doesn't match any option */
+.choice-hint {
+  color: #f2a13b;
+  text-align: center;
+}
+
 .prompt {
   margin: 0;
   font-weight: 600;
@@ -1258,6 +1264,9 @@ main {
 }
 
 .choice-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   padding: 0.5rem 0.9rem;
   border-radius: 8px;
   border: 1px solid #2a6b45;
@@ -1267,6 +1276,24 @@ main {
   font-size: 0.9rem;
 }
 .choice-btn:hover { background: #1c4a2e; }
+
+/* player mugshot on a pick-a-player button (see renderChoose) */
+.choice-btn-pic {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #2a6b45;
+  background: #071510;
+  flex: 0 0 auto;
+}
+
+/* team/country flags are rectangular - a circular crop would cut them up */
+.choice-btn-flag {
+  width: 26px;
+  height: 18px;
+  border-radius: 3px;
+}
 
 .continue-btn {
   background: #1c4a2e;

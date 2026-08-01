@@ -150,18 +150,145 @@ function looksLikeContinuePrompt(prompt) {
   return p.startsWith("continue") || p.startsWith("press enter") || p.startsWith("press any key");
 }
 
+// bare y/n reads as cryptic on a button - the console needs the terse form,
+// the browser doesn't
+// Unicode has no heads/tails coin faces, so the words stay and the emoji
+// just flavours them. ⚾ is the codebase's usual stand-in for a cricket ball.
+const CHOICE_LABELS = {
+  y: "✅",
+  n: "❌",
+  Heads: "👑 Heads",
+  Tails: "🪙 Tails",
+  Bat: "🏏 Bat",
+  Bowl: "⚾ Bowl",
+};
+// what someone might reasonably type for those options - the displayed label
+// is an emoji, so it can't carry the typed spelling the way "Yes"/"No" did
+const CHOICE_ALIASES = { y: ["yes"], n: ["no"] };
+
+// Which choice options are teams/countries we hold a flag for. Fetched once
+// so a prompt full of non-team options (venues, formats, "Auto-select"...)
+// doesn't fire a doomed image request per button.
+let teamFlagSlugs = new Set();
+fetch("teams/flags")
+  .then((r) => (r.ok ? r.json() : []))
+  .then((list) => {
+    teamFlagSlugs = new Set(list);
+  })
+  .catch(() => {});
+
+// mirrors _serve_pic's slugify in web/app.py, which maps a display name to
+// the file it is stored under ("NewZealand" -> newzealand.png)
+function picSlug(name) {
+  return String(name)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+// Resolve what the player typed at a choice prompt to one of the options:
+// the number shown on the button (1-based), or the option text itself /
+// an unambiguous prefix-or-substring of it. Returns null if it matches
+// nothing, or is ambiguous across several options.
+function resolveChoiceInput(raw, options) {
+  const value = (raw || "").trim();
+  if (!value) return null;
+
+  if (/^\d+$/.test(value)) {
+    const idx = parseInt(value, 10) - 1;
+    return idx >= 0 && idx < options.length ? options[idx] : null;
+  }
+
+  const lower = value.toLowerCase();
+  // every spelling this option answers to: itself, its label, plus aliases
+  const formsOf = (o) =>
+    [String(o), String(CHOICE_LABELS[o] || o)]
+      .concat(CHOICE_ALIASES[o] || [])
+      .map((s) => s.toLowerCase());
+  // an exact hit always wins, even if it is also a substring of some longer option
+  const exact = options.find((o) => formsOf(o).some((f) => f === lower));
+  if (exact !== undefined) return exact;
+
+  const matches = options.filter((o) => formsOf(o).some((f) => f.includes(lower)));
+  return matches.length === 1 ? matches[0] : null;
+}
+
 function renderChoose(msg, options) {
   clearControls();
+  if (msg) {
+    const label = document.createElement("p");
+    label.className = "prompt";
+    label.textContent = msg;
+    controlsEl.appendChild(label);
+  }
+
   const group = document.createElement("div");
   group.className = "choice-group";
   options.forEach((opt, idx) => {
     const btn = document.createElement("button");
     btn.className = "choice-btn";
-    btn.textContent = idx + ". " + opt;
+    // a player's option gets their mugshot, a team/country's gets its flag;
+    // everything else (venues, formats, "Auto-select", y/n...) is text-only.
+    // playerTeamMap is the roster sent at the start of the match, so it
+    // doubles as the "is this a player?" test.
+    let pic = null;
+    if (teamForPlayer(opt)) {
+      pic = document.createElement("img");
+      pic.className = "choice-btn-pic";
+      pic.src = "players/pics/" + encodeURIComponent(opt);
+    } else if (teamFlagSlugs.has(picSlug(opt))) {
+      pic = document.createElement("img");
+      pic.className = "choice-btn-pic choice-btn-flag";
+      pic.src = "teams/flags/" + encodeURIComponent(opt);
+    }
+    if (pic) {
+      pic.alt = "";
+      // nothing saved after all - drop it rather than leave a gap
+      pic.addEventListener("error", () => pic.remove());
+      btn.appendChild(pic);
+    }
+    // the number doubles as the key to type at the field below
+    const text = document.createElement("span");
+    text.textContent = idx + 1 + ". " + (CHOICE_LABELS[opt] || opt);
+    btn.appendChild(text);
     btn.addEventListener("click", () => submit(opt, msg ? msg + " -> " + opt : opt));
     group.appendChild(btn);
   });
   controlsEl.appendChild(group);
+
+  // ...or type the number/name instead of clicking - the field is focused,
+  // so the keyboard works without reaching for the mouse first
+  const form = document.createElement("form");
+  form.className = "input-form";
+  const field = document.createElement("input");
+  field.type = "text";
+  field.autocomplete = "off";
+  field.placeholder = "or type a number / name…";
+  const sendBtn = document.createElement("button");
+  sendBtn.type = "submit";
+  sendBtn.textContent = "Send";
+
+  const hint = document.createElement("p");
+  hint.className = "hint choice-hint";
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const picked = resolveChoiceInput(field.value, options);
+    if (picked === null) {
+      hint.textContent = field.value.trim()
+        ? "No match for “" + field.value.trim() + "” - pick a number above, or click one."
+        : "Type a number or name, or click one of the options above.";
+      field.select();
+      return;
+    }
+    submit(picked, msg ? msg + " -> " + picked : picked);
+  });
+
+  form.appendChild(field);
+  form.appendChild(sendBtn);
+  controlsEl.appendChild(form);
+  controlsEl.appendChild(hint);
+  field.focus();
 }
 
 function renderInput(prompt) {

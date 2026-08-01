@@ -586,32 +586,21 @@ class Match:
         default = sorted(batting_team.team_array, key=lambda p: -p.runs)[:3]
         if self.autoplay:
             return default
-        raw = input(
-            "Choose 3 batsmen for %s's super over: %s [Press Enter to auto-select]"
-            % (
-                batting_team.name,
-                " / ".join(
-                    str(p.no) + "." + GetShortName(p.name)
-                    for p in batting_team.team_array
-                ),
-            )
-        )
+        # picked one at a time (rather than a typed list) so the web UI can
+        # render each round as buttons; auto-select stops asking and fills
+        # the rest from the defaults
         picked = []
-        for token in str(raw).replace(",", " ").split():
-            tl = token.lower()
-            match = next(
-                (
-                    p
-                    for p in batting_team.team_array
-                    if str(p.no) == tl or tl in GetShortName(p.name).lower()
-                ),
-                None,
+        for slot in range(3):
+            available = [p for p in batting_team.team_array if p not in picked]
+            chosen = self._PickFromPlayers(
+                available,
+                "Choose batsman %s of 3 for %s's super over"
+                % (str(slot + 1), batting_team.name),
             )
-            if match is not None and match not in picked:
-                picked.append(match)
-            if len(picked) == 3:
+            if chosen is None:
                 break
-        # top up an empty/partial/invalid selection from the defaults
+            picked.append(chosen)
+        # top up an empty/partial selection from the defaults
         for p in default:
             if len(picked) == 3:
                 break
@@ -635,24 +624,10 @@ class Match:
         )
         if self.autoplay:
             return candidates[0]
-        raw = input(
-            "Pick %s's super-over bowler: %s [Press Enter to auto-select]"
-            % (
-                bowling_team.name,
-                " / ".join(
-                    str(p.no) + "." + GetShortName(p.name) for p in candidates
-                ),
-            )
+        bowler = self._PickFromPlayers(
+            candidates, "Pick %s's super-over bowler" % bowling_team.name
         )
-        tl = str(raw).strip().lower()
-        bowler = next(
-            (
-                p
-                for p in candidates
-                if str(p.no) == tl or (tl and tl in GetShortName(p.name).lower())
-            ),
-            None,
-        )
+        # auto-select (or nothing to pick from): the most skilled bowler
         return bowler if bowler is not None else candidates[0]
 
     def _PlaySuperOverInnings(self, batting_team, bowling_team, target=None):
@@ -3880,6 +3855,36 @@ class Match:
             PrintInColor(Randomize(commentary.commentary_lastman), batting_team.color)
         return
 
+    # offered alongside the real players whenever a pick can fall back to the
+    # engine's own choice - see _PickFromPlayers
+    AUTO_SELECT = "Auto-select"
+
+    def _PickFromPlayers(self, players, msg, allow_auto=True):
+        """
+        Ask the player to pick one of `players`, one option per player so the
+        web UI renders them as buttons instead of a number to type in. Names
+        are unique within a squad (ValidateMatchTeams enforces it), so the
+        chosen label maps back to exactly one player.
+
+        Args:
+            players: candidate Player objects.
+            msg: the prompt to show.
+            allow_auto: include an "Auto-select" option that returns None,
+                letting the caller apply its own default.
+
+        Returns:
+            Player, or None if there were no candidates or auto-select was
+            chosen.
+        """
+        if not players:
+            return None
+        by_label = {p.name: p for p in players}
+        options = list(by_label.keys())
+        if allow_auto:
+            options.append(self.AUTO_SELECT)
+        chosen = ChooseFromOptions(options, msg, 200000)
+        return by_label.get(chosen)
+
     def AssignBowler(self):
         """
         Assign a bowler for the current over.
@@ -3909,26 +3914,10 @@ class Match:
                 # if autoplay, let bowlers be chosen randomly
                 if self.autoplay:
                     bowler = Randomize(temp)
-                # else pick bowler
+                # else pick bowler (one option per bowler, so the web UI
+                # renders them as buttons rather than a number to type)
                 else:
-                    next_bowler = input(
-                        "Pick next bowler: {0} [Press Enter to auto-select]".format(
-                            " / ".join(
-                                [str(x.no) + "." + GetShortName(x.name) for x in temp]
-                            )
-                        )
-                    )
-                    bowler = next(
-                        (
-                            x
-                            for x in temp
-                            if (
-                                str(next_bowler) == str(x.no)
-                                or next_bowler.lower() in GetShortName(x.name).lower()
-                            )
-                        ),
-                        None,
-                    )
+                    bowler = self._PickFromPlayers(temp, "Pick next bowler")
                     if bowler is None:
                         bowler = Randomize(temp)
 
@@ -4002,26 +3991,11 @@ class Match:
             # so assign it directly instead of treating it as a string
             batsman = Randomize(remaining_batsmen)
         else:
-            next_batsman = input(
-                "Choose next batsman: {0} [Press Enter to auto-select]".format(
-                    " / ".join(
-                        [str(x.no) + "." + GetShortName(x.name) for x in remaining_batsmen]
-                    )
-                )
-            )
-            # normalize the input for safe comparisons
-            nb = str(next_batsman).lower()
-            batsman = next(
-                (
-                    x
-                    for x in remaining_batsmen
-                    if (
-                        str(nb) == str(x.no)
-                        or nb in GetShortName(x.name).lower()
-                    )
-                ),
-                None,
-            )
+            # one option per batsman, so the web UI renders them as buttons
+            batsman = self._PickFromPlayers(remaining_batsmen, "Choose next batsman")
+            if batsman is None and remaining_batsmen:
+                # auto-select: next man in the batting order
+                batsman = remaining_batsmen[0]
 
         if batsman is None:
             Error_Exit("No batsman assigned!")
