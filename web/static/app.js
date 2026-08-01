@@ -828,7 +828,7 @@ function buildMiscCard(srcPath, fallbackEmoji, caption, subtitle, teamName) {
 }
 
 // partnership milestone: a badge over both batsmen's photos
-function buildPartnershipCard(names, runs) {
+function buildPartnershipCard(batsmen, runs) {
   const wrap = document.createElement("div");
   wrap.className = "event-player";
 
@@ -839,7 +839,12 @@ function buildPartnershipCard(names, runs) {
 
   const row = document.createElement("div");
   row.className = "event-openers";
-  names.forEach((n) => row.appendChild(buildPlayerCard(String(n))));
+  batsmen.forEach((b) => {
+    const contribution = b.runs != null
+      ? b.runs + (b.notOut ? "*" : "") + (b.balls != null ? " (" + b.balls + ")" : "")
+      : "";
+    row.appendChild(buildPlayerCard(String(b.name), contribution));
+  });
   wrap.appendChild(row);
   return wrap;
 }
@@ -1162,6 +1167,24 @@ function renderEvent(kind, data) {
       3500,
       "takeover"
     );
+  } else if (kind === "drinks_break") {
+    showEventPane(
+      buildMiscCard("misc/drinks_break", "🥤", "Drinks break", "", data && data.team),
+      3000,
+      "takeover"
+    );
+  } else if (kind === "stumps") {
+    const day = data && data.day;
+    const sub = day ? "End of Day " + day : "";
+    const card = buildMiscCard("misc/stumps", "🌇", "Stumps!", sub, data && data.team);
+    const comment = data && data.comment ? String(data.comment) : "";
+    if (comment) {
+      const commentEl = document.createElement("div");
+      commentEl.className = "event-captain-comment";
+      commentEl.textContent = comment;
+      card.appendChild(commentEl);
+    }
+    showEventPane(card, 4000, "takeover");
   } else if (kind === "innings_over") {
     const card = buildMiscCard("misc/innings_over", "🏏", "Innings over", "",
       data && data.team);
@@ -1223,10 +1246,10 @@ function renderEvent(kind, data) {
       4000, "takeover"
     );
   } else if (kind === "partnership_milestone") {
-    const names = ((data && data.names) || []).map(String).filter(Boolean);
     const runs = data && data.runs;
-    if (names.length && runs) {
-      showEventPane(buildPartnershipCard(names, runs), 4000, "takeover roster");
+    const batsmen = ((data && data.batsmen) || []).filter((b) => b && b.name);
+    if (batsmen.length && runs) {
+      showEventPane(buildPartnershipCard(batsmen, runs), 4000, "takeover roster");
     }
   } else if (kind === "partnership_broken") {
     // a 50+ stand ends: the bowler's pic, or the fielder's pic on a run-out
@@ -1245,6 +1268,15 @@ function renderEvent(kind, data) {
       commentEl.className = "event-breakthrough-comment";
       commentEl.textContent = comment;
       card.appendChild(commentEl);
+      // was this actually worth much, or too little too late? (see
+      // Match.py's chase-tier check right before this event is pushed)
+      const tooLateComment = data && data.tooLateComment ? String(data.tooLateComment) : "";
+      if (tooLateComment) {
+        const tooLateEl = document.createElement("div");
+        tooLateEl.className = "event-breakthrough-too-late";
+        tooLateEl.textContent = tooLateComment;
+        card.appendChild(tooLateEl);
+      }
       showEventPane(card, 4000, "takeover");
     }
   } else if (kind === "next_batsmen") {
@@ -1260,8 +1292,8 @@ function renderEvent(kind, data) {
       wrap.appendChild(cap);
       const row = document.createElement("div");
       row.className = "event-openers";
-      names.forEach((n, i) => {
-        row.appendChild(buildPlayerCard(n, (i + 1) + "."));
+      names.forEach((n) => {
+        row.appendChild(buildPlayerCard(n));
       });
       wrap.appendChild(row);
       showEventPane(wrap, 4500, "takeover roster");
@@ -1348,6 +1380,28 @@ function renderEvent(kind, data) {
       // badge sits between the photo and the name
       card.insertBefore(badge, card.lastChild);
       showEventPane(card, 3000, "takeover");
+    }
+  } else if (kind === "too_many_extras") {
+    const name = data && data.bowler ? String(data.bowler) : "";
+    const comment = data && data.comment ? String(data.comment) : "";
+    const count = data && data.count;
+    const wides = data && data.wides;
+    const noballs = data && data.noballs;
+    if (name && comment) {
+      const card = buildPlayerCard(name);
+      const badge = document.createElement("div");
+      badge.className = "event-achievement-badge";
+      const parts = [];
+      if (wides) parts.push(wides + (wides === 1 ? " wide" : " wides"));
+      if (noballs) parts.push(noballs + (noballs === 1 ? " no ball" : " no balls"));
+      const breakdown = parts.length ? parts.join(", ") : (count || 2) + " extras";
+      badge.textContent = breakdown + " this over!";
+      card.insertBefore(badge, card.lastChild);
+      const commentEl = document.createElement("div");
+      commentEl.className = "event-captain-comment";
+      commentEl.textContent = comment;
+      card.appendChild(commentEl);
+      showEventPane(card, 3500, "takeover");
     }
   } else if (kind === "tension") {
     const text = data && data.text ? String(data.text) : "";

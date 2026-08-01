@@ -810,6 +810,21 @@ main {
   font-size: clamp(1rem, 2.6vw, 1.4rem);
 }
 
+/* second line under a partnership-broken card when the chase is still
+   cruising regardless - a cold-water dose of realism under the celebration,
+   see commentary_breakthrough_too_late */
+.event-breakthrough-too-late {
+  margin-top: 0.5rem;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: #f2a13b;
+  text-align: center;
+}
+
+.event-pane.takeover .event-breakthrough-too-late {
+  font-size: clamp(0.95rem, 2.4vw, 1.3rem);
+}
+
 .event-countdown-num {
   font-size: 3.2rem;
   font-weight: 900;

@@ -784,6 +784,31 @@ class commentary:
         "a game-changing breakthrough for %s!",
     ]
 
+    # a big partnership broken, but too late to really matter - the chasing
+    # side (%s) is still comfortably on top of the required rate regardless
+    commentary_breakthrough_too_late = [
+        "too little, too late - %s are already cruising!",
+        "the damage is already done - %s are well clear!",
+        "this won't change much - %s are firmly in control!",
+        "a wicket, but %s are already home and hosed!",
+        "too late to stop %s now!",
+        "the game's already gone - %s won't be troubled by this!",
+        "%s have done enough damage already!",
+        "this breakthrough comes far too late for %s to worry!",
+        "%s are cruising regardless of that wicket!",
+        "the horse has already bolted - %s are coasting!",
+        "a nice wicket, but the equation barely changes for %s!",
+        "%s can afford to lose a couple more like that!",
+        "this won't trouble %s much at this point!",
+        "the contest is all but over for %s despite that wicket!",
+        "too little to turn this one around against %s now!",
+        "%s are cruising to victory regardless!",
+        "the writing's already on the wall - %s are cruising!",
+        "a consolation wicket at best - %s are well ahead!",
+        "the damage was done long before this wicket - %s are in charge!",
+        "%s remain firmly in the driver's seat!",
+    ]
+
     # "how's the chase going" verdict pop-up (see Match._ClassifyChase /
     # _PushChaseAssessment) - one tier per difficulty read on the chase
     commentary_chase_cruising = [
@@ -815,6 +840,30 @@ class commentary:
         "%s staring down the barrel here!",
         "the equation has gotten away from %s!",
         "%s need something extraordinary to pull this off!",
+    ]
+
+    # a bowler leaking too many extras (wides/no-balls) in one over
+    commentary_too_many_extras = [
+        "%s is really struggling with the line today!",
+        "too many freebies from %s this over!",
+        "%s needs to find his radar, and fast!",
+        "the extras are piling up for %s!",
+        "%s is gifting runs away here!",
+        "that's a costly lapse in discipline from %s!",
+        "%s just can't seem to find his rhythm!",
+        "the captain won't be happy with %s right now!",
+        "%s is handing out free runs like candy!",
+        "a really sloppy over developing from %s!",
+        "%s needs to tighten up in a hurry!",
+        "that's far too generous from %s!",
+        "%s is letting the batting side off the hook!",
+        "the control just isn't there for %s today!",
+        "%s is making this far too easy for the batters!",
+        "some wayward bowling from %s here!",
+        "%s will want to forget this over in a hurry!",
+        "that's a concerning lack of discipline from %s!",
+        "%s is spraying it all over the place!",
+        "the extras column is getting embarrassing for %s!",
     ]
 
     commentary_out_first_ball = [
@@ -1210,6 +1259,31 @@ class commentary:
         "terrific bowling performance, they have been bowled out!",
         "its all over for them!.. they have been bowled out!",
         "that's all over!! all out!",
+    ]
+
+    # end of a Test day's play (there's still a next day to come - see the
+    # "unless match ends" guard in _AdvanceSessionIfNeeded)
+    commentary_stumps = [
+        "that's stumps for the day!",
+        "bails off - play is done for the day!",
+        "the players will be relieved to see the back of that day!",
+        "an eventful day's play draws to a close!",
+        "time to reflect on a fascinating day's cricket!",
+        "the umpires call time on a captivating day!",
+        "stumps drawn on another absorbing day!",
+        "that wraps up play for today!",
+        "a day to remember, and more still to come!",
+        "the teams will regroup overnight!",
+        "plenty to talk about after that day's play!",
+        "the sun sets on another twist-filled day!",
+        "both sides will have plenty to think about tonight!",
+        "a hard-fought day comes to an end!",
+        "the scoreboard tells only half the story from today!",
+        "stumps - and what a day it's been!",
+        "the players trudge off as the light fades!",
+        "day's play complete - back again tomorrow!",
+        "a day of fluctuating fortunes draws to a close!",
+        "that's a wrap for today - see you tomorrow!",
     ]
 
     commentary_all_out_good_score = [
