@@ -1147,6 +1147,13 @@ class Match:
                 },
             )
 
+        # the deeper read on how the innings actually went. Unlike the card
+        # above this fires for EVERY innings including the last, so a completed
+        # chase still gets its analysis (after the victory card, not instead)
+        analysis = self._BuildInningsAnalysis(summary)
+        if analysis:
+            utilities.PushEvent("innings_analysis", analysis)
+
         # store the snapshot (Test's multi-innings history) and send the web
         # UI's full innings summary; the push is a no-op outside web mode
         if self.is_test:
@@ -2249,6 +2256,265 @@ class Match:
         if (self.max_days - self.day) <= 1 and bt.wickets_fell >= 6 and bt.total_score >= 200:
             return True
         return False
+
+    def _ParRunRate(self):
+        """
+        The run rate a side would be expected to score at in this format -
+        the yardstick the innings analysis judges a total against.
+
+        Returns:
+            float
+        """
+        if self.is_test:
+            return 3.2
+        if not self.overs:
+            return 5.0
+        if self.overs <= 10:
+            return 8.5
+        if self.overs <= 20:
+            return 7.5
+        if self.overs <= 30:
+            return 6.0
+        return 5.4
+
+    def _InningsPhaseNotes(self, summary):
+        """
+        Read the shape of the innings - how it started, how the middle went
+        and how it finished - from the per-over score/wicket history, which
+        Team.StartBattingInnings resets so it only ever covers this innings.
+
+        Returns:
+            list[str]: narrative lines, in the order they happened.
+        """
+        bt = self.batting_team
+        overs_done = sorted(bt.over_history.keys())
+        # under 6 completed overs there aren't really three phases to talk about
+        if len(overs_done) < 6:
+            return []
+
+        third = len(overs_done) // 3
+        phases = [overs_done[:third], overs_done[third: 2 * third], overs_done[2 * third:]]
+
+        notes = []
+        prev_score = 0
+        stats = []
+        for chunk in phases:
+            if not chunk:
+                stats.append(None)
+                continue
+            end_score = int(bt.over_history[chunk[-1]])
+            runs = end_score - prev_score
+            prev_score = end_score
+            wkts = sum(int(bt.over_wkt_history.get(o, 0)) for o in chunk)
+            stats.append({"runs": runs, "wkts": wkts, "overs": len(chunk)})
+
+        overall_rr = summary.score / (summary.balls / 6.0) if summary.balls else 0.0
+
+        start, middle, end = stats
+        if start:
+            rr = start["runs"] / start["overs"]
+            if start["wkts"] >= 3:
+                notes.append(
+                    Randomize(commentary.commentary_phase_early_wickets)
+                    % str(start["wkts"])
+                )
+            elif start["wkts"] == 0 and rr >= overall_rr:
+                notes.append(Randomize(commentary.commentary_phase_good_start))
+            elif start["wkts"] == 0 or rr < overall_rr * 0.8:
+                notes.append(Randomize(commentary.commentary_phase_slow_start))
+
+        if middle:
+            rr = middle["runs"] / middle["overs"]
+            if middle["wkts"] >= 3:
+                notes.append(
+                    Randomize(commentary.commentary_phase_middle_wobble)
+                    % str(middle["wkts"])
+                )
+            elif rr >= overall_rr * 1.1:
+                notes.append(Randomize(commentary.commentary_phase_middle_rebuild))
+            elif rr < overall_rr * 0.8:
+                notes.append(Randomize(commentary.commentary_phase_middle_quiet))
+
+        if end:
+            rr = end["runs"] / end["overs"]
+            if rr >= overall_rr * 1.35:
+                notes.append(
+                    Randomize(commentary.commentary_phase_death_surge)
+                    % (str(end["runs"]), str(end["overs"]))
+                )
+            elif end["wkts"] >= 3:
+                notes.append(
+                    Randomize(commentary.commentary_phase_death_collapse)
+                    % str(end["wkts"])
+                )
+            elif rr < overall_rr * 0.75:
+                notes.append(Randomize(commentary.commentary_phase_death_quiet))
+        return notes
+
+    def _MatchMarginVerdict(self, summary, chase_won):
+        """
+        How the match was won or lost: a nail-biter, a routine result, or a
+        thrashing. Judged on what was actually left at the end - wickets and
+        balls to spare for a successful chase, the run margin for a failed
+        one. Only meaningful once the chase has finished, so it returns None
+        while the innings is still live.
+
+        Returns:
+            str or None
+        """
+        bt = self.batting_team
+        if not (self.overs and bt.batting_second and bt.target):
+            return None
+        balls_left = self.overs * 6 - int(summary.balls)
+        # still in progress (rain/interruption aside) - nothing to judge yet
+        if not chase_won and summary.wickets < 10 and balls_left > 0:
+            return None
+
+        if chase_won:
+            wickets_left = 10 - int(summary.wickets)
+            if wickets_left <= 2 or balls_left <= 6:
+                pool = commentary.commentary_margin_thriller
+            elif wickets_left >= 7 or balls_left >= self.overs * 6 * 0.35:
+                pool = commentary.commentary_margin_crushing
+            else:
+                pool = commentary.commentary_margin_comfortable
+        else:
+            margin = int(bt.target - 1 - summary.score)
+            if margin <= 10:
+                pool = commentary.commentary_margin_thriller
+            # "big" scales with the format - 100 in a T20 is not 100 in an ODI
+            elif margin >= max(40, int(bt.target * 0.35)):
+                pool = commentary.commentary_margin_crushing
+            else:
+                pool = commentary.commentary_margin_comfortable
+        return Randomize(pool)
+
+    def _BuildInningsAnalysis(self, summary):
+        """
+        A read on the innings just finished: how the total rates for this
+        format, the shape of the innings, who batted well, who disappointed,
+        and how the bowling side fared. Structured data (not prose) where the
+        UI can render it better as chips - see the "innings_analysis" event.
+
+        Returns:
+            dict or None: None if nothing meaningful was bowled.
+        """
+        if not summary or not summary.balls:
+            return None
+
+        bt = self.batting_team
+        overs = summary.balls / 6.0
+        run_rate = round(summary.score / overs, 2) if overs else 0.0
+        par = self._ParRunRate()
+
+        # headline: how does this total rate for the format?
+        if run_rate >= par * 1.2:
+            pool = commentary.commentary_innings_commanding
+        elif run_rate >= par:
+            pool = commentary.commentary_innings_solid
+        elif run_rate >= par * 0.8:
+            pool = commentary.commentary_innings_modest
+        else:
+            pool = commentary.commentary_innings_poor
+        headline = Randomize(pool) % str(run_rate)
+        if summary.wickets < 10 and summary.declared:
+            headline += " They declared."
+        elif summary.wickets >= 10:
+            headline += " Bowled out."
+
+        # a T20/ODI-style "runs per wicket" read on how well they batted deep
+        notes = self._InningsPhaseNotes(summary)
+
+        # --- batting: who stood up, who fell away ---
+        faced = [b for b in summary.batting_card if b["balls"] > 0]
+        by_runs = sorted(faced, key=lambda b: -b["runs"])
+        # a meaningful score depends on the format's length
+        good_mark = 25 if (self.overs and self.overs <= 20) else 35
+        good = [b for b in by_runs if b["runs"] >= good_mark][:4]
+        if not good:
+            # nobody passed the bar (a low-scoring innings) - still name the
+            # top contributors rather than showing an empty "did well" list
+            good = [b for b in by_runs if b["runs"] >= 10][:2]
+        # only the recognised batters (top 7) count as a disappointment - a
+        # tailender out cheaply is not news
+        top_order = [b for b in summary.batting_card[:7] if b["balls"] > 0]
+        poor = sorted(
+            [b for b in top_order if b["runs"] < 10 and b["dismissal"] != "not out"],
+            key=lambda b: b["runs"],
+        )[:4]
+
+        def bat_entry(b):
+            sr = round((b["runs"] / b["balls"]) * 100, 1) if b["balls"] else 0.0
+            return {
+                "name": b["name"],
+                "runs": int(b["runs"]),
+                "balls": int(b["balls"]),
+                "strikeRate": float(sr),
+                "notOut": b["dismissal"] == "not out",
+            }
+
+        # --- bowling: the standouts on the other side ---
+        card = [b for b in summary.bowling_card if b["overs"] > 0]
+        best = econ = expensive = None
+        if card:
+            wicket_takers = [b for b in card if b["wickets"] > 0]
+            if wicket_takers:
+                best = sorted(wicket_takers, key=lambda b: (-b["wickets"], b["runs"]))[0]
+            # economy only means something over a real spell
+            spells = [b for b in card if b["overs"] >= 2] or card
+            econ = sorted(spells, key=lambda b: b["economy"])[0]
+            expensive = sorted(spells, key=lambda b: -b["economy"])[0]
+            # the same figures shouldn't be listed twice - the wicket-taker
+            # already carries the praise, and in a one-bowler innings the
+            # cheapest and dearest spell are the same spell
+            if econ is best:
+                econ = None
+            if expensive is econ or expensive is best:
+                expensive = None
+
+        def bowl_entry(b):
+            if b is None:
+                return None
+            return {
+                "name": b["name"],
+                "overs": float(b["overs"]),
+                "runs": int(b["runs"]),
+                "wickets": int(b["wickets"]),
+                "economy": float(b["economy"]),
+            }
+
+        analysis = {
+            "team": bt.name,
+            "bowlingTeam": self.bowling_team.name,
+            "score": int(summary.score),
+            "wickets": int(summary.wickets),
+            "overs": float(summary.overs),
+            "runRate": run_rate,
+            "headline": headline,
+            "notes": notes,
+            "batting": {
+                "good": [bat_entry(b) for b in good],
+                "poor": [bat_entry(b) for b in poor],
+            },
+            "bowling": {
+                "best": bowl_entry(best),
+                "economical": bowl_entry(econ),
+                "expensive": bowl_entry(expensive),
+            },
+        }
+
+        # chasing: say whether the target was reached, and by how far
+        if bt.batting_second and bt.target:
+            got_there = summary.score >= bt.target
+            analysis["chase"] = {
+                "target": int(bt.target),
+                "successful": bool(got_there),
+                "margin": int(abs(bt.target - 1 - summary.score)),
+            }
+            verdict = self._MatchMarginVerdict(summary, got_there)
+            if verdict:
+                analysis["verdict"] = verdict
+        return analysis
 
     def BuildInningsSummary(self):
         """
