@@ -212,8 +212,9 @@ def GetMatchInfo(list_of_teams, venue, autoplay, overs, format_override=None, fa
     commentator = random.sample(list(resources.commentators), k=3)
     umpire = random.sample(list(resources.umpires), k=2)
 
-    # get list of teams
-    teams = [team.key for team in list_of_teams]
+    # get list of teams. Full names (not the short keys) so the web UI can
+    # resolve each option to its flag image, and they read better on a button
+    teams = [team.name for team in list_of_teams]
 
     # select match format, unless ReadData already did
     if match_format is None:
@@ -272,11 +273,11 @@ def GetMatchInfo(list_of_teams, venue, autoplay, overs, format_override=None, fa
         t2 = ChooseFromOptions(teams, "", 5)
     print("Selected %s and %s" % (t1, t2))
 
-    # find teams from user input
+    # find teams from user input (matched on name - see the `teams` list above)
     for t in list_of_teams:
-        if t.key == t1:
+        if t.name == t1:
             team1 = t
-        if t.key == t2:
+        if t.name == t2:
             team2 = t
 
     PushEvent(

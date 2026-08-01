@@ -85,6 +85,25 @@ def player_pic(player_name):
     return _serve_pic(PLAYER_PICS_DIR, player_name)
 
 
+@app.route("/teams/flags")
+def team_flags_index():
+    # Slugs of every flag we hold, so the UI can tell which choice options are
+    # teams/countries worth showing a flag for. Without this it would have to
+    # probe every option of every prompt and lean on the 404s.
+    try:
+        files = os.listdir(TEAM_FLAGS_DIR)
+    except OSError:
+        files = []
+    slugs = sorted(
+        {
+            os.path.splitext(f)[0]
+            for f in files
+            if os.path.splitext(f)[1].lower() in PIC_EXTENSIONS
+        }
+    )
+    return jsonify(slugs)
+
+
 @app.route("/teams/flags/<path:team_name>")
 def team_flag(team_name):
     return _serve_pic(TEAM_FLAGS_DIR, team_name)
