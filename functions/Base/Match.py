@@ -105,6 +105,12 @@ class Match:
             "team_score_milestone_shown": 0,  # highest team-total 100 popped
             "partnership_milestone_shown": 0,  # highest 50 popped, current stand
             "partnership_tracked_wkt": 0,  # wickets_fell the stand is tracked at
+            # drinks break pop-ups (see _DrinksBreakOvers/_PostOverDisplay).
+            # Limited-overs: reset fresh each innings in Play. Test: reset
+            # whenever the session actually advances in _AdvanceSessionIfNeeded
+            # (not per-innings - a session spans both teams' play within it).
+            "drinks_breaks_fired": set(),  # over-numbers already fired this innings
+            "drinks_break_fired_this_session": False,
             # save/resume state (see functions/SaveGame.py). save_slot is the
             # index of the innings currently in progress (limited-overs: 0/1;
             # Test: 0-3); save_started/save_done bracket that innings; the
@@ -1088,6 +1094,7 @@ class Match:
             self.team_score_milestone_shown = 0
             self.partnership_milestone_shown = 0
             self.partnership_tracked_wkt = 0
+            self.drinks_breaks_fired = set()
 
             # reset accumulators for this innings. For limited-overs matches this
             # is a no-op in effect (each team only ever calls it once, and fields
@@ -1687,6 +1694,7 @@ class Match:
                 return False
             n -= remaining
             self.overs_bowled_this_session = 0
+            self.drinks_break_fired_this_session = False
             if self.session < self.sessions_per_day:
                 self.session += 1
             else:
@@ -1739,8 +1747,62 @@ class Match:
             if completed_overs > 0 and completed_overs % 10 == 0:
                 self._PushChaseAssessment()
 
+        self._CheckDrinksBreak()
+
         # rotate strike after an over
         RotateStrike(pair)
+
+    def _DrinksBreakOvers(self):
+        """
+        Completed-over counts at which a drinks break falls in this
+        limited-overs innings: 2 for an ODI-length innings, 1 for a
+        T20-length one, none for a short exhibition game. Recomputed live
+        from self.overs (not cached) so a rain-revised over count reschedules
+        automatically rather than firing at a now-stale over number.
+
+        Returns:
+            list[int]
+        """
+        if not self.overs:
+            return []
+        if self.overs >= 40:
+            return [round(self.overs / 3), round(2 * self.overs / 3)]
+        if self.overs >= 10:
+            return [round(self.overs / 2)]
+        return []
+
+    def _CheckDrinksBreak(self):
+        """
+        Pop a "drinks break" card at the scheduled point(s) for this innings:
+        twice for an ODI-length limited-overs innings, once for a T20-length
+        one (see _DrinksBreakOvers), or once per Test session - never within
+        the last 5 overs of a limited-overs innings, so it can't fire right
+        as the game is about to finish. Called once per over from
+        _PostOverDisplay, so it applies to both formats.
+
+        Returns:
+            None
+        """
+        bt = self.batting_team
+        if self.overs:
+            completed_overs = bt.total_balls // 6
+            overs_left = self.overs - completed_overs
+            if (
+                overs_left >= 5
+                and completed_overs in self._DrinksBreakOvers()
+                and completed_overs not in self.drinks_breaks_fired
+            ):
+                self.drinks_breaks_fired.add(completed_overs)
+                utilities.PushEvent("drinks_break", {"team": bt.name})
+        elif self.is_test:
+            # Test has no fixed over limit, so the "not near the end" guard
+            # doesn't apply - once per session, at its rough halfway point
+            if (
+                not self.drinks_break_fired_this_session
+                and self.overs_bowled_this_session >= self.overs_per_session // 2
+            ):
+                self.drinks_break_fired_this_session = True
+                utilities.PushEvent("drinks_break", {"team": bt.name})
 
     def _UpdateBoundaryStreak(self, batsman, run):
         """
@@ -1917,13 +1979,18 @@ class Match:
         """
         bt = self.batting_team
 
-        # team total milestone: every 100 runs
+        # team total milestone: every 100 runs crossed, but show the exact
+        # live score (not the rounded 100/200/300 threshold that triggered it)
         hundred = (int(bt.total_score) // 100) * 100
         if hundred >= 100 and hundred > self.team_score_milestone_shown:
             self.team_score_milestone_shown = hundred
             utilities.PushEvent(
                 "team_score",
-                {"team": bt.name, "score": hundred, "wickets": int(bt.wickets_fell)},
+                {
+                    "team": bt.name,
+                    "score": int(bt.total_score),
+                    "wickets": int(bt.wickets_fell),
+                },
             )
             self._PushNextBatsmenPreview()
 
@@ -1938,9 +2005,20 @@ class Match:
             fifty = (stand // 50) * 50
             if fifty >= 50 and fifty > self.partnership_milestone_shown:
                 self.partnership_milestone_shown = fifty
-                names = [p.name for p in (bt.current_pair or []) if p is not None]
+                pair = [p for p in (bt.current_pair or []) if p is not None]
+                names = [p.name for p in pair]
+                batsmen = [
+                    {
+                        "name": p.name,
+                        "runs": int(p.runs),
+                        "balls": int(p.balls),
+                        "notOut": bool(p.status),
+                    }
+                    for p in pair
+                ]
                 utilities.PushEvent(
-                    "partnership_milestone", {"runs": fifty, "names": names}
+                    "partnership_milestone",
+                    {"runs": fifty, "names": names, "batsmen": batsmen},
                 )
                 self._PushNextBatsmenPreview()
 
@@ -1953,10 +2031,20 @@ class Match:
         AssignBatsman uses to pick the next man in, just read here as a
         preview rather than a selection.
 
+        A no-op once the innings has actually ended (all out, overs
+        exhausted, or the match already decided) - one of its callers is the
+        wicket-fall handler, and the very wicket that ends the innings/match
+        still leaves genuine not-yet-out reserves on the roster, who would
+        otherwise get previewed as "next in" despite never actually batting.
+
         Returns:
             None
         """
         bt = self.batting_team
+        if not self.status or bt.wickets_fell >= 10:
+            return
+        if self.overs and bt.total_balls >= self.overs * 6:
+            return
         current_pair = bt.current_pair or []
         upcoming = [
             p.name for p in bt.team_array if p.status and p not in current_pair
@@ -2081,6 +2169,7 @@ class Match:
             return False
 
         self.overs_bowled_this_session = 0
+        self.drinks_break_fired_this_session = False
         utilities.PushLiveInningsScorecard(self)
 
         if self.session < self.sessions_per_day:
@@ -2099,10 +2188,25 @@ class Match:
 
         # 3rd session of the day just finished - stumps, roll over to the
         # next day
-        PrintInColor("Stumps! End of Day %s." % str(self.day), Style.BRIGHT)
+        finished_day = self.day
         self.session = 1
         self.day += 1
-        if self.day > self.max_days:
+        match_ends_at_stumps = self.day > self.max_days
+
+        # only pop up "Stumps!" when there's a next day to look forward to -
+        # if this is the final day, the draw result covers it instead
+        if not match_ends_at_stumps:
+            PrintInColor("Stumps! End of Day %s." % str(finished_day), Style.BRIGHT)
+            utilities.PushEvent(
+                "stumps",
+                {
+                    "day": int(finished_day),
+                    "team": self.batting_team.name,
+                    "comment": Randomize(commentary.commentary_stumps),
+                },
+            )
+
+        if match_ends_at_stumps:
             PrintInColor(
                 "That's the end of the 5th day - the match ends in a draw.",
                 Style.BRIGHT,
@@ -2312,6 +2416,8 @@ class Match:
         total_wickets_in_over = 0
         ball = 1
         over_arr = []
+        wides_this_over = 0
+        noballs_this_over = 0
 
         # last over of a chase: pick this over's tension lines up front so no
         # two balls repeat one, and reset the per-ball tracker
@@ -2396,11 +2502,31 @@ class Match:
 
             # check if extra
             if run == 5:
-                self.UpdateExtras()
+                extra_kind = self.UpdateExtras()
+                if extra_kind == "wd":
+                    wides_this_over += 1
+                else:
+                    noballs_this_over += 1
                 # comment on too many extras
-                if over_arr.count(5) > 2:
+                extras_this_over = wides_this_over + noballs_this_over
+                if extras_this_over > 2:
                     PrintInColor(
-                        "%s extras in this over!" % str(over_arr.count(5)), Style.BRIGHT
+                        "%s extras in this over!" % str(extras_this_over), Style.BRIGHT
+                    )
+                # a big-screen warning the moment this over's extras first
+                # reach 2 - fired once, not again for every extra ball after
+                if extras_this_over == 2:
+                    utilities.PushEvent(
+                        "too_many_extras",
+                        {
+                            "bowler": bowler.name,
+                            "team": bowling_team.name,
+                            "count": extras_this_over,
+                            "wides": wides_this_over,
+                            "noballs": noballs_this_over,
+                            "comment": Randomize(commentary.commentary_too_many_extras)
+                            % bowler.name,
+                        },
                     )
                 total_runs_in_over += 1
                 utilities.PushScorecard(self)
@@ -3043,6 +3169,35 @@ class Match:
             else:
                 breakthrough_data["kind"] = "bowler"
                 breakthrough_data["bowler"] = bowler.name
+
+            # is this breakthrough actually worth much? Reuses the same
+            # chase-difficulty read as the "how's the chase going" pop-up
+            # (_ClassifyChase) - if the chasing side is still cruising/on
+            # track even after losing this stand, the wicket is too little,
+            # too late to matter. Only meaningful for a live limited-overs
+            # chase; a first-innings or Test stand has no such signal.
+            if (
+                self.overs
+                and batting_team.batting_second
+                and batting_team.target
+                and batting_team.wickets_fell < 10
+            ):
+                crr = batting_team.GetCurrentRate()
+                rrr = batting_team.GetRequiredRate()
+                wickets_in_hand = 10 - batting_team.wickets_fell
+                remaining = [p for p in batting_team.team_array if p.status]
+                batting_strength = (
+                    sum(p.attr.batting for p in remaining) / len(remaining)
+                    if remaining
+                    else 0
+                )
+                tier = self._ClassifyChase(rrr, crr, wickets_in_hand, batting_strength)
+                if tier in ("cruising", "on_track"):
+                    breakthrough_data["tooLateComment"] = (
+                        Randomize(commentary.commentary_breakthrough_too_late)
+                        % batting_team.name
+                    )
+
             utilities.PushEvent("partnership_broken", breakthrough_data)
 
         self.PrintCommentaryDismissal(dismissal)
@@ -4253,7 +4408,8 @@ class Match:
         Update the extras for the current over.
 
         Returns:
-            None
+            str: "wd" or "nb" - which kind of extra this was, so the caller
+            can track a per-over wide/no-ball breakdown.
         """
         batting_team, bowling_team = self.batting_team, self.bowling_team
         bowler = bowling_team.current_bowler
@@ -4289,7 +4445,7 @@ class Match:
                 )
                 utilities.PushEvent("free_hit", {"umpire": self.umpire})
 
-        return
+        return extra
 
     def GetBowlerComments(self):
         """
