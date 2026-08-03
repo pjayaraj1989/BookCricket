@@ -34,7 +34,7 @@ avatar, so missing pictures are fine.
 | Martin Crowe | `martin_crowe.jpg` |
 | Michael Holding | `michael_holding.jpg` |
 | Mike Haysman | `mike_haysman.jpg` |
-| Phil Tufnel | `phil_tufnel.jpg` |
+| Phil Tufnell | `phil_tufnell.jpg` |
 | Ramiz Raja | `ramiz_raja.jpg` |
 | Ravi Shastri | `ravi_shastri.jpg` |
 | Richie Benaud | `richie_benaud.jpg` |

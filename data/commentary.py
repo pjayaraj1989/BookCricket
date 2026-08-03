@@ -1717,6 +1717,179 @@ class commentary:
         "One side was overwhelmed in every facet.",
     ]
 
+    # ---------------------------------------------------------------
+    # The innings analysis read out loud, as a commentator would (see
+    # Match._BuildAnalysisSpeech). Arg counts are consistent within a list.
+    # ---------------------------------------------------------------
+
+    # opening the segment - takes the batting team's name
+    commentary_analysis_opener = [
+        "Well, that's the innings wrapped up for %s.",
+        "So, let's take stock of that %s innings.",
+        "Right, time to look back at how %s went about that.",
+        "Let's unpack that innings from %s.",
+        "That's %s done and dusted, so what did we make of it?",
+        "A lot to talk about from that %s innings.",
+        "Let me give you my read on that %s effort.",
+        "So there we are - the %s innings complete.",
+        "Plenty to chew over from %s there.",
+        "Let's cast an eye back over the %s innings.",
+        "That's the %s innings in the books.",
+        "Time to make sense of what %s just produced.",
+        "Well then, what did %s give us there?",
+        "Let's run the rule over that %s innings.",
+        "An innings from %s that told a story.",
+        "So, how do we sum up %s today?",
+        "That brings the %s innings to a close.",
+        "Let's talk about what we just saw from %s.",
+        "A few thoughts on that %s innings.",
+        "Here's how I saw the %s innings.",
+    ]
+
+    # a batter who did well - takes (name, "112 (98)")
+    commentary_analysis_bat_praise = [
+        "%s was superb, making %s.",
+        "The standout was %s with %s.",
+        "You have to admire %s there - %s.",
+        "%s played beautifully for %s.",
+        "Special mention for %s, who made %s.",
+        "%s held the innings together with %s.",
+        "A quality knock from %s - %s.",
+        "%s looked in complete control, finishing with %s.",
+        "The pick of the batters was %s with %s.",
+        "%s timed it sweetly on the way to %s.",
+        "Hats off to %s for that %s.",
+        "%s was in fine touch, making %s.",
+        "That knock from %s was a real innings of substance - %s.",
+        "%s dug in and delivered %s.",
+        "A polished effort from %s - %s.",
+        "%s made batting look simple, %s.",
+        "The innings was built around %s and that %s.",
+        "%s answered the call with %s.",
+        "Terrific stuff from %s, %s.",
+        "%s stood tall with %s.",
+    ]
+
+    # a batter who failed - takes (name, "4 (9)")
+    commentary_analysis_bat_fail = [
+        "%s will be disappointed with %s.",
+        "Not a day to remember for %s - %s.",
+        "%s never got going, out for %s.",
+        "A poor return from %s, just %s.",
+        "%s fell cheaply for %s.",
+        "One to forget for %s - %s.",
+        "%s couldn't make it count, %s.",
+        "A rare failure from %s, %s.",
+        "%s went early for %s.",
+        "There was no fluency from %s, out for %s.",
+        "%s threw it away for %s.",
+        "Frustrating stuff from %s - only %s.",
+        "%s simply never settled, %s.",
+        "A soft dismissal for %s on %s.",
+        "%s couldn't find any rhythm, %s.",
+        "Precious little from %s today - %s.",
+        "%s came and went for %s.",
+        "That's a wasted opportunity for %s, %s.",
+        "%s misjudged it and departed for %s.",
+        "A quiet day for %s, out for %s.",
+    ]
+
+    # the pick of the bowlers - takes (name, "4/41")
+    commentary_analysis_bowl_star = [
+        "With the ball, %s was outstanding - %s.",
+        "%s did the damage, finishing with %s.",
+        "The bowling honours go to %s with %s.",
+        "%s was the pick of the attack, %s.",
+        "A superb spell from %s - %s.",
+        "%s ripped through them, taking %s.",
+        "Full marks to %s for figures of %s.",
+        "%s bowled with real menace, %s.",
+        "The breakthroughs came from %s - %s.",
+        "%s was simply too good, returning %s.",
+        "A match-shaping spell from %s, %s.",
+        "%s troubled everyone, ending with %s.",
+        "The standout bowler was %s with %s.",
+        "%s kept striking - %s in the end.",
+        "Terrific bowling from %s, %s.",
+        "%s led the attack superbly with %s.",
+        "It was %s who made the difference, %s.",
+        "A wonderful effort from %s - %s.",
+        "%s was relentless, finishing on %s.",
+        "You have to praise %s for that %s.",
+    ]
+
+    # the most economical bowler - takes (name, "3.30")
+    commentary_analysis_bowl_econ = [
+        "%s barely gave anything away, just %s an over.",
+        "The squeeze came from %s at %s an over.",
+        "%s was miserly, conceding only %s an over.",
+        "Credit to %s for going at just %s an over.",
+        "%s applied the brakes beautifully - %s an over.",
+        "Nothing loose from %s, only %s an over.",
+        "%s bowled a tight line all spell, %s an over.",
+        "The pressure came from %s at %s an over.",
+        "%s was hard to get away, %s an over.",
+        "A disciplined spell from %s - %s an over.",
+        "%s kept it locked down at %s an over.",
+        "Not many scoring chances against %s, %s an over.",
+        "%s strangled the scoring, %s an over.",
+        "Excellent control from %s at %s an over.",
+        "%s made run-scoring a chore, %s an over.",
+        "The most economical was %s with %s an over.",
+        "%s gave the batters nothing - %s an over.",
+        "A frugal spell from %s at %s an over.",
+        "%s held one end tight, %s an over.",
+        "Real accuracy from %s, only %s an over.",
+    ]
+
+    # the bowler who went for runs - takes (name, "8.00")
+    commentary_analysis_bowl_expensive = [
+        "%s had a tough time of it, going at %s an over.",
+        "It was an expensive day for %s - %s an over.",
+        "%s was put to the sword, %s an over.",
+        "The runs flowed off %s at %s an over.",
+        "A day to forget for %s, %s an over.",
+        "%s couldn't find his length, leaking %s an over.",
+        "The batters targeted %s, who went at %s an over.",
+        "%s was carted around at %s an over.",
+        "Costly stuff from %s - %s an over.",
+        "%s struggled badly, conceding %s an over.",
+        "An off day for %s at %s an over.",
+        "%s was picked off at %s an over.",
+        "The captain won't be happy with %s - %s an over.",
+        "%s took real punishment, %s an over.",
+        "Nothing worked for %s today, %s an over.",
+        "%s was the release valve, going at %s an over.",
+        "A chastening spell for %s - %s an over.",
+        "%s got the treatment, %s an over.",
+        "Expensive from %s at %s an over.",
+        "%s will want that spell back, %s an over.",
+    ]
+
+    # closing the segment - no args
+    commentary_analysis_signoff = [
+        "Plenty to ponder before the next innings.",
+        "That's how I saw it, anyway.",
+        "A fascinating passage of cricket.",
+        "Let's see how the other side responds.",
+        "Cricket at its most compelling.",
+        "Plenty of talking points there.",
+        "That innings will take some living with.",
+        "A lot for both sides to think about.",
+        "We'll see whether that proves enough.",
+        "Never a dull moment out there.",
+        "That's the story of the innings.",
+        "One to remember, that.",
+        "The game is beautifully poised.",
+        "Cricket has a habit of surprising us.",
+        "Plenty more drama to come, no doubt.",
+        "That's my read on the innings.",
+        "A thoroughly absorbing watch.",
+        "Let's see what happens next.",
+        "Terrific entertainment, all told.",
+        "And that, in a nutshell, was the innings.",
+    ]
+
     commentary_all_out_good_score = [
         "theyve managed to build a good total though!",
     ]

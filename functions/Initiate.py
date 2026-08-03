@@ -312,6 +312,7 @@ def GetMatchInfo(list_of_teams, venue, autoplay, overs, format_override=None, fa
         fast=fast,
     )
     match.umpires = list(umpire)  # both names, for trivia (self.umpire stays the single on-field one)
+    match.commentators = list(commentator)  # who 'speaks' the innings analysis
 
     match_descriptions = [
         "exciting",
@@ -503,6 +504,7 @@ def BuildMatch(team1, team2, venue, overs, is_test, fast=False, autoplay=False,
         fast=fast,
     )
     match.umpires = list(umpire)  # both names, for trivia (self.umpire stays the single on-field one)
+    match.commentators = list(commentator)  # who 'speaks' the innings analysis
     match.autoplay = autoplay
     # tournament matches run autoplay only for auto-decisions when simulated;
     # never make the autoplay roster-name web check (dozens of blocking
