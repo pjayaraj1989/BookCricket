@@ -541,6 +541,7 @@ function resetSidePane() {
   playerTeamMap = {};
   currentBattingTeam = null;
   currentBowlingTeam = null;
+  matchCommentators = [];
   runRateGraphEl.style.display = "none";
   runRateLegendEl.innerHTML = "";
   runRateSvgEl.innerHTML = "";
@@ -982,6 +983,7 @@ function buildInningsAnalysisCard(data) {
   const wrap = document.createElement("div");
   wrap.className = "innings-analysis";
 
+  // the scoreline this analysis is about
   const head = document.createElement("div");
   head.className = "ia-head";
   if (data.team) head.appendChild(teamFlagBadge(data.team, true));
@@ -997,77 +999,47 @@ function buildInningsAnalysisCard(data) {
   head.appendChild(rr);
   wrap.appendChild(head);
 
-  if (data.headline) {
-    const h = document.createElement("div");
-    h.className = "ia-headline";
-    h.textContent = data.headline;
-    wrap.appendChild(h);
-  }
+  // the analysis itself, delivered by a commentator: their mugshot on the
+  // left, what they are saying in a speech bubble on the right
+  const body = document.createElement("div");
+  body.className = "ia-body";
 
-  if (data.chase) {
-    const c = document.createElement("div");
-    c.className = "ia-chase " + (data.chase.successful ? "ok" : "fail");
-    c.textContent = data.chase.successful
-      ? "Target of " + data.chase.target + " chased down."
-      : "Fell " + data.chase.margin + " run" + (data.chase.margin === 1 ? "" : "s") +
-        " short of " + data.chase.target + ".";
-    wrap.appendChild(c);
-  }
-
-  // how the match was won/lost - thriller, routine, or a thrashing
-  if (data.verdict) {
-    const v = document.createElement("div");
-    v.className = "ia-verdict";
-    v.textContent = data.verdict;
-    wrap.appendChild(v);
-  }
-
-  (data.notes || []).forEach((n) => {
-    const line = document.createElement("div");
-    line.className = "ia-note";
-    line.textContent = n;
-    wrap.appendChild(line);
-  });
-
-  // a labelled row of name chips; skipped entirely when there's nothing to show
-  const addRow = (label, items, cls) => {
-    if (!items || !items.length) return;
-    const row = document.createElement("div");
-    row.className = "ia-row";
-    const lab = document.createElement("span");
-    lab.className = "ia-label";
-    lab.textContent = label;
-    row.appendChild(lab);
-    items.forEach((t) => {
-      const chip = document.createElement("span");
-      chip.className = "ia-chip " + cls;
-      chip.textContent = t;
-      row.appendChild(chip);
+  const who = document.createElement("div");
+  who.className = "ia-commentator";
+  if (data.commentator) {
+    const pic = document.createElement("img");
+    pic.className = "ia-commentator-pic";
+    pic.alt = data.commentator;
+    pic.src = "commentators/" + encodeURIComponent(data.commentator);
+    pic.addEventListener("error", () => {
+      const fallback = document.createElement("span");
+      fallback.className = "ia-commentator-pic ia-commentator-fallback";
+      fallback.textContent = initialsOf(data.commentator);
+      pic.replaceWith(fallback);
     });
-    wrap.appendChild(row);
-  };
+    who.appendChild(pic);
+    const name = document.createElement("div");
+    name.className = "ia-commentator-name";
+    name.textContent = data.commentator;
+    who.appendChild(name);
+    body.appendChild(who);
+  }
 
-  const bat = data.batting || {};
-  addRow(
-    "🏏 Did well",
-    (bat.good || []).map(
-      (b) => b.name + " " + b.runs + (b.notOut ? "*" : "") + " (" + b.balls + ")"
-    ),
-    "good"
-  );
-  addRow(
-    "😞 Disappointed",
-    (bat.poor || []).map((b) => b.name + " " + b.runs + " (" + b.balls + ")"),
-    "poor"
-  );
-
-  const bowl = data.bowling || {};
-  const figures = (b) => b.name + " " + b.wickets + "/" + b.runs + " (" + Number(b.overs).toFixed(1) + " ov)";
-  if (bowl.best) addRow("⚾ Best bowler", [figures(bowl.best)], "good");
-  if (bowl.economical)
-    addRow("🔒 Most economical", [figures(bowl.economical) + " · " + Number(bowl.economical.economy).toFixed(2) + " rpo"], "good");
-  if (bowl.expensive)
-    addRow("💸 Went for runs", [figures(bowl.expensive) + " · " + Number(bowl.expensive.economy).toFixed(2) + " rpo"], "poor");
+  const bubble = document.createElement("div");
+  bubble.className = "ia-speech";
+  // paragraphs the engine wrote as spoken sentences; fall back to the raw
+  // headline if an older payload arrives without them
+  const paras = (data.speech && data.speech.length)
+    ? data.speech
+    : [data.headline].filter(Boolean);
+  paras.forEach((text) => {
+    const p = document.createElement("p");
+    p.className = "ia-para";
+    p.textContent = text;
+    bubble.appendChild(p);
+  });
+  body.appendChild(bubble);
+  wrap.appendChild(body);
 
   return wrap;
 }
@@ -1169,6 +1141,46 @@ let holdingOpen = false; // the visible frame is waiting to be replaced
 // blocked server could never send.
 let dispatchPushedItems = null;
 let currentEventItem = null; // the frame currently visible in the pane
+let currentDispatchKind = null; // event kind being rendered right now
+
+// this match's commentary team, from the "commentators" event at match start.
+// Every full-screen announcement gets one of their faces tucked in the corner,
+// as though they were the ones calling it.
+let matchCommentators = [];
+
+// pop-ups that must NOT get the badge: the commentators' own reveal (it is
+// already all of them), and the innings analysis (it has a big commentator
+// portrait of its own, so a second face would be odd).
+const NO_COMMENTATOR_BADGE = new Set([
+  "commentators",
+  "innings_analysis",
+  "lineup_countdown",
+  "validating_teams",
+]);
+
+function attachCommentatorBadge(paneEl, kind) {
+  if (!matchCommentators.length || NO_COMMENTATOR_BADGE.has(kind)) return;
+  // full-screen announcements only - a docked card has no room for it
+  if (!paneEl.classList.contains("takeover")) return;
+
+  const name = matchCommentators[Math.floor(Math.random() * matchCommentators.length)];
+  const badge = document.createElement("div");
+  badge.className = "event-commentator";
+
+  const pic = document.createElement("img");
+  pic.className = "event-commentator-pic";
+  pic.alt = name; // for screen readers only - no visible name label
+  pic.src = "commentators/" + encodeURIComponent(name);
+  pic.addEventListener("error", () => {
+    const fallback = document.createElement("span");
+    fallback.className = "event-commentator-pic event-commentator-fallback";
+    fallback.textContent = initialsOf(name);
+    pic.replaceWith(fallback);
+  });
+  badge.appendChild(pic);
+
+  paneEl.appendChild(badge);
+}
 
 function finishEventFrame() {
   if (currentEventItem && currentEventItem.eid != null) {
@@ -1178,7 +1190,13 @@ function finishEventFrame() {
 }
 
 function showEventPane(content, holdMs, paneClass) {
-  const item = { content: content, holdMs: holdMs, paneClass: paneClass, eid: null };
+  const item = {
+    content: content,
+    holdMs: holdMs,
+    paneClass: paneClass,
+    eid: null,
+    kind: currentDispatchKind,
+  };
   if (dispatchPushedItems) dispatchPushedItems.push(item);
   eventQueue.push(item);
   // a hold-open frame is meant to give way the moment its result lands
@@ -1206,6 +1224,7 @@ function drainEventQueue() {
   // rebuild the class list from scratch (dropping "visible") so the pop/flip
   // animations restart even if the pane is already showing a previous event
   eventPaneEl.className = "event-pane" + (item.paneClass ? " " + item.paneClass : "");
+  attachCommentatorBadge(eventPaneEl, item.kind);
   void eventPaneEl.offsetWidth; // force reflow
   eventPaneEl.classList.add("visible");
 
@@ -1281,6 +1300,9 @@ function buildPlayerCard(name, role, srcPath) {
 }
 
 function renderEvent(kind, data) {
+  // remembered so every frame this dispatch queues knows which event it came
+  // from - drainEventQueue uses it to decide on the commentator badge
+  currentDispatchKind = kind;
   // the sim overlay stays up across a silent simulation (tournament fixture
   // or a fast-forwarded Test innings), since no events reach the browser
   // while it's running - so whatever event fires *next*, of any kind, is
@@ -1297,18 +1319,71 @@ function renderEvent(kind, data) {
       "fast-forwarding to the end of the innings…"
     );
   } else if (kind === "toss") {
-    const wrap = document.createElement("div");
-    wrap.className = "event-player";
-    const row = document.createElement("div");
-    row.className = "event-toss-row";
-    if (data && data.team1) row.appendChild(teamFlagBadge(data.team1, true));
-    const coin = document.createElement("span");
-    coin.className = "event-coin";
-    coin.textContent = "🪙";
-    row.appendChild(coin);
-    if (data && data.team2) row.appendChild(teamFlagBadge(data.team2, true));
-    wrap.appendChild(row);
-    showEventPane(wrap, 2500, "takeover");
+    const stage = (data && data.stage) || "flip";
+    if (stage === "intro") {
+      // both captains out in the middle, about to toss
+      const wrap = document.createElement("div");
+      wrap.className = "event-player";
+      const cap = document.createElement("div");
+      cap.className = "event-achievement-badge";
+      cap.textContent = "🪙 Time for the toss";
+      wrap.appendChild(cap);
+      const row = document.createElement("div");
+      row.className = "event-openers";
+      ((data && data.captains) || []).forEach((c) => {
+        const role = c.name === data.flipper ? "flips the coin" : "calls it";
+        row.appendChild(buildPlayerCard(String(c.name), role));
+      });
+      wrap.appendChild(row);
+      showEventPane(wrap, 4000, "takeover roster");
+    } else if (stage === "result") {
+      // who won it, with the winning captain
+      const card = buildPlayerCard(String(data.captain));
+      const badge = document.createElement("div");
+      badge.className = "event-achievement-badge";
+      badge.textContent = "🪙 " + data.team + " win the toss!";
+      card.insertBefore(badge, card.lastChild);
+      const sub = document.createElement("div");
+      sub.className = "event-captain-comment";
+      sub.textContent = "Called " + data.call + " · it landed " + data.coin + ".";
+      card.appendChild(sub);
+      showEventPane(card, 4000, "takeover");
+    } else if (stage === "decision") {
+      // the commentator putting the question to the winning captain
+      const card = buildPlayerCard(String(data.captain));
+      const badge = document.createElement("div");
+      badge.className = "event-achievement-badge";
+      badge.textContent = "🤔 Bat or bowl?";
+      card.insertBefore(badge, card.lastChild);
+      const sub = document.createElement("div");
+      sub.className = "event-captain-comment";
+      sub.textContent = "So, what will it be, skipper?";
+      card.appendChild(sub);
+      showEventPane(card, 3000, "takeover");
+    } else if (stage === "elected") {
+      const batting = data.decision === "Bat";
+      const card = buildPlayerCard(String(data.captain));
+      const badge = document.createElement("div");
+      badge.className = "event-achievement-badge";
+      badge.textContent =
+        (batting ? "🏏 " : "⚾ ") + data.team + " elect to " + data.decision.toLowerCase() + " first";
+      card.insertBefore(badge, card.lastChild);
+      showEventPane(card, 3500, "takeover");
+    } else {
+      // the coin in the air, a flag on either side of it
+      const wrap = document.createElement("div");
+      wrap.className = "event-player";
+      const row = document.createElement("div");
+      row.className = "event-toss-row";
+      if (data && data.team1) row.appendChild(teamFlagBadge(data.team1, true));
+      const coin = document.createElement("span");
+      coin.className = "event-coin";
+      coin.textContent = "🪙";
+      row.appendChild(coin);
+      if (data && data.team2) row.appendChild(teamFlagBadge(data.team2, true));
+      wrap.appendChild(row);
+      showEventPane(wrap, 2500, "takeover");
+    }
   } else if (kind === "wicket") {
     showEventPane('<span class="event-stumps">' + STUMPS_SVG + "</span>", 2500);
   } else if (kind === "four") {
@@ -1870,6 +1945,8 @@ function renderEvent(kind, data) {
     }
   } else if (kind === "commentators") {
     const names = ((data && data.names) || []).map(String).filter(Boolean);
+    // remember them: from here on every announcement carries one of their faces
+    matchCommentators = names.slice();
     if (names.length) {
       const row = document.createElement("div");
       row.className = "event-openers";

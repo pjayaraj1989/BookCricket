@@ -2416,11 +2416,9 @@ class Match:
             pool = commentary.commentary_innings_modest
         else:
             pool = commentary.commentary_innings_poor
+        # the "bowled out"/"declared" rider is added by _BuildAnalysisSpeech,
+        # which has the score to hand - adding it here too would say it twice
         headline = Randomize(pool) % str(run_rate)
-        if summary.wickets < 10 and summary.declared:
-            headline += " They declared."
-        elif summary.wickets >= 10:
-            headline += " Bowled out."
 
         # a T20/ODI-style "runs per wicket" read on how well they batted deep
         notes = self._InningsPhaseNotes(summary)
@@ -2514,7 +2512,109 @@ class Match:
             verdict = self._MatchMarginVerdict(summary, got_there)
             if verdict:
                 analysis["verdict"] = verdict
+
+        # turn all of the above into something a commentator would actually
+        # say, and put a name and face to it
+        analysis["speech"] = self._BuildAnalysisSpeech(analysis, summary)
+        if self.commentators:
+            analysis["commentator"] = Randomize(list(self.commentators))
         return analysis
+
+    def _BuildAnalysisSpeech(self, analysis, summary):
+        """
+        Read the innings analysis out as a commentator would - flowing
+        sentences naming the players, rather than a list of labelled figures.
+
+        Args:
+            analysis: the structured analysis built above.
+            summary: the InningsSummary it was derived from.
+
+        Returns:
+            list[str]: paragraphs, in the order they should be spoken.
+        """
+        paras = []
+
+        # 1. the opener, the headline read on the total, and the shape of it
+        opening = Randomize(commentary.commentary_analysis_opener) % analysis["team"]
+        opening += " " + analysis["headline"]
+        if summary.declared:
+            opening += " They declared on %s/%s." % (
+                str(analysis["score"]), str(analysis["wickets"])
+            )
+        elif analysis["wickets"] >= 10:
+            opening += " Bowled out for %s." % str(analysis["score"])
+        paras.append(opening)
+
+        if analysis["notes"]:
+            paras.append(" ".join(analysis["notes"]))
+
+        # 2. the batting - who stood up, who fell away
+        def figures(b):
+            return "%s%s off %s" % (
+                str(b["runs"]), "*" if b["notOut"] else "", str(b["balls"])
+            )
+
+        bat_lines = []
+        for b in analysis["batting"]["good"][:2]:
+            bat_lines.append(
+                Randomize(commentary.commentary_analysis_bat_praise)
+                % (b["name"], figures(b))
+            )
+        for b in analysis["batting"]["poor"][:2]:
+            bat_lines.append(
+                Randomize(commentary.commentary_analysis_bat_fail)
+                % (b["name"], figures(b))
+            )
+        if bat_lines:
+            paras.append(" ".join(bat_lines))
+
+        # 3. the bowling from the other side
+        bowl = analysis["bowling"]
+        bowl_lines = []
+        if bowl["best"]:
+            bowl_lines.append(
+                Randomize(commentary.commentary_analysis_bowl_star)
+                % (
+                    bowl["best"]["name"],
+                    "%s/%s" % (str(bowl["best"]["wickets"]), str(bowl["best"]["runs"])),
+                )
+            )
+        if bowl["economical"]:
+            bowl_lines.append(
+                Randomize(commentary.commentary_analysis_bowl_econ)
+                % (
+                    bowl["economical"]["name"],
+                    ("%.2f" % bowl["economical"]["economy"]),
+                )
+            )
+        if bowl["expensive"]:
+            bowl_lines.append(
+                Randomize(commentary.commentary_analysis_bowl_expensive)
+                % (
+                    bowl["expensive"]["name"],
+                    ("%.2f" % bowl["expensive"]["economy"]),
+                )
+            )
+        if bowl_lines:
+            paras.append(" ".join(bowl_lines))
+
+        # 4. the chase result, then sign off
+        chase = analysis.get("chase")
+        if chase:
+            if chase["successful"]:
+                closing = "They got there, chasing down %s." % str(chase["target"])
+            else:
+                closing = "They fell %s run%s short of %s." % (
+                    str(chase["margin"]),
+                    "" if chase["margin"] == 1 else "s",
+                    str(chase["target"]),
+                )
+            if analysis.get("verdict"):
+                closing += " " + analysis["verdict"]
+            paras.append(closing)
+        else:
+            paras.append(Randomize(commentary.commentary_analysis_signoff))
+        return paras
 
     def BuildInningsSummary(self):
         """
@@ -2788,8 +2888,13 @@ class Match:
 
             if self.overs and batting_team.total_balls == (self.overs * 6):
                 PrintInColor("End of innings", Fore.LIGHTCYAN_EX)
-                # update last partnership
-                if batting_team.wickets_fell > 0:
+                # The chasing side must NOT break out here: the batting-second
+                # branch below is what settles the result (status, commentary
+                # and the "match decided" pop-up). Breaking early skipped all
+                # of that whenever a chase simply ran out of balls with wickets
+                # still standing, so a failed chase never announced itself.
+                if batting_team.wickets_fell > 0 and not batting_team.batting_second:
+                    # update last partnership
                     last_fow = batting_team.fow[-1].runs
                     last_partnership_runs = batting_team.total_score - last_fow
                     last_partnership = Partnership(
@@ -4589,6 +4694,20 @@ class Match:
         )
         PrintInColor("%s is going to flip the coin" % t2.captain.name, Style.BRIGHT)
 
+        # the two captains out in the middle, about to toss
+        utilities.PushEvent(
+            "toss",
+            {
+                "stage": "intro",
+                "captains": [
+                    {"name": t1.captain.name, "team": t1.name},
+                    {"name": t2.captain.name, "team": t2.name},
+                ],
+                "flipper": t2.captain.name,
+                "caller": t1.captain.name,
+            },
+        )
+
         # team1's captain calls the coin
         if self.autoplay:
             call = Randomize(["Heads", "Tails"])
@@ -4597,7 +4716,10 @@ class Match:
                 ["Heads", "Tails"], "%s, Heads or Tails?" % t1.captain.name, 5
             )
         coin = Randomize(["Heads", "Tails"])
-        utilities.PushEvent("toss", {"team1": t1.name, "team2": t2.name})
+        # the coin in the air
+        utilities.PushEvent(
+            "toss", {"stage": "flip", "team1": t1.name, "team2": t2.name}
+        )
         PrintInColor(
             "%s called %s.. and it's %s!" % (t1.captain.name, call, coin),
             Style.BRIGHT,
@@ -4609,8 +4731,26 @@ class Match:
         PrintInColor(
             "%s have won the toss!" % toss_winner.name, toss_winner.color
         )
+        utilities.PushEvent(
+            "toss",
+            {
+                "stage": "result",
+                "team": toss_winner.name,
+                "captain": toss_winner.captain.name,
+                "call": call,
+                "coin": coin,
+            },
+        )
 
         # the toss winner elects to bat or bowl first
+        utilities.PushEvent(
+            "toss",
+            {
+                "stage": "decision",
+                "team": toss_winner.name,
+                "captain": toss_winner.captain.name,
+            },
+        )
         if self.autoplay:
             decision = Randomize(["Bat", "Bowl"])
         else:
@@ -4630,6 +4770,15 @@ class Match:
         msg = "%s have elected to %s first" % (toss_winner.name, decision.lower())
         PrintInColor(msg, toss_winner.color)
         logger.info(msg)
+        utilities.PushEvent(
+            "toss",
+            {
+                "stage": "elected",
+                "team": toss_winner.name,
+                "captain": toss_winner.captain.name,
+                "decision": decision,
+            },
+        )
 
         # now find out who is batting first
         batting_first = next(
