@@ -4746,23 +4746,27 @@ class Match:
             },
         )
 
-        # the toss winner elects to bat or bowl first
-        utilities.PushEvent(
-            "toss",
-            {
-                "stage": "decision",
-                "team": toss_winner.name,
-                "captain": toss_winner.captain.name,
-            },
-        )
-        if self.autoplay:
-            decision = Randomize(["Bat", "Bowl"])
-        else:
+        # the toss winner elects to bat or bowl first - but only the user's
+        # own side (team1 - see GetMatchInfo's "Select your team") actually
+        # gets asked; if the opposition wins it, their call is just randomized
+        # and announced, with no "what will it be, skipper?" prompt shown
+        user_decides = not self.autoplay and toss_winner is self.team1
+        if user_decides:
+            utilities.PushEvent(
+                "toss",
+                {
+                    "stage": "decision",
+                    "team": toss_winner.name,
+                    "captain": toss_winner.captain.name,
+                },
+            )
             decision = ChooseFromOptions(
                 ["Bat", "Bowl"],
                 "%s, do you want to bat or bowl first?" % toss_winner.captain.name,
                 5,
             )
+        else:
+            decision = Randomize(["Bat", "Bowl"])
 
         if decision == "Bat":
             toss_winner.batting_second = False
