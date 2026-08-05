@@ -476,6 +476,141 @@ class commentary:
         "that's gone.. run out!! never run off a mis-field, %s and %s!",
         "what was the batsmen thinking!?.. poor start by %s it was initiated by %s i guess!",
     ]
+
+    # ---------------------------------------------------------------
+    # Run-out drama build-up (see Match._PushRunOutDrama) - the attempted
+    # run itself, played out before the third umpire's verdict. Every list
+    # below takes (striker's surname, non-striker's surname) except
+    # commentary_runout_throw, which takes the fielder's surname.
+    # ---------------------------------------------------------------
+
+    # a single, nothing risky - yet
+    commentary_runout_call_single = [
+        "%s taps it into the gap and calls %s through for a single.",
+        "%s pushes it out and sets off - %s is backing up well.",
+        "A gentle single on offer - %s and %s cross without fuss.",
+        "%s works it away and they trot through for one, %s backing up well.",
+        "A simple tap and run from %s, %s already halfway down.",
+        "%s finds a gap and calls %s for the easy single.",
+        "Just the one there, %s and %s should get back comfortably.",
+        "%s dabs it into space - an easy run for %s and him.",
+        "A routine single being taken by %s and %s.",
+        "%s nudges it away, %s off and running.",
+        "%s and %s cross for what looks a simple one.",
+        "A soft single - %s calling %s through.",
+        "%s taps and runs, %s responding at the other end.",
+        "%s picks the gap, an easy run for %s and the pair.",
+        "%s and %s set off for a comfortable single.",
+        "%s guides it into the gap, an easy one on for %s.",
+        "A gentle single there for %s and %s.",
+        "%s plays it into space and they run one, %s alongside.",
+        "%s and %s cross paths, a routine single.",
+        "%s taps it away, %s already turning for the run.",
+    ]
+
+    # going for the risky second
+    commentary_runout_call_second = [
+        "%s and %s are turning back for a second - this could be tight!",
+        "They've completed one, and now %s sends %s back for the second!",
+        "%s wants two! %s is committed and running hard!",
+        "A risky call - %s and %s are going for the second run!",
+        "%s turns for two, dragging %s into a race against the fielder!",
+        "They're pushing hard for the second - %s and %s in a footrace now!",
+        "%s fancies the second, %s not so sure but he's committed!",
+        "A greedy second being attempted by %s and %s here!",
+        "%s and %s turn for the second - the fielder is closing in!",
+        "That's a big ask - %s sends %s back for two!",
+        "%s and %s are sprinting hard for the second run!",
+        "A brave call for two from %s, %s scrambling to respond!",
+        "They want the second badly - %s and %s in a hurry now!",
+        "%s turns back, %s straining every sinew for the second!",
+        "A tight second being chased by %s and %s!",
+        "%s and %s have gone for the extra run - this is close!",
+        "That second run is on, and %s and %s know it's tight!",
+        "%s wants to push it to two - %s hesitant but running!",
+        "A risky second attempted by %s and %s under pressure!",
+        "They've gone for two - %s and %s racing the throw now!",
+    ]
+
+    # the fielder's throw at the stumps
+    commentary_runout_throw = [
+        "%s swoops in, picks up and fires a throw at the stumps!",
+        "%s collects in one motion and lets fly at the target!",
+        "A flat, hard throw from %s - right at the stumps!",
+        "%s doesn't panic, picks up and unleashes a bullet throw!",
+        "The ball is in the air off %s's arm, homing in on the stumps!",
+        "%s pounces on it and fires it in flat and fast!",
+        "A rocket arm from %s - the throw is dead straight!",
+        "%s gathers cleanly and lets go with everything!",
+        "The throw from %s is on target - this is close!",
+        "%s picks up in a hurry and hurls it goalward at the stumps!",
+        "A sizzling throw from %s - right on the money!",
+        "%s scoops it up and fires in a flat, low throw!",
+        "That's a superb pickup and throw from %s!",
+        "%s doesn't need a second invitation - the throw is away!",
+        "A direct-line throw from %s - can it find the stumps?",
+        "%s lets it go in one clean action - the race is on!",
+        "The arm from %s is true - the ball is flying in!",
+        "%s collects and returns it like a bullet!",
+        "A stunning piece of fielding from %s, and the throw is in!",
+        "%s has given himself the best chance with that throw!",
+    ]
+
+    # ---------------------------------------------------------------
+    # Stumping drama build-up (see Match._PushStumpingDrama) - the batsman
+    # beaten down the track, played out before the third umpire's verdict.
+    # commentary_stumped_advance takes (batsman's surname, bowler's surname);
+    # commentary_stumped_whip takes the keeper's surname.
+    # ---------------------------------------------------------------
+
+    # the batsman advancing down the track, beaten by flight or turn
+    commentary_stumped_advance = [
+        "%s comes down the track to %s - and is beaten all ends up!",
+        "%s advances at %s, gets nowhere near it!",
+        "Tempted down the pitch by %s, %s is deceived by the flight!",
+        "%s charges %s and completely misses the line of it!",
+        "That's drawn %s out of the crease - beaten by %s!",
+        "%s skips down to %s and is done in by the turn!",
+        "A charge down the track from %s against %s - and he's missed it!",
+        "%s is lured forward by %s, beaten by extra bounce and turn!",
+        "%s advances but %s has him in two minds - beaten!",
+        "Out of his ground already - %s beaten by a beauty from %s!",
+        "%s comes down the wicket to %s, completely deceived!",
+        "The flight from %s has %s in trouble, well out of his crease!",
+        "%s dances down to %s and gets it all wrong!",
+        "Drawn forward by %s, %s is well beaten by that one!",
+        "%s ventures down the track against %s - and misses everything!",
+        "That looped one from %s has %s at sea, stranded down the track!",
+        "%s takes a stride at %s and is beaten by the guile!",
+        "A rush of blood from %s - beaten by %s and stranded!",
+        "%s is deceived in flight by %s, well out of his ground!",
+        "%s advances on %s, but the ball goes past everything!",
+    ]
+
+    # the keeper's lightning-quick removal of the bails
+    commentary_stumped_whip = [
+        "%s whips the bails off in a blur!",
+        "Lightning hands from %s - the bails are gone!",
+        "%s is quicksilver behind the stumps!",
+        "In one motion, %s has the stumps shattered!",
+        "%s doesn't need a second invitation - bails off instantly!",
+        "A flash of the gloves from %s and it's done!",
+        "%s whips them off before the batsman can recover!",
+        "The keeper %s is razor quick to the stumps!",
+        "%s collects and removes the bails in the same breath!",
+        "That's textbook glovework from %s!",
+        "%s is electric behind the stumps there!",
+        "One glove is all %s needed - bails gone!",
+        "%s reacts in a flash - the stumps are shattered!",
+        "Superb hands from %s, gone in an instant!",
+        "%s doesn't fumble it - the bails are off immediately!",
+        "The speed of %s behind the stumps is remarkable!",
+        "%s makes no mistake - a clean, quick removal!",
+        "That's %s at his sharpest - bails whipped off!",
+        "%s is unerring - the stumps are broken in a heartbeat!",
+        "A masterclass in glovework from %s!",
+    ]
+
     commentary_stumped = [
         "swift work by the keeper %s!",
         "that's out! stumped.. bravo %s!",

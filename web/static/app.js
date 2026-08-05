@@ -1084,6 +1084,128 @@ function buildUmpireDecisionCard(umpireName, label) {
   return card;
 }
 
+// the attempted run itself, played out before the third-umpire verdict
+// (see Match._PushRunOutDrama): the single, maybe the turn for a second,
+// then the fielder's throw at the stumps.
+function buildRunOutDramaCard(data) {
+  const stage = data && data.stage;
+  const wrap = document.createElement("div");
+  wrap.className = "event-player run-out-drama";
+
+  const badge = document.createElement("div");
+  badge.className = "event-achievement-badge";
+
+  if (stage === "throw") {
+    badge.textContent = "🎯 THROW!";
+    wrap.appendChild(badge);
+
+    const fielderName = data && data.fielder ? String(data.fielder) : "";
+    const row = document.createElement("div");
+    row.className = "run-out-throw-row";
+
+    row.appendChild(buildPlayerCard(fielderName));
+
+    const track = document.createElement("div");
+    track.className = "run-out-throw-line";
+    const ball = document.createElement("span");
+    ball.className = "run-out-ball";
+    ball.textContent = "🔴";
+    track.appendChild(ball);
+    row.appendChild(track);
+
+    const stumps = document.createElement("div");
+    stumps.className = "event-decision-stumps run-out-stumps-target";
+    stumps.innerHTML = STUMPS_SVG;
+    row.appendChild(stumps);
+
+    wrap.appendChild(row);
+  } else {
+    // "single" or "second": both batsmen, running between the wickets
+    badge.textContent = stage === "second" ? "🏃💨 Going for two!" : "🏃 Quick single!";
+    wrap.appendChild(badge);
+
+    const names = (data && data.batsmen) || [];
+    const row = document.createElement("div");
+    row.className = "run-out-run-row" + (stage === "second" ? " risky" : "");
+
+    row.appendChild(buildPlayerCard(String(names[0] || "")));
+    const track = document.createElement("div");
+    track.className = "run-out-track";
+    const runner = document.createElement("span");
+    runner.className = "run-out-runner";
+    runner.textContent = "🏃";
+    track.appendChild(runner);
+    row.appendChild(track);
+    row.appendChild(buildPlayerCard(String(names[1] || "")));
+
+    wrap.appendChild(row);
+  }
+
+  if (data && data.comment) {
+    const commentEl = document.createElement("div");
+    commentEl.className = "event-captain-comment";
+    commentEl.textContent = String(data.comment);
+    wrap.appendChild(commentEl);
+  }
+  return wrap;
+}
+
+// the stumping itself, played out before the third-umpire verdict (see
+// Match._PushStumpingDrama): the batsman drawn down the track, then the
+// keeper's lightning-quick removal of the bails.
+function buildStumpingDramaCard(data) {
+  const stage = data && data.stage;
+  const wrap = document.createElement("div");
+  wrap.className = "event-player stumping-drama";
+
+  const badge = document.createElement("div");
+  badge.className = "event-achievement-badge";
+
+  if (stage === "whip") {
+    badge.textContent = "⚡ Whipped off!";
+    wrap.appendChild(badge);
+
+    const keeperName = data && data.keeper ? String(data.keeper) : "";
+    const row = document.createElement("div");
+    row.className = "stumping-whip-row";
+    row.appendChild(buildPlayerCard(keeperName));
+    const stumps = document.createElement("div");
+    stumps.className = "event-decision-stumps stumping-stumps-shake";
+    stumps.innerHTML = STUMPS_SVG;
+    row.appendChild(stumps);
+    wrap.appendChild(row);
+  } else {
+    // "advance": the batsman charging down the track, beaten by flight or turn
+    badge.textContent = "🏃 Down the track!";
+    wrap.appendChild(badge);
+
+    const batsmanName = data && data.batsman ? String(data.batsman) : "";
+    const bowlerName = data && data.bowler ? String(data.bowler) : "";
+    // reuses the run-out track/runner visual - the same "closing the gap"
+    // motion works for a charge down the pitch as it does for a run
+    const row = document.createElement("div");
+    row.className = "run-out-run-row";
+    row.appendChild(buildPlayerCard(batsmanName));
+    const track = document.createElement("div");
+    track.className = "run-out-track";
+    const runner = document.createElement("span");
+    runner.className = "run-out-runner";
+    runner.textContent = "🏃";
+    track.appendChild(runner);
+    row.appendChild(track);
+    row.appendChild(buildPlayerCard(bowlerName));
+    wrap.appendChild(row);
+  }
+
+  if (data && data.comment) {
+    const commentEl = document.createElement("div");
+    commentEl.className = "event-captain-comment";
+    commentEl.textContent = String(data.comment);
+    wrap.appendChild(commentEl);
+  }
+  return wrap;
+}
+
 function buildCountdownCard(name, number) {
   const card = buildPlayerCard(name);
   const nameEl = card.querySelector(".event-player-name");
@@ -1888,6 +2010,10 @@ function renderEvent(kind, data) {
     badge.textContent = "FREE HIT!";
     card.insertBefore(badge, card.firstChild);
     showEventPane(card, 3000, "takeover");
+  } else if (kind === "run_out_drama") {
+    showEventPane(buildRunOutDramaCard(data), 2600, "takeover");
+  } else if (kind === "stumping_drama") {
+    showEventPane(buildStumpingDramaCard(data), 2600, "takeover");
   } else if (kind === "runout") {
     const ump = data && data.umpire ? String(data.umpire) : "";
     showEventPane(buildUmpireDecisionCard(ump, "RUN OUT"), 3000, "takeover");
