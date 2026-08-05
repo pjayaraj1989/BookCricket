@@ -1225,8 +1225,16 @@ function buildAppealDramaCard(data) {
 
   const row = document.createElement("div");
   row.className = "event-openers";
-  row.appendChild(buildPlayerCard(bowlerName, "Bowler"));
-  row.appendChild(buildPlayerCard(umpireName, "Umpire", "umpires/"));
+  // just the faces here - no names or role labels (see buildUmpireDecisionCard)
+  [buildPlayerCard(bowlerName, "Bowler"), buildPlayerCard(umpireName, "Umpire", "umpires/")].forEach(
+    (card) => {
+      const nameEl = card.querySelector(".event-player-name");
+      if (nameEl) nameEl.remove();
+      const roleEl = card.querySelector(".event-player-role");
+      if (roleEl) roleEl.remove();
+      row.appendChild(card);
+    }
+  );
   wrap.appendChild(row);
 
   const verdict = document.createElement("div");
@@ -1755,6 +1763,12 @@ function renderEvent(kind, data) {
         row.appendChild(buildPlayerCard(n));
       });
       wrap.appendChild(row);
+      if (data && data.comment) {
+        const commentEl = document.createElement("div");
+        commentEl.className = "event-captain-comment";
+        commentEl.textContent = String(data.comment);
+        wrap.appendChild(commentEl);
+      }
       showEventPane(wrap, 4500, "takeover roster");
     }
   } else if (kind === "team_score") {
