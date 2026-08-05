@@ -5171,6 +5171,166 @@ class Match:
             )
             batting_team.partnerships.append(last_partnership)
 
+    def _ShouldRiskSecondRun(self):
+        """
+        A realistic read on whether the batsmen would actually turn back for
+        a second right now, for the run-out drama build-up. A single that
+        already wins the match is never risked for two - there is nothing to
+        gain. Otherwise, while chasing, the odds track the required rate
+        against the current one: push harder for twos when quick runs are
+        needed, hold back when the chase is already comfortable. Outside a
+        chase (batting first, or a Test) there is no such pressure to read,
+        so it falls back to a flat, everyday chance.
+
+        Returns:
+            bool
+        """
+        bt = self.batting_team
+        chance = 0.45
+
+        if self.overs and bt.batting_second and bt.target:
+            runs_needed = bt.target - bt.total_score
+            if runs_needed <= 1:
+                return False
+            rrr = bt.GetRequiredRate()
+            crr = bt.GetCurrentRate()
+            if rrr > 0:
+                # ahead of the rate: nothing to gamble for; behind it: push harder
+                ratio = rrr / max(crr, 0.5)
+                chance = min(0.75, max(0.15, 0.45 * ratio))
+
+        return random.random() < chance
+
+    def _PushRunOutDrama(self, fielder):
+        """
+        Play out the attempted run itself before the third umpire's verdict:
+        the single being taken, then - if it's actually worth the risk (see
+        _ShouldRiskSecondRun) - the batsmen turning back for a second, and
+        finally the fielder's throw at the stumps. Purely a big-screen
+        narrative build-up; the actual out/not-out decision still goes
+        through _CheckThirdUmpire exactly as before.
+
+        Args:
+            fielder: the Player who fields the ball and throws.
+
+        Returns:
+            None
+        """
+        batting_team = self.batting_team
+        pair = batting_team.current_pair
+        # BatsmanOut always dismisses whoever is on strike (see Pair.py) - the
+        # non-striker is their running partner for this call
+        striker = next((x for x in pair if x.onstrike), None)
+        partner = next((x for x in pair if not x.onstrike), None)
+        if striker is None or partner is None:
+            return
+
+        pace = 0 if self.fast else 1.2
+
+        def push(stage, comment, **extra):
+            utilities.PushEvent(
+                "run_out_drama",
+                dict(
+                    {
+                        "stage": stage,
+                        "batsmen": [striker.name, partner.name],
+                        "team": batting_team.name,
+                        "comment": comment,
+                    },
+                    **extra
+                ),
+            )
+            PrintInColor(comment, batting_team.color)
+            if pace:
+                time.sleep(pace)
+
+        # 1. the single itself
+        push(
+            "single",
+            Randomize(commentary.commentary_runout_call_single)
+            % (GetSurname(striker.name), GetSurname(partner.name)),
+        )
+
+        # 2. do they turn back for a second? Realistic to the match
+        # situation (see _ShouldRiskSecondRun) - this is where a routine run
+        # becomes a genuine race against the fielder
+        going_for_two = self._ShouldRiskSecondRun()
+        if going_for_two:
+            push(
+                "second",
+                Randomize(commentary.commentary_runout_call_second)
+                % (GetSurname(striker.name), GetSurname(partner.name)),
+            )
+
+        # 3. the throw - fielder rather than batsmen from here on
+        comment = Randomize(commentary.commentary_runout_throw) % GetSurname(fielder.name)
+        utilities.PushEvent(
+            "run_out_drama",
+            {
+                "stage": "throw",
+                "fielder": fielder.name,
+                "team": self.bowling_team.name,
+                "comment": comment,
+            },
+        )
+        PrintInColor(comment, self.bowling_team.color)
+        if pace:
+            time.sleep(pace)
+
+    def _PushStumpingDrama(self, keeper, bowler):
+        """
+        Play out the stumping itself before the third umpire's verdict: the
+        batsman drawn out of his ground by flight or turn, then the
+        keeper's lightning-quick removal of the bails. Purely a big-screen
+        narrative build-up; the actual out/not-out decision still goes
+        through _CheckThirdUmpire exactly as before.
+
+        Args:
+            keeper: the wicketkeeper.
+            bowler: the bowler who drew the batsman forward.
+
+        Returns:
+            None
+        """
+        batting_team = self.batting_team
+        pair = batting_team.current_pair
+        striker = next((x for x in pair if x.onstrike), None)
+        if striker is None:
+            return
+
+        pace = 0 if self.fast else 1.2
+
+        comment = Randomize(commentary.commentary_stumped_advance) % (
+            GetSurname(striker.name), GetSurname(bowler.name)
+        )
+        utilities.PushEvent(
+            "stumping_drama",
+            {
+                "stage": "advance",
+                "batsman": striker.name,
+                "bowler": bowler.name,
+                "team": batting_team.name,
+                "comment": comment,
+            },
+        )
+        PrintInColor(comment, batting_team.color)
+        if pace:
+            time.sleep(pace)
+
+        comment = Randomize(commentary.commentary_stumped_whip) % GetSurname(keeper.name)
+        utilities.PushEvent(
+            "stumping_drama",
+            {
+                "stage": "whip",
+                "keeper": keeper.name,
+                "team": self.bowling_team.name,
+                "comment": comment,
+            },
+        )
+        PrintInColor(comment, self.bowling_team.color)
+        if pace:
+            time.sleep(pace)
+
     def GenerateDismissal(self, free_hit=False):
         """
         Generate a random mode of dismissal.
@@ -5222,6 +5382,10 @@ class Match:
                     "achievement",
                     {"name": keeper.name, "type": "fielding", "text": "5 stumpings!"},
                 )
+            # the batsman drawn out of his ground, then the bails whipped
+            # off, played out before the third umpire's verdict (which
+            # _CheckThirdUmpire still handles, unchanged)
+            self._PushStumpingDrama(keeper, bowler)
 
         elif dismissal == "c":
             fielder.catches += 1
@@ -5249,6 +5413,9 @@ class Match:
         elif dismissal == "runout":
             fielder.runouts += 1
             dismissal_str = "runout %s" % (GetShortName(fielder.name))
+            # the attempted run itself, played out before the third umpire's
+            # verdict (which _CheckThirdUmpire still handles, unchanged)
+            self._PushRunOutDrama(fielder)
 
         # check if fielder is on fire!
         if fielder.runouts >= 2 or fielder.catches >= 2:

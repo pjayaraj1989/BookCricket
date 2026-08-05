@@ -1220,6 +1220,104 @@ main {
   height: 96px;
 }
 
+/* run-out drama build-up (see buildRunOutDramaCard) - the attempted run,
+   then the fielder's throw, played out before the third-umpire verdict */
+.run-out-run-row,
+.run-out-throw-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.run-out-track {
+  position: relative;
+  width: 90px;
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg, #3a8a5c 0 10px, transparent 10px 18px
+  );
+  flex: 0 0 auto;
+}
+
+.event-pane.takeover .run-out-track { width: 160px; }
+
+.run-out-runner {
+  position: absolute;
+  top: -0.75em;
+  font-size: 1.4rem;
+  animation: run-out-jog 0.7s ease-in-out infinite alternate;
+}
+
+.event-pane.takeover .run-out-runner { font-size: 2.2rem; }
+
+/* the risky second: quicker, more anxious strides */
+.run-out-run-row.risky .run-out-runner {
+  animation-duration: 0.35s;
+}
+
+@keyframes run-out-jog {
+  from { left: 0; transform: scaleX(1); }
+  to { left: calc(100% - 1.2em); transform: scaleX(-1); }
+}
+
+.run-out-throw-line {
+  position: relative;
+  width: 110px;
+  height: 2px;
+  background: rgba(242, 209, 107, 0.35);
+  flex: 0 0 auto;
+}
+
+.event-pane.takeover .run-out-throw-line { width: 200px; }
+
+.run-out-ball {
+  position: absolute;
+  top: -0.5em;
+  font-size: 1rem;
+  animation: run-out-throw-flight 0.5s cubic-bezier(0.3, 0, 0.7, 1) infinite;
+}
+
+@keyframes run-out-throw-flight {
+  from { left: 0; opacity: 1; }
+  90% { opacity: 1; }
+  to { left: calc(100% - 0.9em); opacity: 0.2; }
+}
+
+/* the stumps being aimed at - a pulsing highlight marks them as the target */
+.run-out-stumps-target svg {
+  animation: run-out-target-pulse 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes run-out-target-pulse {
+  from { filter: drop-shadow(0 0 0 rgba(255, 80, 80, 0)); }
+  to { filter: drop-shadow(0 0 10px rgba(255, 80, 80, 0.8)); }
+}
+
+/* stumping drama build-up (see buildStumpingDramaCard) - the "advance"
+   stage reuses .run-out-run-row/.run-out-track above for the charge down
+   the pitch; this is just the "whip" stage: keeper beside the stumps */
+.stumping-whip-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+/* a single sharp shake - the bails going in one violent motion, not a
+   sustained wobble */
+.stumping-stumps-shake svg {
+  animation: stumping-whip-shake 0.35s ease-in-out 2;
+}
+
+@keyframes stumping-whip-shake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  25% { transform: translateX(-4px) rotate(-3deg); }
+  75% { transform: translateX(4px) rotate(3deg); }
+}
+
 /* multi-card rows (teams flags, umpires, commentators) fill the screen too;
    wrap on narrow viewports rather than overflowing */
 .event-pane.takeover .event-openers {
