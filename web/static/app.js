@@ -1206,6 +1206,43 @@ function buildStumpingDramaCard(data) {
   return wrap;
 }
 
+// the fielding side's appeal for an LBW or catch (see Match._PushAppealDrama):
+// bowler and umpire face to face, a big "APPEAL!" badge, and the flavoured
+// line, which already reveals whether the on-field call is out or not out.
+function buildAppealDramaCard(data) {
+  const kind = data && data.kind === "lbw" ? "LBW" : "CATCH";
+  const out = !!(data && data.out);
+  const bowlerName = data && data.bowler ? String(data.bowler) : "";
+  const umpireName = data && data.umpire ? String(data.umpire) : "";
+
+  const wrap = document.createElement("div");
+  wrap.className = "event-player appeal-drama";
+
+  const badge = document.createElement("div");
+  badge.className = "event-achievement-badge";
+  badge.textContent = "🙌 HUGE APPEAL! (" + kind + ")";
+  wrap.appendChild(badge);
+
+  const row = document.createElement("div");
+  row.className = "event-openers";
+  row.appendChild(buildPlayerCard(bowlerName, "Bowler"));
+  row.appendChild(buildPlayerCard(umpireName, "Umpire", "umpires/"));
+  wrap.appendChild(row);
+
+  const verdict = document.createElement("div");
+  verdict.className = "event-achievement-badge";
+  verdict.textContent = out ? "☝️ OUT!" : "🙅 NOT OUT!";
+  wrap.appendChild(verdict);
+
+  if (data && data.comment) {
+    const commentEl = document.createElement("div");
+    commentEl.className = "event-captain-comment";
+    commentEl.textContent = String(data.comment);
+    wrap.appendChild(commentEl);
+  }
+  return wrap;
+}
+
 function buildCountdownCard(name, number) {
   const card = buildPlayerCard(name);
   const nameEl = card.querySelector(".event-player-name");
@@ -2014,6 +2051,8 @@ function renderEvent(kind, data) {
     showEventPane(buildRunOutDramaCard(data), 2600, "takeover");
   } else if (kind === "stumping_drama") {
     showEventPane(buildStumpingDramaCard(data), 2600, "takeover");
+  } else if (kind === "appeal_drama") {
+    showEventPane(buildAppealDramaCard(data), 3000, "takeover");
   } else if (kind === "runout") {
     const ump = data && data.umpire ? String(data.umpire) : "";
     showEventPane(buildUmpireDecisionCard(ump, "RUN OUT"), 3000, "takeover");

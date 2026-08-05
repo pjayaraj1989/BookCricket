@@ -3915,6 +3915,10 @@ class Match:
             return None
 
         kind = random.choice(["lbw", "caught"])
+        bowler = self.bowling_team.current_bowler
+        # the appeal itself, turned down on the field - before the bowling
+        # side's own review of that not-out call
+        self._PushAppealDrama(bowler, "catch" if kind == "caught" else kind, out=False)
         PrintInColor(
             Randomize(commentary.commentary_bowling_appeal) % self.umpire,
             Fore.LIGHTRED_EX,
@@ -5331,6 +5335,51 @@ class Match:
         if pace:
             time.sleep(pace)
 
+    def _PushAppealDrama(self, bowler, kind, out):
+        """
+        Show a big-screen appeal pop-up - the bowler's face, the umpire's
+        face, and a flavoured line - the moment the fielding side appeals
+        for an LBW or catch. Purely a narrative build-up; the on-field call
+        it reports is whatever the caller has already decided (GenerateDismissal
+        always gives it out on the initial appeal, _MaybeBowlingReview always
+        turns it down), any subsequent DRS review still runs unchanged.
+
+        Args:
+            bowler: the Player who bowled the delivery.
+            kind: "lbw" or "catch".
+            out: True if the on-field umpire is giving it out on the appeal.
+
+        Returns:
+            None
+        """
+        if kind == "lbw":
+            pool = (
+                commentary.commentary_appeal_lbw_out
+                if out
+                else commentary.commentary_appeal_lbw_not_out
+            )
+        else:
+            pool = (
+                commentary.commentary_appeal_catch_out
+                if out
+                else commentary.commentary_appeal_catch_not_out
+            )
+        comment = Randomize(pool) % self.umpire
+
+        utilities.PushEvent(
+            "appeal_drama",
+            {
+                "kind": kind,
+                "out": out,
+                "bowler": bowler.name,
+                "umpire": self.umpire,
+                "comment": comment,
+            },
+        )
+        PrintInColor(comment, Fore.LIGHTRED_EX if out else Fore.LIGHTGREEN_EX)
+        if not self.fast:
+            time.sleep(1.2)
+
     def GenerateDismissal(self, free_hit=False):
         """
         Generate a random mode of dismissal.
@@ -5370,6 +5419,10 @@ class Match:
         # generate dismissal string
         if dismissal == "lbw" or dismissal == "b":
             dismissal_str = "%s %s" % (dismissal, GetShortName(bowler.name))
+            if dismissal == "lbw":
+                # the appeal itself, played out before the DRS check that
+                # may still follow (see Ball(), unchanged)
+                self._PushAppealDrama(bowler, "lbw", out=True)
         elif dismissal == "st":
             # stumped
             dismissal_str = "st +%s b %s" % (
@@ -5410,6 +5463,9 @@ class Match:
                         GetShortName(fielder.name),
                         GetShortName(bowler.name),
                     )
+            # the appeal itself, played out before the DRS review that may
+            # still follow (see Ball(), unchanged)
+            self._PushAppealDrama(bowler, "catch", out=True)
         elif dismissal == "runout":
             fielder.runouts += 1
             dismissal_str = "runout %s" % (GetShortName(fielder.name))
