@@ -2,6 +2,7 @@
 **/*.log
 .idea/
 **/*.txt
+**/*.DS_Store
 venv3/
 .vscode/
 
