@@ -819,6 +819,66 @@ class commentary:
         "not given by %s - the bowling side look stunned!",
     ]
 
+    # ---------------------------------------------------------------
+    # Appeal drama pop-up (see Match._PushAppealDrama) - the big-screen
+    # moment the fielding side goes up for an LBW or catch, shown before
+    # any DRS review that follows. Each line already bakes in the on-field
+    # umpire's call, since the pop-up only fires once that call is known.
+    # Every list takes the umpire's name.
+    # ---------------------------------------------------------------
+
+    commentary_appeal_lbw_out = [
+        "huge appeal!.. and %s raises the finger!",
+        "looks plumb.. big shout.. and %s says out!",
+        "that's hit him right in front! %s doesn't hesitate - out!",
+        "they all go up together!.. and %s agrees - out!",
+        "looked dead straight to everyone but the batsman.. given by %s!",
+        "the bowler is convinced, the whole team is convinced.. and so is %s!",
+        "trapped right in front! %s's finger goes up!",
+        "that's out! %s takes his time but eventually gives it!",
+        "pad right in the way of the stumps.. %s says out!",
+        "a massive appeal, and %s doesn't need long to decide - out!",
+    ]
+
+    commentary_appeal_lbw_not_out = [
+        "looks close, huge appeal.. but given not out!",
+        "big shout for lbw.. %s shakes the head - not out!",
+        "that looked out to everyone in the ground, but %s says no!",
+        "the whole side goes up, but %s stays unmoved - not out!",
+        "very close call there, but %s reckons that was missing leg!",
+        "they were certain of that one.. %s says not out!",
+        "umpire %s takes a long look.. and turns it down!",
+        "that's given not out by %s - the bowler can't believe it!",
+        "%s isn't interested in that appeal - not out!",
+        "so close, but the decision from %s is not out!",
+    ]
+
+    commentary_appeal_catch_out = [
+        "looks like a nick.. keeper appeals.. given!",
+        "big appeal for the catch, and %s says out!",
+        "there's a noise there! %s is convinced - out!",
+        "the slip cordon goes up as one.. and %s agrees!",
+        "that's snaffled behind! %s doesn't hesitate - out!",
+        "clean take, loud appeal, and %s raises the finger!",
+        "the keeper is certain, and so is %s - out!",
+        "a thin edge there, %s has seen enough - out!",
+        "safely taken and a huge shout.. %s says out!",
+        "%s is in no doubt at all - that's out!",
+    ]
+
+    commentary_appeal_catch_not_out = [
+        "big appeal for the catch.. but %s isn't interested!",
+        "they think they've got him, but %s says not out!",
+        "was that off the pad? %s reckons so - not out!",
+        "a confident appeal from the fielders, turned down by %s!",
+        "%s wants more evidence than that - not out!",
+        "the keeper is convinced, %s isn't - not out!",
+        "that looked to bounce first, and %s agrees - not out!",
+        "a huge shout for the catch, but %s waves it away!",
+        "no edge there says %s - the fielders are stunned!",
+        "%s isn't giving that one - not out, much to their disgust!",
+    ]
+
     # bowling-side review overturns the not-out call - the batsman is out after all
     commentary_bowling_review_success = [
         "the review shows they were right all along! %s get their wicket!",
@@ -839,6 +899,102 @@ class commentary:
         "the technology sides with the batsman - %s lose a chance!",
         "that's stayed not out - costly review from %s!",
         "the umpire's call is upheld - %s down a review now!",
+    ]
+
+    # big-screen appeal pop-up: lbw shout given out by the on-field umpire
+    commentary_appeal_lbw_out = [
+        "huge appeal for the lbw!.. and %s's finger goes up!",
+        "looks plumb.. and %s agrees, that's out!",
+        "struck low, big shout.. %s doesn't hesitate, he's given!",
+        "that's hit him right in front.. %s raises the finger!",
+        "in line, no bat involved.. %s sends him packing!",
+        "the whole side goes up as one.. and %s says out!",
+        "that looked out from here, and %s thinks so too!",
+        "pinned right in front of middle.. up goes %s's finger!",
+        "no doubt about that one.. %s doesn't even think twice!",
+        "trapped dead in front.. %s has no hesitation!",
+        "that's hitting leg stump.. %s agrees, he's gone!",
+        "a thunderous appeal.. and %s obliges, that's out!",
+        "he never got an edge on that.. %s says he's out lbw!",
+        "smacked on the pad in line.. %s's finger is up!",
+        "that looked stone dead.. %s gives it out!",
+        "the whole ground appeals.. %s raises the finger!",
+        "hit flush in front of all three.. %s doesn't blink, out!",
+        "that's crashed into the pad.. %s says out lbw!",
+        "no inside edge there.. %s sends him on his way!",
+        "he's plumb in front.. %s gives the decision instantly!",
+    ]
+
+    # big-screen appeal pop-up: lbw shout turned down by the on-field umpire
+    commentary_appeal_lbw_not_out = [
+        "huge appeal for the lbw!.. but %s says not out!",
+        "looked close, but %s isn't convinced!",
+        "big shout there.. %s shakes the head!",
+        "they were sure of that one.. but %s waves it away!",
+        "looked high on this one, and %s agrees, not out!",
+        "an inside edge there perhaps.. %s says not out!",
+        "the bowling side can't believe it.. not out says %s!",
+        "that looked out from here, but %s isn't interested!",
+        "given not out by %s, much to the bowlers' disappointment!",
+        "%s reckons that was going down leg, not out!",
+        "a confident appeal, but %s stays unmoved!",
+        "looked plumb to the fielders, but %s says otherwise!",
+        "the whole team goes up.. but %s isn't buying it!",
+        "not out, says %s.. and there are groans all around!",
+        "%s thinks that pitched outside leg, so not out!",
+        "close call, but %s gives the benefit of the doubt!",
+        "the appeal falls on deaf ears.. %s says not out!",
+        "%s reckons there was bat involved there, not out!",
+        "that one looked tight, but %s turns it down!",
+        "not given by %s.. the bowling side look stunned!",
+    ]
+
+    # big-screen appeal pop-up: catch shout given out by the on-field umpire
+    commentary_appeal_catch_out = [
+        "huge appeal for the catch!.. and %s says out!",
+        "there was a noise there.. %s is convinced, that's out!",
+        "the keeper and slips go up as one.. %s agrees, given!",
+        "did that carry? %s certainly thinks so.. out!",
+        "an outside edge there.. big appeal, and %s gives it!",
+        "looks like a nick.. keeper appeals.. given by %s!",
+        "%s spots the faint edge.. that's out!",
+        "clean take at slip, and %s doesn't hesitate.. out!",
+        "he's hit that straight to hand.. %s sends him back!",
+        "a healthy appeal, and %s agrees.. that's out!",
+        "the fielder is confident, and so is %s.. out!",
+        "a sharp catch, and %s raises the finger!",
+        "%s hears the faint tickle.. given out!",
+        "safely taken, and %s wastes no time.. that's out!",
+        "the whole slip cordon appeals.. %s says out!",
+        "%s is in no doubt.. edged and taken, out!",
+        "a routine catch, %s gives it without fuss!",
+        "there's a deflection there.. %s says that's out!",
+        "well held, and %s agrees straight away.. out!",
+        "%s is convinced by the appeal.. he has to go!",
+    ]
+
+    # big-screen appeal pop-up: catch shout turned down by the on-field umpire
+    commentary_appeal_catch_not_out = [
+        "huge appeal for the catch!.. but %s says not out!",
+        "looks like there's an edge, but %s isn't sure!",
+        "the keeper and slips go up.. but %s waves it away!",
+        "did that carry? %s doesn't think so.. not out!",
+        "an appeal for the catch, but %s shakes the head!",
+        "%s reckons that bounced before the take.. not out!",
+        "the fielding side can't believe it.. not out says %s!",
+        "%s isn't convinced there was any bat on that!",
+        "looked out to the fielders, but %s disagrees!",
+        "a confident appeal, but %s stays unmoved!",
+        "%s reckons it came off the pad, not out!",
+        "close to the ground that one.. %s isn't sure, not out!",
+        "the whole team goes up.. but %s isn't interested!",
+        "not out, says %s.. groans all around the field!",
+        "%s thinks that was bump ball.. not out!",
+        "a spirited appeal, but %s turns it down!",
+        "the appeal falls on deaf ears.. %s says not out!",
+        "%s wants no part of that shout.. not out!",
+        "that looked tight, but %s gives the batsman the benefit!",
+        "not given by %s.. the bowling side look stunned!",
     ]
 
     commentary_dropped = [
