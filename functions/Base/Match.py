@@ -2004,14 +2004,65 @@ class Match:
                 )
                 self._PushNextBatsmenPreview()
 
+    # attr.batting (1-10) at or above this counts as a "recognized" batsman
+    # for depth purposes - see _ClassifyBattingDepth
+    _RECOGNIZED_BATTING_THRESHOLD = 6
+    # ascending "how thin is the batting" scale, mirroring _CHASE_TIERS
+    _BATTING_DEPTH_TIERS = ["deep", "solid", "thinning", "exposed"]
+
+    def _ClassifyBattingDepth(self, upcoming, remaining):
+        """
+        Rough read on how much recognized batting is left: how strong the
+        very next men in look (attr.batting, 1-10), floored by how many
+        genuinely recognized batsmen remain anywhere in the reserves. A
+        capable-looking next couple of batsmen can still mean a side is one
+        wicket from the tail if nobody's left behind them, so the overall
+        reserve count sets a floor under how rosy the read can be - same
+        idea as _ClassifyChase's rate/resource mix.
+
+        Args:
+            upcoming: the (up to 3) Players previewed as next in.
+            remaining: every not-yet-out Player still to come (superset of
+                upcoming - includes reserves further down the order too).
+
+        Returns:
+            str: one of "deep", "solid", "thinning", "exposed".
+        """
+        recognized_remaining = sum(
+            1
+            for p in remaining
+            if p.attr.batting >= self._RECOGNIZED_BATTING_THRESHOLD
+        )
+        if recognized_remaining >= 3:
+            depth_index = 0
+        elif recognized_remaining == 2:
+            depth_index = 1
+        elif recognized_remaining == 1:
+            depth_index = 2
+        else:
+            depth_index = 3
+
+        avg_upcoming = (
+            sum(p.attr.batting for p in upcoming) / len(upcoming) if upcoming else 0
+        )
+        if avg_upcoming >= 7:
+            quality_index = 0
+        elif avg_upcoming >= 5:
+            quality_index = 1
+        else:
+            quality_index = 2
+
+        return self._BATTING_DEPTH_TIERS[max(depth_index, quality_index)]
+
     def _PushNextBatsmenPreview(self):
         """
         Pop up a quick preview of the next few batsmen due in, with their
-        photos - fired only at milestone/summary moments (a team-score or
-        partnership milestone, or the periodic match-status check), never on
-        every ball. Same not-out/not-already-in-the-middle filter
-        AssignBatsman uses to pick the next man in, just read here as a
-        preview rather than a selection.
+        photos and a read on the remaining batting depth (see
+        _ClassifyBattingDepth) - fired only at milestone/summary moments (a
+        team-score or partnership milestone, or the periodic match-status
+        check), never on every ball. Same not-out/not-already-in-the-middle
+        filter AssignBatsman uses to pick the next man in, just read here as
+        a preview rather than a selection.
 
         A no-op once the innings has actually ended (all out, overs
         exhausted, or the match already decided) - one of its callers is the
@@ -2028,11 +2079,23 @@ class Match:
         if self.overs and bt.total_balls >= self.overs * 6:
             return
         current_pair = bt.current_pair or []
-        upcoming = [
-            p.name for p in bt.team_array if p.status and p not in current_pair
-        ][:3]
+        remaining = [p for p in bt.team_array if p.status and p not in current_pair]
+        upcoming = remaining[:3]
         if upcoming:
-            utilities.PushEvent("next_batsmen", {"names": upcoming})
+            tier = self._ClassifyBattingDepth(upcoming, remaining)
+            lines = {
+                "deep": commentary.commentary_batting_depth_deep,
+                "solid": commentary.commentary_batting_depth_solid,
+                "thinning": commentary.commentary_batting_depth_thinning,
+                "exposed": commentary.commentary_batting_depth_exposed,
+            }[tier]
+            utilities.PushEvent(
+                "next_batsmen",
+                {
+                    "names": [p.name for p in upcoming],
+                    "comment": Randomize(lines) % bt.name,
+                },
+            )
 
     # tier names in ascending order of difficulty - indices double as a
     # comparable "how bad is it" scale for _ClassifyChase's rate/resource mix

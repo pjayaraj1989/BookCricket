@@ -1194,6 +1194,104 @@ class commentary:
         "the extras column is getting embarrassing for %s!",
     ]
 
+    # batting-depth read shown alongside the next-batsmen preview (see
+    # Match._ClassifyBattingDepth): the lineup still goes deep, strength
+    # throughout
+    commentary_batting_depth_deep = [
+        "%s bat deep, this line-up goes all the way down!",
+        "there's no real tail to speak of for %s today!",
+        "%s have batting to spare, right down the order!",
+        "plenty of runs left in this %s line-up yet!",
+        "%s can bat long into the innings without a worry!",
+        "the batting card just keeps going for %s!",
+        "%s have cover all the way to number eleven!",
+        "no easy outs left in this %s order!",
+        "%s have real depth - this could go a long way yet!",
+        "%s aren't short of batting, that's for sure!",
+        "the lower order can play a bit too for %s!",
+        "%s have all bases covered with the bat!",
+        "still plenty of batting muscle left for %s!",
+        "%s's tail can wag if it needs to!",
+        "there's genuine depth in this %s side!",
+        "%s have batsmen to burn even this deep!",
+        "the %s line-up reads well from top to bottom!",
+        "%s won't be worried about the batting to come!",
+        "this %s side just keeps producing batters!",
+        "%s have more than enough in reserve here!",
+    ]
+
+    # solid middle ground: the next few in look capable, no alarm bells yet
+    commentary_batting_depth_solid = [
+        "the next few in for %s all look capable enough!",
+        "no real worries with the bat for %s just yet!",
+        "%s still have some recognized batting to come!",
+        "the batsmen coming up for %s can hold their own!",
+        "%s aren't in any batting trouble for now!",
+        "a couple more capable batters still in the shed for %s!",
+        "%s look fine with the bat for the time being!",
+        "the order still has substance for %s here!",
+        "%s can call on some proper batting still!",
+        "nothing alarming about the batting to come for %s!",
+        "%s have enough to be getting on with!",
+        "the next men in for %s know how to bat!",
+        "%s still look reasonably well covered!",
+        "there's a bit more batting left in this %s side!",
+        "%s aren't panicking about the order just yet!",
+        "a few more recognized batters up next for %s!",
+        "%s have some cover left before the tail!",
+        "the batting for %s holds up for now!",
+        "%s can still call on some proper batsmen!",
+        "no immediate cause for concern for %s with the bat!",
+    ]
+
+    # depth thinning out - only a batter or so of real substance left
+    commentary_batting_depth_thinning = [
+        "the depth is thinning out fast for %s now!",
+        "only one recognized batter left who can win this for %s!",
+        "%s are down to their last real batting option!",
+        "the batting resources are running low for %s!",
+        "%s can't afford another slip now, depth is thin!",
+        "just the one specialist left in the shed for %s!",
+        "%s are relying on one man to see this through now!",
+        "the order is getting thin for %s from here!",
+        "%s have precious little batting left in reserve!",
+        "one more recognized bat and that's it for %s!",
+        "%s are stretched thin with the bat now!",
+        "the cupboard is nearly bare for %s!",
+        "%s need their remaining batter to stand tall!",
+        "not much left in the tank for %s with the bat!",
+        "%s are down to the last of their proper batsmen!",
+        "the depth chart is running out for %s!",
+        "%s have just about one recognized wicket left!",
+        "it's thinning quickly for %s from here on!",
+        "%s are one wicket away from the tail proper!",
+        "the batting is wearing thin for %s now!",
+    ]
+
+    # tail fully exposed - nothing but the bowlers left
+    commentary_batting_depth_exposed = [
+        "the tail is fully exposed for %s now!",
+        "not much batting depth remaining for %s!",
+        "%s are down to the tail-enders from here!",
+        "there's no real batting left for %s now!",
+        "%s will be hoping the bowlers can hold firm!",
+        "the specialists are all gone for %s, just the tail now!",
+        "%s have nothing but the tail to come!",
+        "it's the last line of defense for %s now!",
+        "%s are staring at the bottom of the order!",
+        "the recognized batting is done for %s!",
+        "%s are relying purely on the tail from here!",
+        "there's daylight at the end of the innings for %s!",
+        "%s have run out of proper batsmen!",
+        "just the bowlers left to bat for %s now!",
+        "the tail is well and truly exposed for %s!",
+        "%s are into the last rites of this innings!",
+        "not a single recognized batter left for %s!",
+        "%s will need something special from the tail now!",
+        "the end is near for %s with the bat!",
+        "%s are down to hope and the tail-enders!",
+    ]
+
     commentary_out_first_ball = [
         "Out first ball.. %s has to go!!",
         "gone! %s is out without tickling the scoreboard!",
