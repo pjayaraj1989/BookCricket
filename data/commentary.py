@@ -1585,16 +1585,53 @@ class commentary:
         "oh big appeal from the keeper but Wide says %s!",
         "bowler under pressure here!.. %s signals wide again!",
     ]
-    commentary_no_ball = [
-        "good delivery , batsman misses it.. but No ball called!",
-        "well bowled.. but no ball!",
-        "he has lost his run up !",
-        "oh that's a dangerous beamer! no ball called!",
-        "bowler tries a full toss but that's way above the waist height!",
-        "bowler loses his rhythm! no ball called",
-        "bowled him! but oh that's a no ball!",
-        "in the air and taken!. but no ball called!!",
-        "oh that's a high full toss! no ball called!",
+    # front-foot no-ball: the bowler has overstepped the popping crease
+    commentary_no_ball_front_foot = [
+        "no ball! %s has overstepped the line!",
+        "%s has missed his run up, and it's a no ball!",
+        "the front foot has landed well past the line, no ball from %s!",
+        "%s loses his rhythm at the crease, that's a no ball!",
+        "a costly error from %s, he's stepped over the line!",
+        "%s has gone way past the popping crease, no ball!",
+        "the umpire's quick to spot it, %s has overstepped!",
+        "%s will be frustrated with himself, no ball called!",
+        "that's a no ball, %s just couldn't get his run up right!",
+        "%s drags his foot well over the line, no ball!",
+        "a rare slip in discipline from %s, no ball called!",
+        "%s has bowled a beauty, but it won't count, no ball!",
+        "the front foot betrays %s there, no ball!",
+        "%s needs to sort out his mark, that's another no ball!",
+        "no ball! %s just can't find his line at the crease!",
+        "%s has crept over the crease, and the umpire spots it!",
+        "that's a real waste, %s oversteps and it's a no ball!",
+        "%s will be annoyed, a good ball undone by the no ball!",
+        "the front foot lands miles over the line for %s, no ball!",
+        "%s's rhythm deserts him at the crease, no ball called!",
+    ]
+
+    # a delivery called no-ball for going above waist height on the full -
+    # a dangerous, illegal delivery, not just a technical overstep
+    commentary_no_ball_height = [
+        "that's dangerous! %s's full toss is well above the waist, no ball!",
+        "a beamer from %s! the umpire wastes no time calling it!",
+        "way too high from %s, that's an automatic no ball!",
+        "%s sends down a nasty full toss, called for height!",
+        "that's not on, %s has bowled well above the waist!",
+        "a genuinely dangerous delivery from %s, no ball for height!",
+        "the batsman ducks out of the way, %s's beamer called no ball!",
+        "%s loses control completely, that full toss is way too high!",
+        "the umpire raises the no-ball signal instantly, too high from %s!",
+        "%s will need a word from the captain after that beamer!",
+        "that's a serious lapse from %s, height no ball called!",
+        "the batsman is fortunate there, %s's full toss flies above the waist!",
+        "no ball! %s has strayed dangerously high with that one!",
+        "%s completely misjudges the length, way above waist height!",
+        "a full toss that never should have been bowled, no ball from %s!",
+        "%s will be reprimanded for that one, called for height!",
+        "the delivery from %s balloons up above the waist, no ball!",
+        "that's a real concern, %s's beamer is called immediately!",
+        "%s has lost all semblance of control, no ball for height!",
+        "a dangerous moment there, %s's full toss called no ball!",
     ]
 
     # announced after a no-ball: the next delivery is a free hit
@@ -4398,4 +4435,66 @@ class commentary:
         "a skied shot, safely pouched at the deep by %s!",
         "%s holds on at the boundary, right under the swirling ball!",
         "gone! caught right on the rope by %s!",
+    ]
+
+    # Test cricket, very early in the innings: the batsman lets one go
+    # through to the keeper rather than playing a shot. Takes the bowler's
+    # and batsman's surnames, in that order
+    commentary_leave = [
+        "%s shoulders arms outside off, well bowled full by %s.. good leave!",
+        "left it on a length, well watched by %s off %s!",
+        "%s lets that one go, wise leave against %s early on!",
+        "good leave by %s.. %s got that one to shape away!",
+        "%s shows it the full face and leaves, good leave off %s!",
+        "it goes down the leg side and left by %s off %s!",
+        "%s watches it closely and lets it go through to the keeper, off %s!",
+        "no interest from %s there, %s beats the bat with room to spare!",
+        "a disciplined leave from %s against %s!",
+        "%s decides against playing at that one from %s, smart leave!",
+        "well outside off, and %s wants no part of it against %s!",
+        "%s's judgement outside off is spot on, leaves it from %s!",
+        "%s shoulders arms to a good ball from %s!",
+        "that's shaping away, and %s lets it go from %s!",
+        "%s keeps his bat out of the way against %s, good leave!",
+        "a watchful leave from %s off %s early in this innings!",
+        "%s reads the length well and leaves it alone off %s!",
+        "not interested, says %s, as %s's delivery goes through to the keeper!",
+        "%s is content to leave that one from %s!",
+        "good judgement outside off from %s against %s!",
+        "%s lets it sail through, wisely leaving %s's delivery alone!",
+        "%s offers no shot to a probing delivery from %s!",
+        "a mature leave from %s off the bowling of %s!",
+        "%s trusts his defence isn't needed there, leaves it from %s!",
+        "%s sways away from the line and lets that one from %s go by!",
+        "no shot from %s, well left outside off against %s!",
+        "%s is watchful early on, leaves that one from %s!",
+        "%s shows great discipline, leaving %s's delivery alone!",
+        "that's well left by %s, %s can't tempt him into anything rash!",
+        "%s is happy to leave that one from %s, good early judgement!",
+    ]
+
+    # Test cricket only: a wide down the leg side beats the keeper
+    # completely and races away to the boundary for four instead of the
+    # routine one - a rare event. Takes the umpire's name
+    commentary_wide_boundary = [
+        "that's beaten the keeper completely! races away for four byes, wide called by %s!",
+        "down the leg side and beats everyone! that's gone all the way, %s signals wide!",
+        "the keeper can't get near it! four more byes there, wide says %s!",
+        "oh that's evaded the keeper entirely, and it's raced away for four! wide by %s!",
+        "a big mix-up behind the stumps! that's gone to the boundary, wide called by %s!",
+        "the keeper dives but can't stop it! four byes there, wide says %s!",
+        "well down the leg side, and it's beaten everybody! four more, wide by %s!",
+        "the keeper is left stranded! that's raced to the fence, wide called by %s!",
+        "a costly miss behind the stumps, that's away for four! wide says %s!",
+        "the ball skids past the keeper and away for four! wide called by %s!",
+        "nobody near that one! it's raced all the way to the boundary, wide by %s!",
+        "the keeper gets a hand but can't hold it, four byes! wide says %s!",
+        "that's beaten everyone in the deep leg area, four more! wide called by %s!",
+        "a rare mix-up there, and the ball races away for four! wide by %s!",
+        "the keeper is nowhere near that one, four byes down the leg side! wide says %s!",
+        "that's gone begging! all the way to the fence, wide called by %s!",
+        "the fielders watch it race away for four! a rare boundary wide, %s signals!",
+        "well outside leg and away it goes for four! wide called by %s!",
+        "the keeper completely misjudges that one, four byes! wide says %s!",
+        "an expensive moment for the fielding side, that's away for four! wide by %s!",
     ]

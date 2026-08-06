@@ -3449,8 +3449,17 @@ class Match:
             bowler.ball_history.append(0)
             batting_team.ball_history.append(0)
             on_strike.dots += 1
+            # very early in a Test innings, the new ball and the need to
+            # play oneself in mean plenty of dot balls are just watchful
+            # leaves rather than genuine plays at the ball
+            early_test_overs = self.is_test and batting_team.total_balls < 18
             if not used_drs:
-                if bowler.attr.ispacer:
+                if early_test_overs and random.random() < 0.3:
+                    comment = Randomize(commentary.commentary_leave) % (
+                        GetSurname(on_strike.name),
+                        GetSurname(bowler.name),
+                    )
+                elif bowler.attr.ispacer:
                     comment = Randomize(commentary.commentary_dot_ball_pacer) % (
                         GetSurname(bowler.name),
                         on_strike.name,
@@ -3673,10 +3682,14 @@ class Match:
         # bowler's own dismissals.
         streak = self._BowlerWicketStreak(bowler)
         # a "he's on a hat-trick" tension line promises a next delivery from
-        # this bowler - not valid if this wicket was the innings' 10th and
-        # last: there's no next ball left for him to bowl here.
-        innings_over = batting_team.wickets_fell == 10
-        if streak == 2 and not innings_over:
+        # this bowler - not valid if this wicket ends the innings (10th
+        # wicket) or, in limited overs, if it was the very last ball of the
+        # innings, and never valid once the match itself is already decided
+        # (a chase completed via this very wicket, for instance)
+        overs_exhausted = self.overs is not None and batting_team.total_balls >= self.overs * 6
+        innings_over = batting_team.wickets_fell == 10 or overs_exhausted
+        match_over = not self.status
+        if streak == 2 and not innings_over and not match_over:
             # one more and it's a hat-trick - flag the tension before the
             # very next ball is bowled
             hattrick_building_comment = Randomize(commentary.commentary_on_a_hattrick)
@@ -5180,17 +5193,47 @@ class Match:
             bowler.ball_history.append("WD")
             batting_team.ball_history.append("WD")
             PrintInColor("WIDE...!", Fore.LIGHTCYAN_EX)
-            PrintInColor(
-                Randomize(commentary.commentary_wide) % self.umpire, Style.BRIGHT
-            )
+            # Test cricket only: very occasionally a wide down the leg side
+            # beats the keeper completely and races away for four rather
+            # than the routine one - the extra 3 runs are on top of the 1
+            # already added above
+            if self.is_test and random.random() < 0.03:
+                bowler.runs_given += 3
+                batting_team.total_score += 3
+                PrintInColor(
+                    Randomize(commentary.commentary_wide_boundary) % self.umpire,
+                    Fore.LIGHTGREEN_EX,
+                )
+            else:
+                PrintInColor(
+                    Randomize(commentary.commentary_wide) % self.umpire, Style.BRIGHT
+                )
             logger.info("WIDE")
         elif extra == "nb":
-            # no balls
+            # no balls: either a front-foot overstep (by far the more
+            # common cause) or a delivery called for sailing above waist
+            # height on the full - a genuinely dangerous ball, not just a
+            # technical overstep
             bowler.ball_history.append("NB")
             batting_team.ball_history.append("NB")
             PrintInColor("NO BALL...!", Fore.LIGHTCYAN_EX)
-            PrintInColor(Randomize(commentary.commentary_no_ball), Style.BRIGHT)
+            no_ball_type = "height" if random.random() < 0.12 else "front_foot"
+            no_ball_pool = (
+                commentary.commentary_no_ball_height
+                if no_ball_type == "height"
+                else commentary.commentary_no_ball_front_foot
+            )
+            no_ball_comment = Randomize(no_ball_pool) % bowler.name
+            PrintInColor(no_ball_comment, Style.BRIGHT)
             logger.info("NO BALL")
+            utilities.PushEvent(
+                "no_ball",
+                {
+                    "type": no_ball_type,
+                    "bowler": bowler.name,
+                    "comment": no_ball_comment,
+                },
+            )
             # the next legal delivery is a free hit - a limited-overs rule only,
             # Test cricket has no free hit
             if not self.is_test:

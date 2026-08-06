@@ -1282,6 +1282,26 @@ function buildCleanCatchCard(data) {
   return card;
 }
 
+// a no-ball: either a front-foot overstep or a delivery called for going
+// above waist height on the full (see Match.UpdateExtras)
+function buildNoBallCard(data) {
+  const type = data && data.type;
+  const bowlerName = data && data.bowler ? String(data.bowler) : "";
+  const cfg = {
+    front_foot: ["👟", "NO BALL! (Front Foot)"],
+    height: ["⚠️", "NO BALL! (Height)"],
+  }[type] || ["🚫", "NO BALL!"];
+
+  const card = buildPlayerCard(bowlerName, "Bowler");
+  const badge = document.createElement("div");
+  badge.className = "event-achievement-badge";
+  badge.textContent = cfg[0] + " " + cfg[1];
+  card.insertBefore(badge, card.lastChild);
+
+  appendComment(card, data && data.comment);
+  return card;
+}
+
 // the very first over of the innings goes for 16+ runs, sees 2+ wickets, or
 // (rarest) both at once - see Match.py's PlayOver, gated on over == 0
 function buildFirstOverDramaCard(data) {
@@ -2156,6 +2176,8 @@ function renderEvent(kind, data) {
       2500,
       "popup"
     );
+  } else if (kind === "no_ball") {
+    showEventPane(buildNoBallCard(data), 2800, "takeover");
   } else if (kind === "free_hit") {
     const ump = data && data.umpire ? String(data.umpire) : "Umpire";
     // umpire signalling the free hit: photo + big "FREE HIT!" badge (no team

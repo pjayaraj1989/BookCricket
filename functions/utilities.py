@@ -269,7 +269,7 @@ def PushEvent(kind, data=None):
             "partnership_broken", "chase_update", "drinks_break",
             "too_many_extras", "stumps", "innings_analysis", "run_out_drama",
             "stumping_drama", "appeal_drama", "clean_catch", "first_over_drama",
-            "captain_out").
+            "captain_out", "no_ball").
         data: Optional dict of extra fields for the frontend to render.
 
     Returns:
