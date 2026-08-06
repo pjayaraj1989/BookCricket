@@ -53,7 +53,13 @@ def GetVenue(venue_data, autoplay):
     venue = next((v for v in venues if v['name'] == selected_venue_name), None)
     
     PrintInColor("Selected Stadium: %s" % venue['name'], Style.BRIGHT)
-    PushEvent("venue_selected", {"name": venue['name']})
+    PushEvent(
+        "venue_selected",
+        {
+            "name": venue['name'],
+            "comment": Randomize(commentary.commentary_venue_reveal) % venue['name'],
+        },
+    )
     venue_obj = Venue(name=venue['name'], run_prob=venue['run_prob'])
 
     # populate run_prob_t20
@@ -64,9 +70,20 @@ def GetVenue(venue_data, autoplay):
     weather = choice(list(resources.weathers.keys()), 1, p=resources.weather_prob, replace=False)[0]
     venue_obj.weather = weather
     PrintInColor(resources.weathers[weather], Style.BRIGHT)
+    weather_lines = {
+        "sunny": commentary.commentary_weather_sunny,
+        "overcast": commentary.commentary_weather_overcast,
+        "rainy": commentary.commentary_weather_rainy,
+        "cloudy": commentary.commentary_weather_cloudy,
+        "humid": commentary.commentary_weather_humid,
+    }.get(weather)
     PushEvent(
         "weather",
-        {"weather": weather, "text": resources.weathers[weather]},
+        {
+            "weather": weather,
+            "text": resources.weathers[weather],
+            "comment": Randomize(weather_lines) if weather_lines else "",
+        },
     )
 
     return venue_obj
@@ -338,11 +355,11 @@ def GetMatchInfo(list_of_teams, venue, autoplay, overs, format_override=None, fa
         ),
         Style.BRIGHT,
     )
-    PushEvent("commentators", {"names": list(commentator)})
+    PushEvent("commentators", {"names": list(commentator), "comment": Randomize(commentary.commentary_commentators_reveal)})
     PrintInColor(
         "Umpires for todays match are %s and %s" % (umpire[0], umpire[1]), Style.BRIGHT
     )
-    PushEvent("umpires", {"names": [umpire[0], umpire[1]]})
+    PushEvent("umpires", {"names": [umpire[0], umpire[1]], "comment": Randomize(commentary.commentary_umpires_reveal)})
     
     if not autoplay:
         input("press enter to continue..")
@@ -454,7 +471,21 @@ def AssignWeather(venue, announce=False):
     venue.weather = weather
     if announce:
         PrintInColor(resources.weathers[weather], Style.BRIGHT)
-        PushEvent("weather", {"weather": weather, "text": resources.weathers[weather]})
+        weather_lines = {
+            "sunny": commentary.commentary_weather_sunny,
+            "overcast": commentary.commentary_weather_overcast,
+            "rainy": commentary.commentary_weather_rainy,
+            "cloudy": commentary.commentary_weather_cloudy,
+            "humid": commentary.commentary_weather_humid,
+        }.get(weather)
+        PushEvent(
+            "weather",
+            {
+                "weather": weather,
+                "text": resources.weathers[weather],
+                "comment": Randomize(weather_lines) if weather_lines else "",
+            },
+        )
     return weather
 
 
@@ -533,8 +564,8 @@ def BuildMatch(team1, team2, venue, overs, is_test, fast=False, autoplay=False,
             ),
             Fore.LIGHTCYAN_EX,
         )
-        PushEvent("commentators", {"names": list(commentator)})
-        PushEvent("umpires", {"names": [umpire[0], umpire[1]]})
+        PushEvent("commentators", {"names": list(commentator), "comment": Randomize(commentary.commentary_commentators_reveal)})
+        PushEvent("umpires", {"names": [umpire[0], umpire[1]], "comment": Randomize(commentary.commentary_umpires_reveal)})
         match.DisplayPlayingXI()
         if not autoplay:
             PushLineupCountdown(match)

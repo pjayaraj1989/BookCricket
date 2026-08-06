@@ -54,7 +54,6 @@ class Match:
             "umpires": [],  # both umpires' names (self.umpire is just the on-field one used in commentary); for trivia
             "commentators": None,
             "drs": False,
-            "review_upheld": False,  # last DRS review was taken and OUT stood
             "free_hit": False,  # next legal delivery is a free hit (after a no-ball)
             "firstinnings": None,
             "secondinnings": None,
@@ -253,7 +252,12 @@ class Match:
         if result is not None and getattr(result, "winner", None) is not None:
             utilities.PushEvent(
                 "victory",
-                {"team": result.winner.name, "result": result.result_str},
+                {
+                    "team": result.winner.name,
+                    "result": result.result_str,
+                    "comment": Randomize(commentary.commentary_victory_flavor)
+                    % result.winner.name,
+                },
             )
         # persistent post-match highlights card; no-op in console mode
         utilities.PushMatchHighlights(self)
@@ -332,6 +336,8 @@ class Match:
                 "score": int(self.batting_team.total_score),
                 "wickets": int(self.batting_team.wickets_fell),
                 "overs": float(BallsToOvers(self.batting_team.total_balls)),
+                "comment": Randomize(commentary.commentary_resume)
+                % self.batting_team.name,
             },
         )
 
@@ -536,7 +542,10 @@ class Match:
         second = self.team1 if first is self.team2 else self.team2
 
         PrintInColor("The scores are level! We go to a SUPER OVER!", Style.BRIGHT)
-        utilities.PushEvent("super_over", {"stage": "start"})
+        utilities.PushEvent(
+            "super_over",
+            {"stage": "start", "comment": Randomize(commentary.commentary_super_over_start)},
+        )
         if not self.autoplay:
             input("press enter to continue..")
 
@@ -545,7 +554,13 @@ class Match:
                 PrintInColor(
                     "The super over is tied as well! Another one it is!", Style.BRIGHT
                 )
-                utilities.PushEvent("super_over", {"stage": "start"})
+                utilities.PushEvent(
+                    "super_over",
+                    {
+                        "stage": "start",
+                        "comment": Randomize(commentary.commentary_super_over_start),
+                    },
+                )
 
             first_runs, first_wkts = self._PlaySuperOverInnings(first, second)
             second_runs, second_wkts = self._PlaySuperOverInnings(
@@ -563,14 +578,27 @@ class Match:
                 )
                 PrintInColor(msg, winner.color)
                 utilities.PushEvent(
-                    "super_over", {"stage": "result", "team": winner.name}
+                    "super_over",
+                    {
+                        "stage": "result",
+                        "team": winner.name,
+                        "comment": Randomize(commentary.commentary_super_over_win)
+                        % winner.name,
+                    },
                 )
                 if not self.autoplay:
                     input("press enter to continue..")
                 return winner
 
         PrintInColor("Still nothing between them - honours shared!", Style.BRIGHT)
-        utilities.PushEvent("super_over", {"stage": "result", "team": None})
+        utilities.PushEvent(
+            "super_over",
+            {
+                "stage": "result",
+                "team": None,
+                "comment": Randomize(commentary.commentary_super_over_tie),
+            },
+        )
         return None
 
     def _PickSuperOverBatsmen(self, batting_team):
@@ -735,6 +763,8 @@ class Match:
                 "team": batting_team.name,
                 "runs": runs,
                 "wickets": wickets,
+                "comment": Randomize(commentary.commentary_super_over_innings)
+                % batting_team.name,
             },
         )
         return runs, wickets
@@ -898,7 +928,7 @@ class Match:
                 self.rain_enabled = True
                 # build-up begins after ~30+ overs of play
                 self.rain_buildup_over = 30 + random.randint(0, 25)
-                utilities.PushEvent("rain", {"stage": "clouds"})
+                utilities.PushEvent("rain", {"stage": "clouds", "comment": Randomize(commentary.commentary_rain_clouds)})
                 PrintInColor(
                     "Dark rain clouds hang over the ground as the players take the field.",
                     Style.BRIGHT,
@@ -956,7 +986,12 @@ class Match:
                 if not self.save_started:
                     utilities.PushEvent(
                         "follow_on",
-                        {"team": lead_team.name, "opponent": trail_team.name},
+                        {
+                            "team": lead_team.name,
+                            "opponent": trail_team.name,
+                            "comment": Randomize(commentary.commentary_follow_on)
+                            % trail_team.name,
+                        },
                     )
                 if not self.save_done:
                     self._SetupTestInnings(trail_team, lead_team, chase=False)
@@ -1144,6 +1179,8 @@ class Match:
                         if top_bowl
                         else None
                     ),
+                    "comment": Randomize(commentary.commentary_innings_over)
+                    % batting_team.name,
                 },
             )
 
@@ -1252,13 +1289,13 @@ class Match:
 
         if over == self.lo_rain_over - 5:
             PrintInColor(Randomize(commentary.commentary_rain_cloudy), Style.BRIGHT)
-            utilities.PushEvent("rain", {"stage": "cloudy"})
+            utilities.PushEvent("rain", {"stage": "cloudy", "comment": Randomize(commentary.commentary_rain_cloudy)})
         elif over == self.lo_rain_over - 3:
             PrintInColor(Randomize(commentary.commentary_rain_drizzling), Style.BRIGHT)
-            utilities.PushEvent("rain", {"stage": "drizzle"})
+            utilities.PushEvent("rain", {"stage": "drizzle", "comment": Randomize(commentary.commentary_rain_drizzling)})
         elif over == self.lo_rain_over - 1:
             PrintInColor(Randomize(commentary.commentary_rain_heavy), Style.BRIGHT)
-            utilities.PushEvent("rain", {"stage": "heavy"})
+            utilities.PushEvent("rain", {"stage": "heavy", "comment": Randomize(commentary.commentary_rain_heavy)})
         elif over == self.lo_rain_over:
             self.lo_rain_done = True
             PrintInColor(
@@ -1297,7 +1334,12 @@ class Match:
         PrintInColor(msg, Style.BRIGHT)
         self.logger.info(msg)
         utilities.PushEvent(
-            "rain", {"stage": "stopped", "resume": msg}
+            "rain",
+            {
+                "stage": "stopped",
+                "resume": msg,
+                "comment": Randomize(commentary.commentary_rain_heavy),
+            },
         )
 
         if not batting_team.batting_second:
@@ -1386,7 +1428,14 @@ class Match:
             )
             PrintInColor(msg, Style.BRIGHT)
             self.logger.info(msg)
-            utilities.PushEvent("rain", {"stage": "stopped", "resume": msg})
+            utilities.PushEvent(
+                "rain",
+                {
+                    "stage": "stopped",
+                    "resume": msg,
+                    "comment": Randomize(commentary.commentary_rain_heavy),
+                },
+            )
             if not self.autoplay:
                 input("press enter to continue..")
             return True
@@ -1443,7 +1492,14 @@ class Match:
         )
         PrintInColor(msg, Style.BRIGHT)
         self.logger.info(msg)
-        utilities.PushEvent("rain", {"stage": "stopped", "resume": msg})
+        utilities.PushEvent(
+            "rain",
+            {
+                "stage": "stopped",
+                "resume": msg,
+                "comment": Randomize(commentary.commentary_rain_interrupt),
+            },
+        )
         if not self.autoplay:
             input("press enter to continue..")
         return True
@@ -1547,6 +1603,8 @@ class Match:
                             "team": batting_team.name,
                             "score": int(batting_team.total_score),
                             "wickets": int(batting_team.wickets_fell),
+                            "comment": Randomize(commentary.commentary_declare)
+                            % batting_team.name,
                         },
                     )
                     PrintInColor(
@@ -1611,17 +1669,17 @@ class Match:
             if n < self.rain_buildup_over:
                 return False
             PrintInColor(Randomize(commentary.commentary_rain_cloudy), Style.BRIGHT)
-            utilities.PushEvent("rain", {"stage": "cloudy"})
+            utilities.PushEvent("rain", {"stage": "cloudy", "comment": Randomize(commentary.commentary_rain_cloudy)})
             self.rain_stage = 1
             self.rain_next_over = n + random.randint(5, 10)
         elif self.rain_stage == 1 and n >= self.rain_next_over:
             PrintInColor(Randomize(commentary.commentary_rain_drizzling), Style.BRIGHT)
-            utilities.PushEvent("rain", {"stage": "drizzle"})
+            utilities.PushEvent("rain", {"stage": "drizzle", "comment": Randomize(commentary.commentary_rain_drizzling)})
             self.rain_stage = 2
             self.rain_next_over = n + random.randint(2, 5)
         elif self.rain_stage == 2 and n >= self.rain_next_over:
             PrintInColor(Randomize(commentary.commentary_rain_heavy), Style.BRIGHT)
-            utilities.PushEvent("rain", {"stage": "heavy"})
+            utilities.PushEvent("rain", {"stage": "heavy", "comment": Randomize(commentary.commentary_rain_heavy)})
             self.rain_stage = 3
             self.rain_done = True
             return self._RainStopsPlay()
@@ -1646,7 +1704,12 @@ class Match:
                 Style.BRIGHT,
             )
             utilities.PushEvent(
-                "rain", {"stage": "stopped", "resume": "No further play - match drawn"}
+                "rain",
+                {
+                    "stage": "stopped",
+                    "resume": "No further play - match drawn",
+                    "comment": Randomize(commentary.commentary_rain_interrupt),
+                },
             )
             return True
         resume = (
@@ -1655,7 +1718,14 @@ class Match:
             else "Play will resume shortly"
         )
         PrintInColor("Rain has stopped play. %s." % resume, Style.BRIGHT)
-        utilities.PushEvent("rain", {"stage": "stopped", "resume": resume})
+        utilities.PushEvent(
+            "rain",
+            {
+                "stage": "stopped",
+                "resume": resume,
+                "comment": Randomize(commentary.commentary_rain_heavy),
+            },
+        )
         if not self.autoplay:
             input("press enter to continue..")
         return False
@@ -1775,7 +1845,7 @@ class Match:
                 and completed_overs not in self.drinks_breaks_fired
             ):
                 self.drinks_breaks_fired.add(completed_overs)
-                utilities.PushEvent("drinks_break", {"team": bt.name})
+                utilities.PushEvent("drinks_break", {"team": bt.name, "comment": Randomize(commentary.commentary_drinks_break) % bt.name})
         elif self.is_test:
             # Test has no fixed over limit, so the "not near the end" guard
             # doesn't apply - once per session, at its rough halfway point
@@ -1784,7 +1854,7 @@ class Match:
                 and self.overs_bowled_this_session >= self.overs_per_session // 2
             ):
                 self.drinks_break_fired_this_session = True
-                utilities.PushEvent("drinks_break", {"team": bt.name})
+                utilities.PushEvent("drinks_break", {"team": bt.name, "comment": Randomize(commentary.commentary_drinks_break) % bt.name})
 
     def _UpdateBoundaryStreak(self, batsman, run):
         """
@@ -1826,7 +1896,13 @@ class Match:
         )
         utilities.PushEvent(
             "boundary_streak",
-            {"name": batsman.name, "count": len(streak), "text": text},
+            {
+                "name": batsman.name,
+                "count": len(streak),
+                "text": text,
+                "comment": Randomize(commentary.commentary_boundary_streak)
+                % GetShortName(batsman.name),
+            },
         )
 
     def _BowlerWicketStreak(self, bowler):
@@ -1926,7 +2002,11 @@ class Match:
         bt = self.batting_team
 
         if bt.batting_second:
-            data = {"team": bt.name, "runsToWin": int(bt.target)}
+            data = {
+                "team": bt.name,
+                "runsToWin": int(bt.target),
+                "comment": Randomize(commentary.commentary_target_chase) % bt.name,
+            }
             if self.overs:
                 data["overs"] = int(self.overs)
             if self.dls_target:
@@ -1944,10 +2024,17 @@ class Match:
         diff = sum(i.score for i in bt.innings_history) - sum(
             i.score for i in opp.innings_history
         )
+        test_comment = Randomize(commentary.commentary_target_test) % bt.name
         if diff < 0:
-            utilities.PushEvent("target", {"team": bt.name, "status": "trail", "diff": -diff})
+            utilities.PushEvent(
+                "target",
+                {"team": bt.name, "status": "trail", "diff": -diff, "comment": test_comment},
+            )
         elif diff > 0:
-            utilities.PushEvent("target", {"team": bt.name, "status": "lead", "diff": diff})
+            utilities.PushEvent(
+                "target",
+                {"team": bt.name, "status": "lead", "diff": diff, "comment": test_comment},
+            )
 
     def _CheckScoreMilestones(self):
         """
@@ -1972,6 +2059,8 @@ class Match:
                     "team": bt.name,
                     "score": int(bt.total_score),
                     "wickets": int(bt.wickets_fell),
+                    "comment": Randomize(commentary.commentary_team_total_flavor)
+                    % bt.name,
                 },
             )
             self._PushNextBatsmenPreview()
@@ -1998,9 +2087,20 @@ class Match:
                     }
                     for p in pair
                 ]
+                comment = (
+                    Randomize(commentary.commentary_partnership_milestone)
+                    % (GetSurname(pair[0].name), GetSurname(pair[1].name))
+                    if len(pair) == 2
+                    else ""
+                )
                 utilities.PushEvent(
                     "partnership_milestone",
-                    {"runs": fifty, "names": names, "batsmen": batsmen},
+                    {
+                        "runs": fifty,
+                        "names": names,
+                        "batsmen": batsmen,
+                        "comment": comment,
+                    },
                 )
                 self._PushNextBatsmenPreview()
 
@@ -2220,7 +2320,14 @@ class Match:
         if self.session < self.sessions_per_day:
             # session break (lunch/tea), same day continues
             interval = "Lunch" if self.session == 1 else "Tea"
-            utilities.PushEvent("session_break", {"interval": interval})
+            utilities.PushEvent(
+                "session_break",
+                {
+                    "interval": interval,
+                    "comment": Randomize(commentary.commentary_session_break)
+                    % interval,
+                },
+            )
             self.session += 1
             PrintInColor(
                 "%s break! End of session %s, Day %s."
@@ -3078,6 +3185,43 @@ class Match:
                 Style.BRIGHT,
             )
 
+        # a dramatic very first over of the innings: an expensive start, an
+        # early wicket haul, or both at once (the rare genuinely "dramatic"
+        # case) - purely a big-screen moment, doesn't affect anything else
+        if over == 0:
+            very_expensive = total_runs_in_over > 15
+            wicket_laden = total_wickets_in_over >= 2
+            first_over_type = None
+            if very_expensive and wicket_laden:
+                first_over_type = "dramatic"
+                first_over_comment = (
+                    Randomize(commentary.commentary_first_over_dramatic)
+                    % bowling_team.name
+                )
+            elif very_expensive:
+                first_over_type = "expensive"
+                first_over_comment = (
+                    Randomize(commentary.commentary_first_over_expensive) % bowler.name
+                )
+            elif wicket_laden:
+                first_over_type = "wickets"
+                first_over_comment = (
+                    Randomize(commentary.commentary_first_over_wickets)
+                    % bowling_team.name
+                )
+            if first_over_type:
+                utilities.PushEvent(
+                    "first_over_drama",
+                    {
+                        "type": first_over_type,
+                        "bowler": bowler.name,
+                        "team": bowling_team.name,
+                        "runs": int(total_runs_in_over),
+                        "wickets": int(total_wickets_in_over),
+                        "comment": first_over_comment,
+                    },
+                )
+
         # if bowler finished his spell, update it
         if BallsToOvers(bowler.balls_bowled) == bowler.max_overs:
             bowler.spell_over = True
@@ -3169,9 +3313,11 @@ class Match:
                 else:
                     self.UpdateDismissal(dismissal)
                     return
-            elif dismissal.startswith("c&b") or dismissal.startswith("c "):
-                # caught: the umpire gives it out on the appeal, and the
-                # batsman can review it for a missing edge
+            elif dismissal.startswith("c +"):
+                # a keeper catch is always the genuinely uncertain nick
+                # behind the bat (see GenerateDismissal) - the umpire gives
+                # it out on the appeal, and the batsman can review it for a
+                # missing edge
                 PrintInColor(
                     Randomize(commentary.commentary_caught_appeal), Fore.LIGHTRED_EX
                 )
@@ -3185,10 +3331,12 @@ class Match:
                     run = 0  # no edge - the batsman survives
                     used_drs = True
                     break
-                # an edge confirmed on review is a catch behind the wicket, so
-                # the keeper always takes it
-                if self.review_upheld:
-                    dismissal = self._RewriteCatchToKeeper(dismissal)
+                self.UpdateDismissal(dismissal)
+                return
+            elif dismissal.startswith("c&b") or dismissal.startswith("c "):
+                # a clean, obvious catch elsewhere in the field (or a return
+                # catch) - no real doubt, so no appeal drama and nothing to
+                # review
                 self.UpdateDismissal(dismissal)
                 return
             elif "runout" in dismissal or "st " in dismissal:
@@ -3423,11 +3571,21 @@ class Match:
         bowler.wickets_taken.append(player_dismissed)
 
         # LBW is the umpire's call, so pop up the umpire giving the decision;
-        # run-outs and stumpings already showed their third-umpire pop-up
-        # before UpdateDismissal was reached; everything else (bowled/caught)
-        # gets the generic stumps animation
+        # run-outs and stumpings already showed their third-umpire pop-up,
+        # and catches (nick or clean) already showed their own appeal/catch
+        # pop-up, all before UpdateDismissal was reached - only a plain
+        # bowled is left to get the generic stumps animation here
         if "lbw" in dismissal:
-            utilities.PushEvent("lbw", {"umpire": self.umpire})
+            utilities.PushEvent(
+                "lbw",
+                {
+                    "umpire": self.umpire,
+                    "comment": Randomize(commentary.commentary_lbw_umpire)
+                    % self.umpire,
+                },
+            )
+        elif dismissal.startswith("c&b") or dismissal.startswith("c "):
+            pass  # appeal_drama or clean_catch already showed the moment
         elif "runout" in dismissal or "st " in dismissal:
             pass  # third-umpire flow already showed the decision
         else:
@@ -3470,10 +3628,43 @@ class Match:
             ),
         )
 
-        # check if player dismissed is captain
+        # check if player dismissed is captain - and, rarer still, whether
+        # it's the opposing captain who actually got him. A run-out credits
+        # no bowler at all, so the "wicket-taker" there is the fielder who
+        # effected it, parsed the same way the breakthrough card does below;
+        # every other mode (including catches/stumpings) is credited to the
+        # bowler in the traditional sense
         if player_dismissed.attr.iscaptain:
-            PrintInColor(
-                Randomize(commentary.commentary_captain_out), bowling_team.color
+            if "runout" in dismissal:
+                credited_name = dismissal.replace("runout", "").strip()
+                credited = next(
+                    (
+                        p
+                        for p in bowling_team.team_array
+                        if GetShortName(p.name) == credited_name
+                    ),
+                    None,
+                )
+            else:
+                credited = bowler
+
+            if credited is not None and credited.attr.iscaptain:
+                captain_out_comment = Randomize(commentary.commentary_captain_duel) % (
+                    GetSurname(credited.name),
+                    GetSurname(player_dismissed.name),
+                )
+            else:
+                captain_out_comment = Randomize(commentary.commentary_captain_out)
+            PrintInColor(captain_out_comment, bowling_team.color)
+            utilities.PushEvent(
+                "captain_out",
+                {
+                    "player": player_dismissed.name,
+                    "team": batting_team.name,
+                    "dismisser": credited.name if credited is not None else None,
+                    "duel": bool(credited is not None and credited.attr.iscaptain),
+                    "comment": captain_out_comment,
+                },
             )
 
         # hat-trick / N-wickets-in-N-balls detection. A run-out never reaches
@@ -3488,13 +3679,15 @@ class Match:
         if streak == 2 and not innings_over:
             # one more and it's a hat-trick - flag the tension before the
             # very next ball is bowled
-            PrintInColor(Randomize(commentary.commentary_on_a_hattrick), bowling_team.color)
+            hattrick_building_comment = Randomize(commentary.commentary_on_a_hattrick)
+            PrintInColor(hattrick_building_comment, bowling_team.color)
             utilities.PushEvent(
                 "achievement",
                 {
                     "name": bowler.name,
                     "type": "hattrick_building",
                     "text": "ON A HAT-TRICK!",
+                    "comment": hattrick_building_comment,
                 },
             )
         elif streak >= 3:
@@ -3510,7 +3703,7 @@ class Match:
             utilities.PushEvent(
                 "achievement",
                 {"name": bowler.name, "type": achievement_type, "text": text,
-                 "streak": streak},
+                 "streak": streak, "comment": line},
             )
             PrintInColor(line, bowling_team.color)
             if not self.autoplay:   input("press enter to continue..")
@@ -3519,8 +3712,10 @@ class Match:
             if not self.autoplay:   input("press enter to continue..")
         # check if bowler got 5 wkts
         if bowler.wkts == 5:
+            fifer_comment = Randomize(commentary.commentary_fifer)
             achievement_data = {
-                "name": bowler.name, "type": "bowling", "text": "5 wickets!"
+                "name": bowler.name, "type": "bowling", "text": "5 wickets!",
+                "comment": fifer_comment,
             }
             if bowler.attr.iscaptain:
                 achievement_data["captainComment"] = Randomize(
@@ -3528,7 +3723,7 @@ class Match:
                 )
             utilities.PushEvent("achievement", achievement_data)
             PrintInColor("That's 5 Wickets for %s !" % bowler.name, bowling_team.color)
-            PrintInColor(Randomize(commentary.commentary_fifer), bowling_team.color)
+            PrintInColor(fifer_comment, bowling_team.color)
             if not self.autoplay:   input("press enter to continue..")
         # update fall of wicket
         fow_info = Fow(
@@ -3881,9 +4076,6 @@ class Match:
         """
         team = self.batting_team
         pair = team.current_pair
-        # set true only when a review was actually taken and the on-field OUT
-        # stood (i.e. an edge/impact was confirmed) - read by the catch flow
-        self.review_upheld = False
 
         if team.drs_chances <= 0:
             PrintInColor(
@@ -3906,57 +4098,51 @@ class Match:
             Fore.LIGHTGREEN_EX,
         )
         PrintInColor("Decision pending...", Style.BRIGHT)
-        utilities.PushEvent("drs_pending", {"kind": kind})
+        utilities.PushEvent("drs_pending", {"kind": kind, "comment": Randomize(commentary.commentary_drs_pending)})
         if not self.fast:
             time.sleep(5)
 
         overturned = random.choice([True, False])
-        utilities.PushEvent("drs_result", {"out": not overturned, "kind": kind})
 
         if overturned:
             # on-field call was wrong: the batsman survives and, because the
             # review succeeded, the team keeps the chance
             if kind == "caught":
-                PrintInColor(
-                    Randomize(commentary.commentary_caught_overturned),
-                    Fore.LIGHTGREEN_EX,
-                )
+                result_comment = Randomize(commentary.commentary_caught_overturned)
             else:
                 # both lists describe a successful LBW review (missing the
                 # stumps, or bat/impact outside the line)
-                PrintInColor(
-                    Randomize(
-                        commentary.commentary_lbw_overturned
-                        + commentary.commentary_lbw_edged_outside
-                    ),
-                    Fore.LIGHTGREEN_EX,
+                result_comment = Randomize(
+                    commentary.commentary_lbw_overturned
+                    + commentary.commentary_lbw_edged_outside
                 )
+            PrintInColor(result_comment, Fore.LIGHTGREEN_EX)
             PrintInColor(
                 "Review successful - %s keep their %s review(s)."
                 % (team.name, str(team.drs_chances)),
                 Style.BRIGHT,
             )
         else:
-            # on-field call was right: a chance is burnt (and, for a catch,
-            # an edge was confirmed - so it's a catch behind the wicket)
-            self.review_upheld = True
+            # on-field call was right: a chance is burnt
             if kind == "caught":
-                PrintInColor(
-                    Randomize(commentary.commentary_caught_decision_stays)
-                    % self.umpire,
-                    Fore.LIGHTRED_EX,
+                result_comment = (
+                    Randomize(commentary.commentary_caught_decision_stays) % self.umpire
                 )
             else:
-                PrintInColor(
-                    Randomize(commentary.commentary_lbw_decision_stays) % self.umpire,
-                    Fore.LIGHTRED_EX,
+                result_comment = (
+                    Randomize(commentary.commentary_lbw_decision_stays) % self.umpire
                 )
+            PrintInColor(result_comment, Fore.LIGHTRED_EX)
             team.drs_chances -= 1
             PrintInColor(
                 "Review lost - %s have %s review(s) left."
                 % (team.name, str(team.drs_chances)),
                 Style.BRIGHT,
             )
+        utilities.PushEvent(
+            "drs_result",
+            {"out": not overturned, "kind": kind, "comment": result_comment},
+        )
         return overturned
 
     def _MaybeBowlingReview(self):
@@ -4016,18 +4202,15 @@ class Match:
             return False
 
         PrintInColor("Decision pending...", Style.BRIGHT)
-        utilities.PushEvent("drs_pending", {"kind": kind})
+        utilities.PushEvent("drs_pending", {"kind": kind, "comment": Randomize(commentary.commentary_drs_pending)})
         if not self.fast:
             time.sleep(5)
 
         overturned = random.choice([True, False])
-        utilities.PushEvent("drs_result", {"out": overturned, "kind": kind})
 
         if overturned:
-            PrintInColor(
-                Randomize(commentary.commentary_bowling_review_success) % team.name,
-                Fore.LIGHTRED_EX,
-            )
+            result_comment = Randomize(commentary.commentary_bowling_review_success) % team.name
+            PrintInColor(result_comment, Fore.LIGHTRED_EX)
             PrintInColor(
                 "Review successful - %s keep their %s review(s)."
                 % (team.name, str(team.drs_chances)),
@@ -4035,15 +4218,17 @@ class Match:
             )
         else:
             team.drs_chances -= 1
-            PrintInColor(
-                Randomize(commentary.commentary_bowling_review_fail) % team.name,
-                Fore.LIGHTGREEN_EX,
-            )
+            result_comment = Randomize(commentary.commentary_bowling_review_fail) % team.name
+            PrintInColor(result_comment, Fore.LIGHTGREEN_EX)
             PrintInColor(
                 "Review lost - %s have %s review(s) left."
                 % (team.name, str(team.drs_chances)),
                 Style.BRIGHT,
             )
+        utilities.PushEvent(
+            "drs_result",
+            {"out": overturned, "kind": kind, "comment": result_comment},
+        )
         return overturned
 
     def _GenerateBowlingReviewDismissal(self, kind):
@@ -4068,7 +4253,11 @@ class Match:
         if fielder.catches == 5:
             utilities.PushEvent(
                 "achievement",
-                {"name": fielder.name, "type": "fielding", "text": "5 catches!"},
+                {
+                    "name": fielder.name, "type": "fielding", "text": "5 catches!",
+                    "comment": Randomize(commentary.commentary_fielding_milestone)
+                    % fielder.name,
+                },
             )
         if fielder == bowler:
             return "c&b %s" % GetShortName(bowler.name)
@@ -4089,9 +4278,16 @@ class Match:
         referred = random.choice([True, False])
         if not referred:
             # given out on the spot
-            PrintInColor(Randomize(commentary.commentary_given_out), Fore.LIGHTRED_EX)
+            given_out_comment = Randomize(commentary.commentary_given_out)
+            PrintInColor(given_out_comment, Fore.LIGHTRED_EX)
             utilities.PushEvent(
-                "third_umpire", {"stage": "out", "kind": kind, "umpire": self.umpire}
+                "third_umpire",
+                {
+                    "stage": "out",
+                    "kind": kind,
+                    "umpire": self.umpire,
+                    "comment": given_out_comment,
+                },
             )
             return True
 
@@ -4101,26 +4297,32 @@ class Match:
             if kind == "stumped"
             else commentary.commentary_referred_runout
         )
-        PrintInColor(Randomize(referral), Style.BRIGHT)
-        utilities.PushEvent("third_umpire", {"stage": "referred", "kind": kind})
+        referral_comment = Randomize(referral)
+        PrintInColor(referral_comment, Style.BRIGHT)
+        utilities.PushEvent(
+            "third_umpire",
+            {"stage": "referred", "kind": kind, "comment": referral_comment},
+        )
         # green/red lights, just like DRS
-        utilities.PushEvent("drs_pending", {"kind": kind})
+        utilities.PushEvent(
+            "drs_pending",
+            {"kind": kind, "comment": Randomize(commentary.commentary_drs_pending)},
+        )
         if not self.fast:
             time.sleep(4)
         out = random.choice([True, False])
-        utilities.PushEvent("drs_result", {"out": out, "kind": kind})
         if out:
-            PrintInColor(
-                Randomize(commentary.commentary_third_umpire_out), Fore.LIGHTRED_EX
-            )
+            result_comment = Randomize(commentary.commentary_third_umpire_out)
+            PrintInColor(result_comment, Fore.LIGHTRED_EX)
         else:
-            PrintInColor(
-                Randomize(commentary.commentary_third_umpire_not_out),
-                Fore.LIGHTGREEN_EX,
-            )
+            result_comment = Randomize(commentary.commentary_third_umpire_not_out)
+            PrintInColor(result_comment, Fore.LIGHTGREEN_EX)
             # a reprieve must un-credit the stat GenerateDismissal already
             # awarded, so an overturned dismissal leaves no phantom on record
             self._UndoDismissalStat(dismissal, kind)
+        utilities.PushEvent(
+            "drs_result", {"out": out, "kind": kind, "comment": result_comment}
+        )
         return out
 
     def _UndoDismissalStat(self, dismissal, kind):
@@ -4146,47 +4348,6 @@ class Match:
             )
             if fielder is not None:
                 fielder.runouts = max(0, fielder.runouts - 1)
-
-    def _RewriteCatchToKeeper(self, dismissal):
-        """
-        A caught dismissal whose edge was confirmed on review is a catch behind
-        the wicket, so credit it to the keeper. Rewrites the dismissal string
-        to "c +<keeper> b <bowler>" and moves the catch off whoever
-        GenerateDismissal first credited (a fielder, or the bowler on a c&b).
-        Already-keeper catches are left untouched.
-
-        Args:
-            dismissal: The generated catch dismissal string.
-
-        Returns:
-            str: The (possibly rewritten) dismissal string.
-        """
-        keeper = self.bowling_team.keeper
-        bowler = self.bowling_team.current_bowler
-        # already a keeper catch: nothing to change
-        if dismissal.startswith("c +"):
-            return dismissal
-
-        if dismissal.startswith("c&b"):
-            original = bowler
-        else:  # "c <fielder> b <bowler>"
-            name = dismissal.split(" b ")[0][2:].strip()
-            original = next(
-                (
-                    p
-                    for p in self.bowling_team.team_array
-                    if GetShortName(p.name) == name
-                ),
-                None,
-            )
-        if original is keeper:
-            return dismissal
-
-        # move the catch from the original catcher to the keeper
-        if original is not None:
-            original.catches = max(0, original.catches - 1)
-        keeper.catches += 1
-        return "c +%s b %s" % (GetShortName(keeper.name), GetShortName(bowler.name))
 
     def PrintCommentaryDismissal(self, dismissal):
         """
@@ -4772,6 +4933,7 @@ class Match:
                 ],
                 "flipper": t2.captain.name,
                 "caller": t1.captain.name,
+                "comment": Randomize(commentary.commentary_toss_intro),
             },
         )
 
@@ -4785,7 +4947,13 @@ class Match:
         coin = Randomize(["Heads", "Tails"])
         # the coin in the air
         utilities.PushEvent(
-            "toss", {"stage": "flip", "team1": t1.name, "team2": t2.name}
+            "toss",
+            {
+                "stage": "flip",
+                "team1": t1.name,
+                "team2": t2.name,
+                "comment": Randomize(commentary.commentary_toss_flip),
+            },
         )
         PrintInColor(
             "%s called %s.. and it's %s!" % (t1.captain.name, call, coin),
@@ -4806,6 +4974,7 @@ class Match:
                 "captain": toss_winner.captain.name,
                 "call": call,
                 "coin": coin,
+                "comment": Randomize(commentary.commentary_toss_result) % toss_winner.name,
             },
         )
 
@@ -4821,6 +4990,8 @@ class Match:
                     "stage": "decision",
                     "team": toss_winner.name,
                     "captain": toss_winner.captain.name,
+                    "comment": Randomize(commentary.commentary_toss_decision)
+                    % toss_winner.captain.name,
                 },
             )
             decision = ChooseFromOptions(
@@ -4848,6 +5019,7 @@ class Match:
                 "team": toss_winner.name,
                 "captain": toss_winner.captain.name,
                 "decision": decision,
+                "comment": Randomize(commentary.commentary_toss_elected) % toss_winner.name,
             },
         )
 
@@ -5026,7 +5198,13 @@ class Match:
                 PrintInColor(
                     Randomize(commentary.commentary_free_hit), Fore.LIGHTGREEN_EX
                 )
-                utilities.PushEvent("free_hit", {"umpire": self.umpire})
+                utilities.PushEvent(
+                    "free_hit",
+                    {
+                        "umpire": self.umpire,
+                        "comment": Randomize(commentary.commentary_free_hit_call),
+                    },
+                )
 
         return extra
 
@@ -5108,7 +5286,11 @@ class Match:
             # first fifty
             if p.runs >= 50 and p.fifty == 0:
                 p.fifty += 1
-                achievement_data = {"name": p.name, "type": "batting", "text": "50!"}
+                milestone_comment = Randomize(commentary.commentary_milestone) % name
+                achievement_data = {
+                    "name": p.name, "type": "batting", "text": "50!",
+                    "comment": milestone_comment,
+                }
                 if p.attr.iscaptain:
                     achievement_data["captainComment"] = Randomize(
                         commentary.commentary_captain_leading
@@ -5128,10 +5310,7 @@ class Match:
                     )
 
                 # call by first name or last name
-                PrintInColor(
-                    Randomize(commentary.commentary_milestone) % name,
-                    batting_team.color,
-                )
+                PrintInColor(milestone_comment, batting_team.color)
 
                 #  check if he had a good day with the ball as well
                 if p.wkts >= 2:
@@ -5144,7 +5323,11 @@ class Match:
                 # after first fifty is done
                 p.hundred += 1
                 p.fifty += 1
-                achievement_data = {"name": p.name, "type": "batting", "text": "100!"}
+                milestone_comment = Randomize(commentary.commentary_milestone) % p.name
+                achievement_data = {
+                    "name": p.name, "type": "batting", "text": "100!",
+                    "comment": milestone_comment,
+                }
                 if p.attr.iscaptain:
                     achievement_data["captainComment"] = Randomize(
                         commentary.commentary_captain_leading
@@ -5162,15 +5345,16 @@ class Match:
                         Randomize(commentary.commentary_captain_leading),
                         batting_team.color,
                     )
-                PrintInColor(
-                    Randomize(commentary.commentary_milestone) % p.name,
-                    batting_team.color,
-                )
+                PrintInColor(milestone_comment, batting_team.color)
 
             elif p.runs >= 200 and (p.hundred == 1):
                 # after first fifty is done
                 p.hundred += 1
-                achievement_data = {"name": p.name, "type": "batting", "text": "200!"}
+                milestone_comment = Randomize(commentary.commentary_milestone) % name
+                achievement_data = {
+                    "name": p.name, "type": "batting", "text": "200!",
+                    "comment": milestone_comment,
+                }
                 if p.attr.iscaptain:
                     achievement_data["captainComment"] = Randomize(
                         commentary.commentary_captain_leading
@@ -5188,10 +5372,7 @@ class Match:
                         Randomize(commentary.commentary_captain_leading),
                         batting_team.color,
                     )
-                PrintInColor(
-                    Randomize(commentary.commentary_milestone) % name,
-                    batting_team.color,
-                )
+                PrintInColor(milestone_comment, batting_team.color)
 
             # the crowd rises at each 50-run milestone (50/100/150/200/...),
             # with a line that names the ground
@@ -5419,18 +5600,29 @@ class Match:
         Returns:
             None
         """
+        # a given-out appeal is only genuinely reviewable if DRS is on and
+        # the batting side actually has a chance left to spend - otherwise
+        # the appeal is final the moment it's given, worth calling out
+        no_reviews_left = out and self.drs and self.batting_team.drs_chances <= 0
+
         if kind == "lbw":
-            pool = (
-                commentary.commentary_appeal_lbw_out
-                if out
-                else commentary.commentary_appeal_lbw_not_out
-            )
+            if no_reviews_left:
+                pool = commentary.commentary_appeal_lbw_out_no_review
+            else:
+                pool = (
+                    commentary.commentary_appeal_lbw_out
+                    if out
+                    else commentary.commentary_appeal_lbw_not_out
+                )
         else:
-            pool = (
-                commentary.commentary_appeal_catch_out
-                if out
-                else commentary.commentary_appeal_catch_not_out
-            )
+            if no_reviews_left:
+                pool = commentary.commentary_appeal_catch_out_no_review
+            else:
+                pool = (
+                    commentary.commentary_appeal_catch_out
+                    if out
+                    else commentary.commentary_appeal_catch_not_out
+                )
         comment = Randomize(pool) % self.umpire
 
         utilities.PushEvent(
@@ -5440,10 +5632,47 @@ class Match:
                 "out": out,
                 "bowler": bowler.name,
                 "umpire": self.umpire,
+                "noReviewsLeft": no_reviews_left,
                 "comment": comment,
             },
         )
         PrintInColor(comment, Fore.LIGHTRED_EX if out else Fore.LIGHTGREEN_EX)
+        if not self.fast:
+            time.sleep(1.2)
+
+    def _PushCleanCatch(self, fielder, bowler):
+        """
+        Show a big-screen pop-up for a clean, unappealed catch - no umpire
+        or verdict involved, just the fielder's face and a flavoured line.
+        The counterpart to _PushAppealDrama's keeper-nick case (see
+        GenerateDismissal): a catch that was never in any real doubt, taken
+        by anyone other than the keeper (including a caught-and-bowled).
+
+        Args:
+            fielder: the Player who took the catch (the bowler, for c&b).
+            bowler: the Player who bowled the delivery.
+
+        Returns:
+            None
+        """
+        is_return_catch = fielder is bowler
+        pool = (
+            commentary.commentary_return_catch
+            if is_return_catch
+            else commentary.commentary_caught
+        )
+        comment = Randomize(pool) % GetSurname(fielder.name)
+
+        utilities.PushEvent(
+            "clean_catch",
+            {
+                "fielder": fielder.name,
+                "bowler": bowler.name,
+                "isReturnCatch": is_return_catch,
+                "comment": comment,
+            },
+        )
+        PrintInColor(comment, Fore.LIGHTGREEN_EX)
         if not self.fast:
             time.sleep(1.2)
 
@@ -5500,7 +5729,11 @@ class Match:
             if keeper.stumpings == 5:
                 utilities.PushEvent(
                     "achievement",
-                    {"name": keeper.name, "type": "fielding", "text": "5 stumpings!"},
+                    {
+                        "name": keeper.name, "type": "fielding", "text": "5 stumpings!",
+                        "comment": Randomize(commentary.commentary_fielding_milestone)
+                        % keeper.name,
+                    },
                 )
             # the batsman drawn out of his ground, then the bails whipped
             # off, played out before the third umpire's verdict (which
@@ -5508,31 +5741,52 @@ class Match:
             self._PushStumpingDrama(keeper, bowler)
 
         elif dismissal == "c":
+            # roughly half of all catches are a genuinely uncertain nick
+            # behind the bat - always the keeper's take, appealed to the
+            # umpire and open to a DRS review (see Ball()). The rest are
+            # clean, obvious catches elsewhere in the field (or a
+            # caught-and-bowled) with no doubt at all, so no appeal and
+            # nothing to review
+            is_nick = random.random() < 0.45
+            if is_nick:
+                fielder = keeper
+            else:
+                fielder = Randomize(
+                    [p for p in bowling_team.team_array if p is not keeper]
+                )
             fielder.catches += 1
             if fielder.catches == 5:
                 utilities.PushEvent(
                     "achievement",
-                    {"name": fielder.name, "type": "fielding", "text": "5 catches!"},
+                    {
+                        "name": fielder.name, "type": "fielding", "text": "5 catches!",
+                        "comment": Randomize(commentary.commentary_fielding_milestone)
+                        % fielder.name,
+                    },
                 )
-            # check if catcher is the bowler
             if fielder == bowler:
                 dismissal_str = "c&b %s" % (GetShortName(bowler.name))
+            elif fielder.attr.iskeeper:
+                dismissal_str = "%s +%s b %s" % (
+                    dismissal,
+                    GetShortName(fielder.name),
+                    GetShortName(bowler.name),
+                )
             else:
-                if fielder.attr.iskeeper:
-                    dismissal_str = "%s +%s b %s" % (
-                        dismissal,
-                        GetShortName(fielder.name),
-                        GetShortName(bowler.name),
-                    )
-                else:
-                    dismissal_str = "%s %s b %s" % (
-                        dismissal,
-                        GetShortName(fielder.name),
-                        GetShortName(bowler.name),
-                    )
-            # the appeal itself, played out before the DRS review that may
-            # still follow (see Ball(), unchanged)
-            self._PushAppealDrama(bowler, "catch", out=True)
+                dismissal_str = "%s %s b %s" % (
+                    dismissal,
+                    GetShortName(fielder.name),
+                    GetShortName(bowler.name),
+                )
+            if is_nick:
+                # the appeal itself, played out before the DRS review that
+                # may still follow (see Ball(), unchanged)
+                self._PushAppealDrama(bowler, "catch", out=True)
+            else:
+                # no doubt at all about this one - its own pop-up so it
+                # visibly reads as a different kind of wicket, not just
+                # another generic "OUT"
+                self._PushCleanCatch(fielder, bowler)
         elif dismissal == "runout":
             fielder.runouts += 1
             dismissal_str = "runout %s" % (GetShortName(fielder.name))

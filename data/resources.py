@@ -43,7 +43,7 @@ class resources:
         "Ravi Shastri",
         "Richie Benaud",
         "Mike Haysman",
-        "Phil Tufnel",
+        "Phil Tufnell",
         "David Lloyd",
         "Dean Jones",
         "Ian Botham",
