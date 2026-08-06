@@ -26,6 +26,7 @@ from functions.Initiate import (
     LoadTeam, LoadVenueByName, AssignWeather, BuildMatch,
     ListLeagues, LeagueTeamNames, VenueChoices,
 )
+from data.commentary import commentary
 from colorama import Style, Fore
 
 WIN_POINTS = 2
@@ -191,7 +192,13 @@ class Tournament:
             Style.BRIGHT,
         )
         utilities.PushEvent(
-            "series", {"stage": "final_set", "teamA": first, "teamB": second}
+            "series",
+            {
+                "stage": "final_set",
+                "teamA": first,
+                "teamB": second,
+                "comment": Randomize(commentary.commentary_series_final_set),
+            },
         )
         self._save()
 
@@ -329,7 +336,12 @@ class Tournament:
         # clear the "simulating" overlay and announce the tie
         utilities.PushEvent(
             "series",
-            {"stage": "tie", "home": fx["home"], "away": fx["away"]},
+            {
+                "stage": "tie",
+                "home": fx["home"],
+                "away": fx["away"],
+                "comment": Randomize(commentary.commentary_series_tie),
+            },
         )
         PrintInColor(
             "%s vs %s ended level - it's a SUPER OVER!" % (fx["home"], fx["away"]),
@@ -377,8 +389,15 @@ class Tournament:
         PrintInColor("Result: %s" % result_str, Style.BRIGHT)
         utilities.PushEvent(
             "series",
-            {"stage": "match_result", "home": home, "away": away,
-             "winner": winner, "resultStr": result_str},
+            {
+                "stage": "match_result", "home": home, "away": away,
+                "winner": winner, "resultStr": result_str,
+                "comment": (
+                    Randomize(commentary.commentary_series_match_result) % winner
+                    if winner
+                    else ""
+                ),
+            },
         )
 
     def _accumulate_nrr(self, match):
@@ -584,6 +603,11 @@ class Tournament:
         self.show_stats(final=True)
         utilities.PushEvent("series", {
             "stage": "champion", "champion": self.champion, "summary": summary,
+            "comment": (
+                Randomize(commentary.commentary_series_champion) % self.champion
+                if self.champion
+                else ""
+            ),
         })
         self._delete_save()
 

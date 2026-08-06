@@ -268,7 +268,8 @@ def PushEvent(kind, data=None):
             "approaching", "first_ball_wicket", "validating_teams",
             "partnership_broken", "chase_update", "drinks_break",
             "too_many_extras", "stumps", "innings_analysis", "run_out_drama",
-            "stumping_drama", "appeal_drama").
+            "stumping_drama", "appeal_drama", "clean_catch", "first_over_drama",
+            "captain_out").
         data: Optional dict of extra fields for the frontend to render.
 
     Returns:
@@ -751,6 +752,10 @@ def PushMatchHighlights(match):
             player_of_match = {"name": result.mom_name, "stat": result.mom_stat}
     elif result.mom is not None:
         player_of_match = {"name": result.mom.name, "stat": result.mom.GetMomStat()}
+    if player_of_match is not None:
+        player_of_match["comment"] = (
+            Randomize(commentary.commentary_man_of_the_match) % player_of_match["name"]
+        )
 
     channel.highlights({
         "isTest": is_test,

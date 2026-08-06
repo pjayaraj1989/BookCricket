@@ -1251,6 +1251,94 @@ function buildAppealDramaCard(data) {
   return wrap;
 }
 
+// a clean, unappealed catch (see Match._PushCleanCatch): no umpire or
+// verdict involved, just the fielder's face and a flavoured line - the
+// counterpart to buildAppealDramaCard's keeper-nick case
+function buildCleanCatchCard(data) {
+  const fielderName = data && data.fielder ? String(data.fielder) : "";
+  const isReturnCatch = !!(data && data.isReturnCatch);
+
+  const card = buildPlayerCard(fielderName, isReturnCatch ? "Caught & Bowled" : "Caught");
+  const badge = document.createElement("div");
+  badge.className = "event-achievement-badge";
+  badge.textContent = "🙌 CAUGHT!";
+  card.insertBefore(badge, card.firstChild);
+
+  if (data && data.comment) {
+    const commentEl = document.createElement("div");
+    commentEl.className = "event-captain-comment";
+    commentEl.textContent = String(data.comment);
+    card.appendChild(commentEl);
+  }
+  return card;
+}
+
+// the very first over of the innings goes for 16+ runs, sees 2+ wickets, or
+// (rarest) both at once - see Match.py's PlayOver, gated on over == 0
+function buildFirstOverDramaCard(data) {
+  const type = data && data.type;
+  const bowlerName = data && data.bowler ? String(data.bowler) : "";
+  const runs = data && data.runs;
+  const wickets = data && data.wickets;
+
+  const cfg = {
+    expensive: ["🔥", "EXPENSIVE START!"],
+    wickets: ["🎯", "EARLY STRIKES!"],
+    dramatic: ["💥", "DRAMATIC OVER!"],
+  }[type] || ["🏏", "WHAT AN OVER!"];
+
+  const wrap = document.createElement("div");
+  wrap.className = "event-player";
+
+  const badge = document.createElement("div");
+  badge.className = "event-achievement-badge";
+  badge.textContent = cfg[0] + " " + cfg[1];
+  wrap.appendChild(badge);
+
+  wrap.appendChild(buildPlayerCard(bowlerName, "Bowler"));
+
+  if (runs != null && wickets != null) {
+    const stats = document.createElement("div");
+    stats.className = "event-tension-eq";
+    stats.textContent =
+      runs + (runs === 1 ? " run" : " runs") + ", " +
+      wickets + (wickets === 1 ? " wicket" : " wickets") + " in the 1st over";
+    wrap.appendChild(stats);
+  }
+
+  appendComment(wrap, data && data.comment);
+  return wrap;
+}
+
+// the batting side's captain is dismissed - and, rarer still, by the
+// opposing captain himself (see Match.py's UpdateDismissal, "duel" flag)
+function buildCaptainOutCard(data) {
+  const duel = !!(data && data.duel);
+  const playerName = data && data.player ? String(data.player) : "";
+  const dismisserName = data && data.dismisser ? String(data.dismisser) : "";
+
+  const wrap = document.createElement("div");
+  wrap.className = "event-player";
+
+  const badge = document.createElement("div");
+  badge.className = "event-achievement-badge";
+  badge.textContent = duel ? "⚔️ CAPTAIN vs CAPTAIN!" : "👑 CAPTAIN'S WICKET!";
+  wrap.appendChild(badge);
+
+  if (duel && dismisserName) {
+    const row = document.createElement("div");
+    row.className = "event-openers";
+    row.appendChild(buildPlayerCard(dismisserName, "Bowler"));
+    row.appendChild(buildPlayerCard(playerName, "Out"));
+    wrap.appendChild(row);
+  } else {
+    wrap.appendChild(buildPlayerCard(playerName, "Captain"));
+  }
+
+  appendComment(wrap, data && data.comment);
+  return wrap;
+}
+
 function buildCountdownCard(name, number) {
   const card = buildPlayerCard(name);
   const nameEl = card.querySelector(".event-player-name");
@@ -1420,6 +1508,16 @@ function initialsOf(name) {
     .toUpperCase();
 }
 
+// shared helper: appends a flavoured commentary line (see data/commentary.py's
+// 30-phrase pools, one per big-screen pop-up) to any card if one was sent
+function appendComment(el, comment) {
+  if (!comment) return;
+  const commentEl = document.createElement("div");
+  commentEl.className = "event-captain-comment";
+  commentEl.textContent = String(comment);
+  el.appendChild(commentEl);
+}
+
 function buildPlayerCard(name, role, srcPath) {
   const initials = initialsOf(name);
 
@@ -1502,6 +1600,7 @@ function renderEvent(kind, data) {
         row.appendChild(buildPlayerCard(String(c.name), role));
       });
       wrap.appendChild(row);
+      appendComment(wrap, data && data.comment);
       showEventPane(wrap, 4000, "takeover roster");
     } else if (stage === "result") {
       // who won it, with the winning captain
@@ -1514,6 +1613,7 @@ function renderEvent(kind, data) {
       sub.className = "event-captain-comment";
       sub.textContent = "Called " + data.call + " · it landed " + data.coin + ".";
       card.appendChild(sub);
+      appendComment(card, data && data.comment);
       showEventPane(card, 4000, "takeover");
     } else if (stage === "decision") {
       // the commentator putting the question to the winning captain
@@ -1526,6 +1626,7 @@ function renderEvent(kind, data) {
       sub.className = "event-captain-comment";
       sub.textContent = "So, what will it be, skipper?";
       card.appendChild(sub);
+      appendComment(card, data && data.comment);
       showEventPane(card, 3000, "takeover");
     } else if (stage === "elected") {
       const batting = data.decision === "Bat";
@@ -1535,6 +1636,7 @@ function renderEvent(kind, data) {
       badge.textContent =
         (batting ? "🏏 " : "⚾ ") + data.team + " elect to " + data.decision.toLowerCase() + " first";
       card.insertBefore(badge, card.lastChild);
+      appendComment(card, data && data.comment);
       showEventPane(card, 3500, "takeover");
     } else {
       // the coin in the air, a flag on either side of it
@@ -1549,6 +1651,7 @@ function renderEvent(kind, data) {
       row.appendChild(coin);
       if (data && data.team2) row.appendChild(teamFlagBadge(data.team2, true));
       wrap.appendChild(row);
+      appendComment(wrap, data && data.comment);
       showEventPane(wrap, 2500, "takeover");
     }
   } else if (kind === "wicket") {
@@ -1625,19 +1728,15 @@ function renderEvent(kind, data) {
     }
   } else if (kind === "session_break") {
     const isLunch = data && data.interval === "Lunch";
-    showEventPane(
-      isLunch
-        ? buildMiscCard("misc/lunch", "🍽️", "Lunch break")
-        : buildMiscCard("misc/tea", "☕", "Tea break"),
-      3500,
-      "takeover"
-    );
+    const sessionCard = isLunch
+      ? buildMiscCard("misc/lunch", "🍽️", "Lunch break")
+      : buildMiscCard("misc/tea", "☕", "Tea break");
+    appendComment(sessionCard, data && data.comment);
+    showEventPane(sessionCard, 3500, "takeover");
   } else if (kind === "drinks_break") {
-    showEventPane(
-      buildMiscCard("misc/drinks_break", "🥤", "Drinks break", "", data && data.team),
-      3000,
-      "takeover"
-    );
+    const drinksCard = buildMiscCard("misc/drinks_break", "🥤", "Drinks break", "", data && data.team);
+    appendComment(drinksCard, data && data.comment);
+    showEventPane(drinksCard, 3000, "takeover");
   } else if (kind === "stumps") {
     const day = data && data.day;
     const sub = day ? "End of Day " + day : "";
@@ -1677,6 +1776,7 @@ function renderEvent(kind, data) {
         data.topBowler.wickets + "/" + data.topBowler.runs;
       card.appendChild(tw);
     }
+    appendComment(card, data && data.comment);
     showEventPane(card, 4500, "takeover");
   } else if (kind === "innings_analysis") {
     showEventPane(buildInningsAnalysisCard(data), 9000, "takeover analysis");
@@ -1694,29 +1794,31 @@ function renderEvent(kind, data) {
   } else if (kind === "victory") {
     const caption = data && data.result ? String(data.result) : "Victory!";
     const team = data && data.team ? String(data.team) : "";
-    showEventPane(
-      team ? buildVictoryCard(team, caption) : buildMiscCard("misc/victory", "🏆", caption),
-      5000,
-      "takeover"
-    );
+    const victoryCard = team
+      ? buildVictoryCard(team, caption)
+      : buildMiscCard("misc/victory", "🏆", caption);
+    appendComment(victoryCard, data && data.comment);
+    showEventPane(victoryCard, 5000, "takeover");
   } else if (kind === "declare") {
     const sub = data && data.team ? data.score + "/" + data.wickets : "";
     const cap = data && data.team ? data.team + " declared" : "Declared";
-    showEventPane(
-      buildMiscCard("misc/declare", "✋", cap, sub, data && data.team),
-      4000, "takeover"
-    );
+    const declareCard = buildMiscCard("misc/declare", "✋", cap, sub, data && data.team);
+    appendComment(declareCard, data && data.comment);
+    showEventPane(declareCard, 4000, "takeover");
   } else if (kind === "follow_on") {
     const sub = data && data.opponent ? data.opponent + " to bat again" : "";
-    showEventPane(
-      buildMiscCard("misc/follow_on", "🔁", "Follow-on enforced!", sub, data && data.opponent),
-      4000, "takeover"
+    const followOnCard = buildMiscCard(
+      "misc/follow_on", "🔁", "Follow-on enforced!", sub, data && data.opponent
     );
+    appendComment(followOnCard, data && data.comment);
+    showEventPane(followOnCard, 4000, "takeover");
   } else if (kind === "partnership_milestone") {
     const runs = data && data.runs;
     const batsmen = ((data && data.batsmen) || []).filter((b) => b && b.name);
     if (batsmen.length && runs) {
-      showEventPane(buildPartnershipCard(batsmen, runs), 4000, "takeover roster");
+      const partnershipCard = buildPartnershipCard(batsmen, runs);
+      appendComment(partnershipCard, data && data.comment);
+      showEventPane(partnershipCard, 4000, "takeover roster");
     }
   } else if (kind === "partnership_broken") {
     // a 50+ stand ends: the bowler's pic, or the fielder's pic on a run-out
@@ -1773,38 +1875,30 @@ function renderEvent(kind, data) {
     }
   } else if (kind === "team_score") {
     if (data && data.score) {
-      showEventPane(
-        buildTeamScoreCard(String(data.team), data.score, data.wickets),
-        4000,
-        "takeover"
-      );
+      const teamScoreCard = buildTeamScoreCard(String(data.team), data.score, data.wickets);
+      appendComment(teamScoreCard, data && data.comment);
+      showEventPane(teamScoreCard, 4000, "takeover");
     }
   } else if (kind === "super_over") {
     const stage = data && data.stage;
     if (stage === "start") {
-      showEventPane(
-        buildMiscCard("misc/super_over", "⚡", "SUPER OVER!", "the scores are level!"),
-        3500,
-        "takeover"
-      );
+      const startCard = buildMiscCard("misc/super_over", "⚡", "SUPER OVER!", "the scores are level!");
+      appendComment(startCard, data && data.comment);
+      showEventPane(startCard, 3500, "takeover");
     } else if (stage === "innings") {
-      showEventPane(
-        buildMiscCard(
-          "misc/super_over", "⚡",
-          data.team + " " + data.runs + "/" + data.wickets,
-          "super over", data.team
-        ),
-        3000,
-        "takeover"
+      const inningsCard = buildMiscCard(
+        "misc/super_over", "⚡",
+        data.team + " " + data.runs + "/" + data.wickets,
+        "super over", data.team
       );
+      appendComment(inningsCard, data && data.comment);
+      showEventPane(inningsCard, 3000, "takeover");
     } else if (stage === "result") {
-      showEventPane(
-        data.team
-          ? buildVictoryCard(String(data.team), "won the Super Over!")
-          : buildMiscCard("misc/super_over", "⚡", "Super Over tied!", "honours shared"),
-        4500,
-        "takeover"
-      );
+      const resultCard = data.team
+        ? buildVictoryCard(String(data.team), "won the Super Over!")
+        : buildMiscCard("misc/super_over", "⚡", "Super Over tied!", "honours shared");
+      appendComment(resultCard, data && data.comment);
+      showEventPane(resultCard, 4500, "takeover");
     }
   } else if (kind === "first_ball_wicket") {
     const batter = data && data.batter ? String(data.batter) : "";
@@ -1852,6 +1946,7 @@ function renderEvent(kind, data) {
       badge.textContent = "🔥 " + text;
       // badge sits between the photo and the name
       card.insertBefore(badge, card.lastChild);
+      appendComment(card, data && data.comment);
       showEventPane(card, 3000, "takeover");
     }
   } else if (kind === "too_many_extras") {
@@ -1909,7 +2004,11 @@ function renderEvent(kind, data) {
       heavy: ["misc/rain_heavy", "🌧️", "Heavy rain!", ""],
       stopped: ["misc/rain_stopped", "☔", "Rain stopped play", (data && data.resume) || ""],
     }[data && data.stage];
-    if (cfg) showEventPane(buildMiscCard(cfg[0], cfg[1], cfg[2], cfg[3]), 3500, "takeover");
+    if (cfg) {
+      const rainCard = buildMiscCard(cfg[0], cfg[1], cfg[2], cfg[3]);
+      appendComment(rainCard, data && data.comment);
+      showEventPane(rainCard, 3500, "takeover");
+    }
   } else if (kind === "target") {
     const team = data && data.team ? String(data.team) : "";
     let caption, sub;
@@ -1927,7 +2026,9 @@ function renderEvent(kind, data) {
         : "in the final innings";
       if (data && data.dls) sub += " · D/L revised target";
     }
-    showEventPane(buildMiscCard("misc/target", "🎯", caption, sub, team), 4000, "takeover");
+    const targetCard = buildMiscCard("misc/target", "🎯", caption, sub, team);
+    appendComment(targetCard, data && data.comment);
+    showEventPane(targetCard, 4000, "takeover");
   } else if (kind === "chase_update") {
     const team = data && data.team ? String(data.team) : "";
     const comment = data && data.comment ? String(data.comment) : "";
@@ -1995,20 +2096,17 @@ function renderEvent(kind, data) {
       cloudy: ["misc/weather_cloudy", "⛅", "Cloudy"],
       humid: ["misc/weather_humid", "🥵", "Humid"],
     }[w] || ["misc/weather_" + (w || "unknown"), "🌤️", w || "Weather"];
-    showEventPane(
-      buildMiscCard(cfg[0], cfg[1], cfg[2], (data && data.text) || ""),
-      3500,
-      "takeover"
-    );
+    const weatherCard = buildMiscCard(cfg[0], cfg[1], cfg[2], (data && data.text) || "");
+    appendComment(weatherCard, data && data.comment);
+    showEventPane(weatherCard, 3500, "takeover");
   } else if (kind === "resume") {
     const bt = data && data.battingTeam ? String(data.battingTeam) : "";
     const score = data ? (data.score + "/" + data.wickets) : "";
-    showEventPane(
-      buildMiscCard("misc/resume", "⏮️", "Resuming your game",
-        bt ? (bt + " " + score) : "", bt),
-      3000,
-      "takeover"
+    const resumeCard = buildMiscCard(
+      "misc/resume", "⏮️", "Resuming your game", bt ? (bt + " " + score) : "", bt
     );
+    appendComment(resumeCard, data && data.comment);
+    showEventPane(resumeCard, 3000, "takeover");
   } else if (kind === "series") {
     const stage = data && data.stage;
     // hideSimOverlay() for a non-"simulating" stage already happened above
@@ -2018,26 +2116,26 @@ function renderEvent(kind, data) {
         ((data && data.home) || "") + "  v  " + ((data && data.away) || "")
       );
     } else if (stage === "tie") {
-      showEventPane(
-        buildMiscCard("misc/super_over", "⚡", "Match tied!",
-          "Super Over: " + (data.home || "") + " v " + (data.away || "")),
-        3000, "takeover");
+      const tieCard = buildMiscCard("misc/super_over", "⚡", "Match tied!",
+        "Super Over: " + (data.home || "") + " v " + (data.away || ""));
+      appendComment(tieCard, data && data.comment);
+      showEventPane(tieCard, 3000, "takeover");
     } else if (stage === "final_set") {
-      showEventPane(
-        buildMiscCard("misc/series_final", "🏆", "Final set!",
-          (data.teamA || "") + " vs " + (data.teamB || "")),
-        3500, "takeover");
+      const finalSetCard = buildMiscCard("misc/series_final", "🏆", "Final set!",
+        (data.teamA || "") + " vs " + (data.teamB || ""));
+      appendComment(finalSetCard, data && data.comment);
+      showEventPane(finalSetCard, 3500, "takeover");
     } else if (stage === "match_result") {
       const w = data && data.winner;
-      showEventPane(
-        buildMiscCard("misc/series_result", "📋", w ? (w + " win") : "No result",
-          (data.home || "") + " v " + (data.away || "")),
-        2600, "takeover");
+      const resultCard = buildMiscCard("misc/series_result", "📋", w ? (w + " win") : "No result",
+        (data.home || "") + " v " + (data.away || ""));
+      appendComment(resultCard, data && data.comment);
+      showEventPane(resultCard, 2600, "takeover");
     } else if (stage === "champion") {
-      showEventPane(
-        buildMiscCard("misc/champion", "🏆", "Champions!",
-          (data && data.summary) || (data && data.champion) || ""),
-        5000, "takeover");
+      const championCard = buildMiscCard("misc/champion", "🏆", "Champions!",
+        (data && data.summary) || (data && data.champion) || "");
+      appendComment(championCard, data && data.comment);
+      showEventPane(championCard, 5000, "takeover");
     }
     // standings/stats/match_start stages are rendered as text in the log
   } else if (kind === "validating_teams") {
@@ -2060,6 +2158,7 @@ function renderEvent(kind, data) {
     badge.className = "event-gameon-text";
     badge.textContent = "FREE HIT!";
     card.insertBefore(badge, card.firstChild);
+    appendComment(card, data && data.comment);
     showEventPane(card, 3000, "takeover");
   } else if (kind === "run_out_drama") {
     showEventPane(buildRunOutDramaCard(data), 2600, "takeover");
@@ -2067,12 +2166,20 @@ function renderEvent(kind, data) {
     showEventPane(buildStumpingDramaCard(data), 2600, "takeover");
   } else if (kind === "appeal_drama") {
     showEventPane(buildAppealDramaCard(data), 3000, "takeover");
+  } else if (kind === "clean_catch") {
+    showEventPane(buildCleanCatchCard(data), 3000, "takeover");
+  } else if (kind === "first_over_drama") {
+    showEventPane(buildFirstOverDramaCard(data), 4000, "takeover");
+  } else if (kind === "captain_out") {
+    showEventPane(buildCaptainOutCard(data), 4000, "takeover");
   } else if (kind === "runout") {
     const ump = data && data.umpire ? String(data.umpire) : "";
     showEventPane(buildUmpireDecisionCard(ump, "RUN OUT"), 3000, "takeover");
   } else if (kind === "lbw") {
     const ump = data && data.umpire ? String(data.umpire) : "";
-    showEventPane(buildUmpireDecisionCard(ump, "LBW"), 3000, "takeover");
+    const lbwCard = buildUmpireDecisionCard(ump, "LBW");
+    appendComment(lbwCard, data && data.comment);
+    showEventPane(lbwCard, 3000, "takeover");
   } else if (kind === "achievement") {
     const name = data && data.name ? String(data.name) : "";
     const text = data && data.text ? String(data.text) : "";
@@ -2091,6 +2198,9 @@ function renderEvent(kind, data) {
       badge.textContent = emoji + " " + text;
       // badge sits between the photo and the name
       card.insertBefore(badge, card.lastChild);
+      // the milestone's own flavour line (see data/commentary.py's
+      // commentary_milestone/_fifer/_fielding_milestone/_hattrick pools)
+      appendComment(card, data && data.comment);
       // captain hitting a batting/bowling milestone gets an extra cool line
       const captainComment = data && data.captainComment ? String(data.captainComment) : "";
       if (captainComment) {
@@ -2107,10 +2217,14 @@ function renderEvent(kind, data) {
   } else if (kind === "umpires") {
     const names = ((data && data.names) || []).map(String).filter(Boolean);
     if (names.length) {
+      const wrap = document.createElement("div");
+      wrap.className = "event-player";
       const row = document.createElement("div");
       row.className = "event-openers";
       names.forEach((n) => row.appendChild(buildPlayerCard(n, "Umpire", "umpires/")));
-      showEventPane(row, 2500, "takeover roster");
+      wrap.appendChild(row);
+      appendComment(wrap, data && data.comment);
+      showEventPane(wrap, 2500, "takeover roster");
     }
   } else if (kind === "lineup_countdown") {
     const players = (data && data.players) || [];
@@ -2127,36 +2241,35 @@ function renderEvent(kind, data) {
     // remember them: from here on every announcement carries one of their faces
     matchCommentators = names.slice();
     if (names.length) {
+      const wrap = document.createElement("div");
+      wrap.className = "event-player";
       const row = document.createElement("div");
       row.className = "event-openers";
       names.forEach((n) => row.appendChild(buildPlayerCard(n, "Commentator", "commentators/")));
-      showEventPane(row, 2500, "takeover roster");
+      wrap.appendChild(row);
+      appendComment(wrap, data && data.comment);
+      showEventPane(wrap, 2500, "takeover roster");
     }
   } else if (kind === "venue_selected") {
     const name = data && data.name ? String(data.name) : "";
     if (name) {
-      showEventPane(
-        buildMiscCard("venues/" + encodeURIComponent(name), "🏟️", name),
-        4000,
-        "takeover venue"
-      );
+      const venueCard = buildMiscCard("venues/" + encodeURIComponent(name), "🏟️", name);
+      appendComment(venueCard, data && data.comment);
+      showEventPane(venueCard, 4000, "takeover venue");
     }
   } else if (kind === "third_umpire") {
     if (data && data.stage === "referred") {
       const label = DISMISSAL_KIND_LABELS[data && data.kind];
       const sub = label ? "checking the replay… (" + label + ")" : "checking the replay…";
-      showEventPane(
-        buildMiscCard("misc/third_umpire", "📺", "Third umpire", sub),
-        3000,
-        "takeover"
-      );
+      const referredCard = buildMiscCard("misc/third_umpire", "📺", "Third umpire", sub);
+      appendComment(referredCard, data && data.comment);
+      showEventPane(referredCard, 3000, "takeover");
     } else {
       // given out on the spot by the on-field umpire
       const label = data && data.kind === "stumped" ? "STUMPED" : "RUN OUT";
-      showEventPane(
-        buildUmpireDecisionCard(data && data.umpire, label),
-        3000, "takeover"
-      );
+      const outCard = buildUmpireDecisionCard(data && data.umpire, label);
+      appendComment(outCard, data && data.comment);
+      showEventPane(outCard, 3000, "takeover");
     }
   } else if (kind === "drs_pending") {
     const wrap = document.createElement("div");
@@ -2174,6 +2287,7 @@ function renderEvent(kind, data) {
       '<span class="drs-bulb red"></span><span class="drs-bulb green"></span>';
     wrap.appendChild(lights);
     if (currentBattingTeam) wrap.appendChild(teamFlagBadge(currentBattingTeam, true));
+    appendComment(wrap, data && data.comment);
     showEventPane(wrap, 0, "takeover");
   } else if (kind === "drs_result") {
     const out = !!(data && data.out);
@@ -2358,6 +2472,7 @@ function renderMatchHighlights(highlights) {
     badge.textContent = "🏅 Man of the Match";
     // badge sits between the photo and the name
     mom.insertBefore(badge, mom.children[1]);
+    appendComment(mom, highlights.playerOfMatch.comment);
     showEventPane(mom, 6000, "takeover");
   }
 }
