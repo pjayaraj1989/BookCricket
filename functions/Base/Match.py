@@ -23,6 +23,7 @@ from functions.utilities import (
     CheckForConsecutiveElements,
     ChooseFromOptions,
     is_name_valid,
+    TeamRef,
 )
 import functions.utilities as utilities
 from functions.DuckworthLewis import ResourcesRemaining, RevisedTarget, ParScore, G50
@@ -256,7 +257,7 @@ class Match:
                     "team": result.winner.name,
                     "result": result.result_str,
                     "comment": Randomize(commentary.commentary_victory_flavor)
-                    % result.winner.name,
+                    % TeamRef(result.winner),
                 },
             )
         # persistent post-match highlights card; no-op in console mode
@@ -583,7 +584,7 @@ class Match:
                         "stage": "result",
                         "team": winner.name,
                         "comment": Randomize(commentary.commentary_super_over_win)
-                        % winner.name,
+                        % TeamRef(winner),
                     },
                 )
                 if not self.autoplay:
@@ -764,7 +765,7 @@ class Match:
                 "runs": runs,
                 "wickets": wickets,
                 "comment": Randomize(commentary.commentary_super_over_innings)
-                % batting_team.name,
+                % TeamRef(batting_team),
             },
         )
         return runs, wickets
@@ -1180,7 +1181,7 @@ class Match:
                         else None
                     ),
                     "comment": Randomize(commentary.commentary_innings_over)
-                    % batting_team.name,
+                    % TeamRef(batting_team),
                 },
             )
 
@@ -1604,7 +1605,7 @@ class Match:
                             "score": int(batting_team.total_score),
                             "wickets": int(batting_team.wickets_fell),
                             "comment": Randomize(commentary.commentary_declare)
-                            % batting_team.name,
+                            % TeamRef(batting_team),
                         },
                     )
                     PrintInColor(
@@ -1845,7 +1846,7 @@ class Match:
                 and completed_overs not in self.drinks_breaks_fired
             ):
                 self.drinks_breaks_fired.add(completed_overs)
-                utilities.PushEvent("drinks_break", {"team": bt.name, "comment": Randomize(commentary.commentary_drinks_break) % bt.name})
+                utilities.PushEvent("drinks_break", {"team": bt.name, "comment": Randomize(commentary.commentary_drinks_break) % TeamRef(bt)})
         elif self.is_test:
             # Test has no fixed over limit, so the "not near the end" guard
             # doesn't apply - once per session, at its rough halfway point
@@ -1854,7 +1855,7 @@ class Match:
                 and self.overs_bowled_this_session >= self.overs_per_session // 2
             ):
                 self.drinks_break_fired_this_session = True
-                utilities.PushEvent("drinks_break", {"team": bt.name, "comment": Randomize(commentary.commentary_drinks_break) % bt.name})
+                utilities.PushEvent("drinks_break", {"team": bt.name, "comment": Randomize(commentary.commentary_drinks_break) % TeamRef(bt)})
 
     def _UpdateBoundaryStreak(self, batsman, run):
         """
@@ -2005,7 +2006,7 @@ class Match:
             data = {
                 "team": bt.name,
                 "runsToWin": int(bt.target),
-                "comment": Randomize(commentary.commentary_target_chase) % bt.name,
+                "comment": Randomize(commentary.commentary_target_chase) % TeamRef(bt),
             }
             if self.overs:
                 data["overs"] = int(self.overs)
@@ -2024,7 +2025,7 @@ class Match:
         diff = sum(i.score for i in bt.innings_history) - sum(
             i.score for i in opp.innings_history
         )
-        test_comment = Randomize(commentary.commentary_target_test) % bt.name
+        test_comment = Randomize(commentary.commentary_target_test) % TeamRef(bt)
         if diff < 0:
             utilities.PushEvent(
                 "target",
@@ -2060,7 +2061,7 @@ class Match:
                     "score": int(bt.total_score),
                     "wickets": int(bt.wickets_fell),
                     "comment": Randomize(commentary.commentary_team_total_flavor)
-                    % bt.name,
+                    % TeamRef(bt),
                 },
             )
             self._PushNextBatsmenPreview()
@@ -2193,7 +2194,7 @@ class Match:
                 "next_batsmen",
                 {
                     "names": [p.name for p in upcoming],
-                    "comment": Randomize(lines) % bt.name,
+                    "comment": Randomize(lines) % TeamRef(bt),
                 },
             )
 
@@ -2288,7 +2289,7 @@ class Match:
             {
                 "team": bt.name,
                 "tier": tier,
-                "comment": Randomize(lines) % bt.name,
+                "comment": Randomize(lines) % TeamRef(bt),
                 "runsNeeded": int(runs_needed),
                 "ballsLeft": int(balls_left),
                 "crr": crr,
@@ -3115,7 +3116,7 @@ class Match:
                     if batting_team.total_score >= batting_team.target:
                         PrintInColor(
                             Randomize(commentary.commentary_won_last_ball)
-                            % batting_team.name,
+                            % TeamRef(batting_team),
                             Style.BRIGHT,
                         )
                         self._PushChaseDecided(chasing_won=True)
@@ -3196,7 +3197,7 @@ class Match:
                 first_over_type = "dramatic"
                 first_over_comment = (
                     Randomize(commentary.commentary_first_over_dramatic)
-                    % bowling_team.name
+                    % TeamRef(bowling_team)
                 )
             elif very_expensive:
                 first_over_type = "expensive"
@@ -3207,7 +3208,7 @@ class Match:
                 first_over_type = "wickets"
                 first_over_comment = (
                     Randomize(commentary.commentary_first_over_wickets)
-                    % bowling_team.name
+                    % TeamRef(bowling_team)
                 )
             if first_over_type:
                 utilities.PushEvent(
@@ -3779,7 +3780,7 @@ class Match:
             breakthrough_data = {
                 "runs": int(partnership.runs),
                 "comment": Randomize(commentary.commentary_breakthrough)
-                % bowling_team.name,
+                % TeamRef(bowling_team),
             }
             if "runout" in dismissal:
                 fielder_name = dismissal.replace("runout", "").strip()
@@ -3822,7 +3823,7 @@ class Match:
                 if tier in ("cruising", "on_track"):
                     breakthrough_data["tooLateComment"] = (
                         Randomize(commentary.commentary_breakthrough_too_late)
-                        % batting_team.name
+                        % TeamRef(batting_team)
                     )
 
             utilities.PushEvent("partnership_broken", breakthrough_data)
@@ -4458,7 +4459,7 @@ class Match:
         # calculate the situation
         if batting_team.batting_second and (7 <= batting_team.wickets_fell < 10):
             PrintInColor(
-                Randomize(commentary.commentary_goingtolose) % batting_team.name,
+                Randomize(commentary.commentary_goingtolose) % TeamRef(batting_team),
                 Style.BRIGHT,
             )
 
@@ -4977,7 +4978,7 @@ class Match:
         toss_winner = t1 if call == coin else t2
         toss_loser = t2 if toss_winner is t1 else t1
         PrintInColor(
-            "%s have won the toss!" % toss_winner.name, toss_winner.color
+            "%s have won the toss!" % TeamRef(toss_winner), toss_winner.color
         )
         utilities.PushEvent(
             "toss",
@@ -4987,7 +4988,7 @@ class Match:
                 "captain": toss_winner.captain.name,
                 "call": call,
                 "coin": coin,
-                "comment": Randomize(commentary.commentary_toss_result) % toss_winner.name,
+                "comment": Randomize(commentary.commentary_toss_result) % TeamRef(toss_winner),
             },
         )
 
@@ -5032,7 +5033,7 @@ class Match:
                 "team": toss_winner.name,
                 "captain": toss_winner.captain.name,
                 "decision": decision,
-                "comment": Randomize(commentary.commentary_toss_elected) % toss_winner.name,
+                "comment": Randomize(commentary.commentary_toss_elected) % TeamRef(toss_winner),
             },
         )
 
@@ -5921,21 +5922,21 @@ class Match:
         # how much is the score
         if batting_team.total_score >= 50 and not batting_team.fifty_up:
             PrintInColor(
-                Randomize(commentary.commentary_score_fifty) % batting_team.name,
+                Randomize(commentary.commentary_score_fifty) % TeamRef(batting_team),
                 Style.BRIGHT,
             )
             batting_team.fifty_up = True
 
         if batting_team.total_score >= 100 and not batting_team.hundred_up:
             PrintInColor(
-                Randomize(commentary.commentary_score_hundred) % batting_team.name,
+                Randomize(commentary.commentary_score_hundred) % TeamRef(batting_team),
                 Style.BRIGHT,
             )
             batting_team.hundred_up = True
 
         if batting_team.total_score >= 200 and not batting_team.two_hundred_up:
             PrintInColor(
-                Randomize(commentary.commentary_score_two_hundred) % batting_team.name,
+                Randomize(commentary.commentary_score_two_hundred) % TeamRef(batting_team),
                 Style.BRIGHT,
             )
             batting_team.two_hundred_up = True
@@ -5943,7 +5944,7 @@ class Match:
         if batting_team.total_score >= 300 and not batting_team.three_hundred_up:
             PrintInColor(
                 Randomize(commentary.commentary_score_three_hundred)
-                % batting_team.name,
+                % TeamRef(batting_team),
                 Style.BRIGHT,
             )
             batting_team.three_hundred_up = True
@@ -6005,14 +6006,14 @@ class Match:
             if crr <= 4.0:
                 PrintInColor(
                     Randomize(commentary.commentary_situation_low_rr)
-                    % batting_team.name,
+                    % TeamRef(batting_team),
                     Fore.GREEN,
                 )
 
             elif crr >= 8.0:
                 PrintInColor(
                     Randomize(commentary.commentary_situation_good_rr)
-                    % batting_team.name,
+                    % TeamRef(batting_team),
                     Fore.GREEN,
                 )
                 PrintInColor(
@@ -6024,14 +6025,14 @@ class Match:
             if wkts_fell == 0:
                 PrintInColor(
                     Randomize(commentary.commentary_situation_no_wkts_fell)
-                    % batting_team.name,
+                    % TeamRef(batting_team),
                     Fore.GREEN,
                 )
 
             elif 1 < wkts_fell <= 6:
                 PrintInColor(
                     Randomize(commentary.commentary_situation_unstable)
-                    % batting_team.name,
+                    % TeamRef(batting_team),
                     Style.BRIGHT,
                 )
                 PrintInColor("Lost %s wickets so far!" % wkts_fell, Style.BRIGHT)
@@ -6044,7 +6045,7 @@ class Match:
             elif 6 < wkts_fell < 10:
                 PrintInColor(
                     Randomize(commentary.commentary_situation_trouble)
-                    % batting_team.name,
+                    % TeamRef(batting_team),
                     Style.BRIGHT,
                 )
                 PrintInColor(
@@ -6061,25 +6062,25 @@ class Match:
             if crr >= rr:
                 PrintInColor(
                     Randomize(commentary.commentary_situation_reqd_rate_low)
-                    % batting_team.name,
+                    % TeamRef(batting_team),
                     Fore.GREEN,
                 )
                 if 0 <= batting_team.wickets_fell <= 2:
                     PrintInColor(
                         Randomize(commentary.commentary_situation_reqd_rate_low)
-                        % batting_team.name,
+                        % TeamRef(batting_team),
                         Fore.GREEN,
                     )
                 if batting_team.wickets_fell <= 5:
                     PrintInColor(
                         Randomize(commentary.commentary_situation_shouldnt_lose_wks)
-                        % batting_team.name,
+                        % TeamRef(batting_team),
                         Style.BRIGHT,
                     )
                 elif 5 <= batting_team.wickets_fell < 7:
                     PrintInColor(
                         Randomize(commentary.commentary_situation_unstable)
-                        % batting_team.name,
+                        % TeamRef(batting_team),
                         Style.BRIGHT,
                     )
                 elif 7 < batting_team.wickets_fell < 10:
@@ -6093,19 +6094,19 @@ class Match:
             if rr - crr >= 1.0:
                 PrintInColor(
                     Randomize(commentary.commentary_situation_reqd_rate_high)
-                    % batting_team.name,
+                    % TeamRef(batting_team),
                     Style.BRIGHT,
                 )
                 if 0 <= batting_team.wickets_fell <= 2:
                     PrintInColor(
                         Randomize(commentary.commentary_situation_got_wkts_in_hand)
-                        % batting_team.name,
+                        % TeamRef(batting_team),
                         Style.BRIGHT,
                     )
                 if 7 <= batting_team.wickets_fell < 10:
                     PrintInColor(
                         Randomize(commentary.commentary_situation_gone_case)
-                        % batting_team.name,
+                        % TeamRef(batting_team),
                         Fore.RED,
                     )
                     # say who can save the match

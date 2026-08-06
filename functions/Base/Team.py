@@ -37,6 +37,10 @@ class Team:
             "batting_second": False,
             "name": " ",
             "key": " ",
+            # informal name the commentators sometimes use instead (e.g.
+            # India / "Men in Blue") - see data/teams_*.json's
+            # "team_nickname" and utilities.TeamRef; "" if none is set
+            "nickname": "",
             "last_bowler": None,
             "captain": None,
             "keeper": None,

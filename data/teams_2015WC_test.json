@@ -14,6 +14,7 @@
         {"name": "James Anderson", "batting": 5, "bowling": 9, "openingbowler": 1, "pacer": 1},
         {"name": "Stuart Broad", "batting": 5, "bowling": 9, "pacer": 1}
       ],
+      "team_nickname": "the English",
       "key": "ENG",
       "color": "lcyan"
     },
@@ -32,6 +33,7 @@
         {"name": "Nathan Lyon", "batting": 5, "bowling": 8, "spinner": 1},
         {"name": "Josh Hazlewood", "batting": 4, "bowling": 9, "pacer": 1}
       ],
+      "team_nickname": "Aussies",
       "key": "AUS",
       "color": "lyellow"
     },
@@ -50,6 +52,7 @@
         {"name": "Ishant Sharma", "batting": 4, "bowling": 9, "openingbowler": 1, "pacer": 1},
         {"name": "Bhuvneshwar Kumar", "batting": 5, "bowling": 8, "pacer": 1}
       ],
+      "team_nickname": "Men in Blue",
       "key": "IND",
       "color": "lblue"
     }

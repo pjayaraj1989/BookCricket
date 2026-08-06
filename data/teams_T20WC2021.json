@@ -14,6 +14,7 @@
         {"name": "Bhuvneshwar Kumar", "batting": 5, "bowling": 8,"openingbowler": 1, "pacer":1},
         {"name": "Jasprit Bumrah", "batting": 3, "bowling": 9, "pacer":1}
       ],
+      "team_nickname": "Men in Blue",
       "key": "IND",
       "color": "lcyan"
     },
@@ -32,6 +33,7 @@
         {"name": "Tim Southee", "batting": 5,"bowling": 9, "pacer":1},
         {"name": "Trent Boult","batting": 3,"bowling": 9, "openingbowler": 1, "pacer":1}
       ],
+      "team_nickname": "Kiwis",
       "key": "NZ",
       "color": "grey"
     },
@@ -50,6 +52,7 @@
         {"name": "Tabraiz Shamsi", "batting": 4,"bowling": 8, "spinner":1},
         {"name": "Keshav Maharaj","batting": 3,"bowling": 8, "spinner":1}
       ],
+      "team_nickname": "Proteas",
       "key": "SA",
       "color": "lgreen"
     },
@@ -68,6 +71,7 @@
         {"name": "Haris Rauf","batting": 3,"bowling": 9, "pacer":1},
         {"name": "Shaheen Afridi","batting": 4,"bowling": 9, "openingbowler":1, "pacer":1}
       ],
+      "team_nickname": "the Pakistanis",
       "key": "PAK",
       "color": "green"
     },
@@ -86,6 +90,7 @@
         {"name": "Oshane Thomas", "batting": 5,"bowling": 9, "pacer":1},
         {"name": "Ravi Rampaul","batting": 5,"bowling": 9, "pacer":1, "openingbowler": 1}
       ],
+      "team_nickname": "Caribbeans",
       "key": "WI",
       "color": "magenta"
     },
@@ -104,6 +109,7 @@
         {"name": "Binura Fernando", "batting": 4,"bowling": 8, "pacer":1},
         {"name": "Lahiru Kumara","batting": 4,"bowling": 8, "pacer":1}
       ],
+      "team_nickname": "the Sri Lankans",
       "key": "SL",
       "color": "lmagenta"
     },
@@ -122,6 +128,7 @@
         {"name": "Shoriful Islam", "batting": 3,"bowling": 8, "pacer":1},
         {"name": "Mustafizur Rahman","batting": 3,"bowling": 8, "pacer":1}
       ],
+      "team_nickname": "the Bangladeshis",
       "key": "BAN",
       "color": "grey"
     },
@@ -140,6 +147,7 @@
         {"name": "Adam Zampa", "batting": 6,"bowling": 8,"spinner": 1},
         {"name": "Josh Hazlewood","batting": 5, "bowling": 9, "pacer":1}
       ],
+      "team_nickname": "Aussies",
       "key": "AUS",
       "color": "lyellow"
     },
@@ -158,6 +166,7 @@
         {"name": "Chris Woakes", "batting": 5,"bowling": 9,"openingbowler": 1, "pacer":1},
         {"name": "Tymal Mills", "batting": 5, "bowling": 9, "pacer":1}
       ],
+      "team_nickname": "the English",
       "key": "ENG",
       "color": "lblue"
     },
@@ -176,6 +185,7 @@
         {"name": "Shapoor Zadran", "batting": 3,"bowling": 7, "pacer":1},
         {"name": "Mujeeb Ur Rahman","batting": 3,"bowling": 7, "spinner": 1 }
       ],
+      "team_nickname": "the Afghans",
       "key": "AFG",
       "color": "lred"
     }
