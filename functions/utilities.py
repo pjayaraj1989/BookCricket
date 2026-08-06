@@ -90,6 +90,24 @@ def Randomize(mylist: list):
     return op
 
 
+def TeamRef(team):
+    """
+    A team's name for commentary - usually the full name, but about a
+    third of the time their informal nickname if one is set (e.g. India /
+    "Men in Blue", see data/teams_*.json's "team_nickname"). Falls back to
+    the full name when no nickname is set, so it's always safe to call.
+
+    Args:
+        team: A Team object.
+
+    Returns:
+        str: the name to use in this line of commentary.
+    """
+    if getattr(team, "nickname", "") and random.random() < 0.35:
+        return team.nickname
+    return team.name
+
+
 # check for N consecutive elements in a list
 def CheckForConsecutiveElements(arr: list, element, N: int):
     """

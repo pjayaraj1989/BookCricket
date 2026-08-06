@@ -14,6 +14,7 @@
         {"name": "Zaheer Khan", "batting": 5, "bowling": 9, "openingbowler": 1, "pacer": 1},
         {"name": "R.P Singh", "batting": 4, "bowling": 8, "pacer": 1}
       ],
+      "team_nickname": "Men in Blue",
       "key": "IND",
       "color": "lcyan"
     },
@@ -32,6 +33,7 @@
         {"name": "Brad Hogg", "batting": 5, "bowling": 8, "spinner": 1},
         {"name": "Stuart Clark", "batting": 3, "bowling": 8, "pacer": 1}
       ],
+      "team_nickname": "Aussies",
       "key": "AUS",
       "color": "lyellow"
     },
@@ -50,6 +52,7 @@
         {"name": "Steve Harmison", "batting": 3, "bowling": 8, "openingbowler": 1, "pacer": 1},
         {"name": "Monty Panesar", "batting": 2, "bowling": 8, "spinner": 1}
       ],
+      "team_nickname": "the English",
       "key": "ENG",
       "color": "lblue"
     }

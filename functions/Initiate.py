@@ -138,6 +138,7 @@ def ReadTeams(json_file):
                 t.team_array.append(p)
 
             t.key = v["key"]
+            t.nickname = v.get("team_nickname", "")
             t.opening_pair = [t.team_array[0], t.team_array[1]]
             # assign color
             t.color = resources.color_map[v["color"]]
