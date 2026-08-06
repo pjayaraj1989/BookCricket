@@ -1,3 +1,4 @@
+import random
 from colorama import Style
 from functions.utilities import (
     FillAttributes,
@@ -105,6 +106,52 @@ class Team:
         self.current_bowler = None
         for p in self.team_array:
             p.ResetBowlingInnings()
+        self.AssignFieldingPositions()
+
+    def AssignFieldingPositions(self):
+        """
+        Give every fielder a plausible position based on their role in the
+        XI - purely flavour, read by GenerateDismissal to decide who
+        plausibly takes a catch and how the commentary describes it.
+        Called once per innings, when this team takes the field.
+
+        - the keeper stands at the stumps (untouched below)
+        - the captain (unless he's also the keeper) mostly fields in the
+          covers/extra-cover/midwicket area
+        - fast bowlers always field out at the deep boundary
+        - everyone else follows their spot in the batting order: top order
+          at slip, middle order at point, the tail out at the deep with
+          the quicks
+
+        Returns:
+            None
+        """
+        for p in self.team_array:
+            p.field_position = None
+
+        if self.keeper is not None:
+            self.keeper.field_position = "keeper"
+
+        if (
+            self.captain is not None
+            and not self.captain.attr.iskeeper
+            and random.random() < 0.8
+        ):
+            self.captain.field_position = "covers"
+
+        top_order = self.team_array[:4]
+        middle_order = self.team_array[4:7]
+        tail = self.team_array[7:]
+
+        for p in top_order:
+            if p.field_position is None:
+                p.field_position = "deep" if p.attr.ispacer else "slip"
+        for p in middle_order:
+            if p.field_position is None:
+                p.field_position = "deep" if p.attr.ispacer else "point"
+        for p in tail:
+            if p.field_position is None:
+                p.field_position = "deep"
 
     def SummarizeBatting(self, autoplay):
         """

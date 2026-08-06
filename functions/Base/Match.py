@@ -5640,7 +5640,7 @@ class Match:
         if not self.fast:
             time.sleep(1.2)
 
-    def _PushCleanCatch(self, fielder, bowler):
+    def _PushCleanCatch(self, fielder, bowler, in_powerplay=False):
         """
         Show a big-screen pop-up for a clean, unappealed catch - no umpire
         or verdict involved, just the fielder's face and a flavoured line.
@@ -5648,19 +5648,31 @@ class Match:
         GenerateDismissal): a catch that was never in any real doubt, taken
         by anyone other than the keeper (including a caught-and-bowled).
 
+        The flavour line reflects where the fielder actually stands (see
+        Team.AssignFieldingPositions): a slip fielder taking it inside the
+        powerplay reads as a new-ball edge to slip; a fielder posted at the
+        deep (fast bowlers and the tail always are) reads as a boundary
+        catch. Everyone else falls back to the generic pool.
+
         Args:
             fielder: the Player who took the catch (the bowler, for c&b).
             bowler: the Player who bowled the delivery.
+            in_powerplay: True inside the first 5 overs of a limited-overs
+                innings - only relevant to the slip-catch flavour.
 
         Returns:
             None
         """
         is_return_catch = fielder is bowler
-        pool = (
-            commentary.commentary_return_catch
-            if is_return_catch
-            else commentary.commentary_caught
-        )
+        position = None if is_return_catch else getattr(fielder, "field_position", None)
+        if is_return_catch:
+            pool = commentary.commentary_return_catch
+        elif in_powerplay and position == "slip":
+            pool = commentary.commentary_caught_slip
+        elif position == "deep":
+            pool = commentary.commentary_caught_deep
+        else:
+            pool = commentary.commentary_caught
         comment = Randomize(pool) % GetSurname(fielder.name)
 
         utilities.PushEvent(
@@ -5669,6 +5681,7 @@ class Match:
                 "fielder": fielder.name,
                 "bowler": bowler.name,
                 "isReturnCatch": is_return_catch,
+                "position": position,
                 "comment": comment,
             },
         )
@@ -5785,8 +5798,12 @@ class Match:
             else:
                 # no doubt at all about this one - its own pop-up so it
                 # visibly reads as a different kind of wicket, not just
-                # another generic "OUT"
-                self._PushCleanCatch(fielder, bowler)
+                # another generic "OUT". The powerplay-slip flavour only
+                # makes sense in a limited-overs innings' first 5 overs
+                in_powerplay = (
+                    self.overs is not None and self.batting_team.total_balls < 30
+                )
+                self._PushCleanCatch(fielder, bowler, in_powerplay=in_powerplay)
         elif dismissal == "runout":
             fielder.runouts += 1
             dismissal_str = "runout %s" % (GetShortName(fielder.name))
