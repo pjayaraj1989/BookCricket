@@ -56,6 +56,10 @@ class Player:
             "wickets_taken": [],
             "isspinner": False,
             "ispacer": False,
+            # where this player fields when their team is bowling - "slip",
+            # "point", "deep", "covers", or "keeper"; None until
+            # Team.AssignFieldingPositions runs (see Team.StartBowlingInnings)
+            "field_position": None,
         }
         self = FillAttributes(self, attrs, kwargs)
 

@@ -1257,8 +1257,17 @@ function buildAppealDramaCard(data) {
 function buildCleanCatchCard(data) {
   const fielderName = data && data.fielder ? String(data.fielder) : "";
   const isReturnCatch = !!(data && data.isReturnCatch);
+  // where the fielder was standing (see Team.AssignFieldingPositions) -
+  // shown alongside "Caught" when it's notable (not the generic case)
+  const positionLabel = {
+    slip: "Slip", deep: "Deep", covers: "Covers", point: "Point",
+  }[data && data.position];
 
-  const card = buildPlayerCard(fielderName, isReturnCatch ? "Caught & Bowled" : "Caught");
+  let role = "Caught";
+  if (isReturnCatch) role = "Caught & Bowled";
+  else if (positionLabel) role = "Caught (" + positionLabel + ")";
+
+  const card = buildPlayerCard(fielderName, role);
   const badge = document.createElement("div");
   badge.className = "event-achievement-badge";
   badge.textContent = "🙌 CAUGHT!";

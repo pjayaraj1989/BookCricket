@@ -1432,19 +1432,19 @@ class commentary:
     # throughout
     commentary_batting_depth_deep = [
         "%s bat deep, this line-up goes all the way down!",
-        "there's no real tail to speak of for %s today!",
+        "%s have batting to spare in this order!",
         "%s have batting to spare, right down the order!",
         "plenty of runs left in this %s line-up yet!",
         "%s can bat long into the innings without a worry!",
         "the batting card just keeps going for %s!",
-        "%s have cover all the way to number eleven!",
+        "%s have plenty of batting still to call upon!",
         "no easy outs left in this %s order!",
         "%s have real depth - this could go a long way yet!",
         "%s aren't short of batting, that's for sure!",
-        "the lower order can play a bit too for %s!",
+        "%s have options in behind if this doesn't come off!",
         "%s have all bases covered with the bat!",
         "still plenty of batting muscle left for %s!",
-        "%s's tail can wag if it needs to!",
+        "the depth chart looks great for %s right now!",
         "there's genuine depth in this %s side!",
         "%s have batsmen to burn even this deep!",
         "the %s line-up reads well from top to bottom!",
@@ -4347,4 +4347,55 @@ class commentary:
         "the numbers don't lie, %s thoroughly deserves this!",
         "%s was the star of the show from start to finish!",
         "a fitting reward for %s's outstanding contribution today!",
+    ]
+
+    # a clean catch taken by a slip fielder inside the first 5 overs - the
+    # new-ball edge finds a fielder standing right there for it
+    commentary_caught_slip = [
+        "taken in the slips! well held by %s!",
+        "edged, and safely pouched at slip by %s!",
+        "a sharp take in the slip cordon from %s!",
+        "gone! snapped up in the slips by %s!",
+        "the slip fielder %s doesn't need to move for that one!",
+        "a regulation take at slip for %s, but a wicket all the same!",
+        "there's the edge, and %s is right there in the slips!",
+        "caught at slip! %s makes it look easy!",
+        "%s takes a good one in the slips early on!",
+        "the slip cordon does its job, well taken %s!",
+        "an early breakthrough, caught in the slips by %s!",
+        "%s gobbles it up at slip, textbook fielding!",
+        "the new ball does the trick, and %s takes the catch at slip!",
+        "a simple chance in the slips, safely taken by %s!",
+        "%s reacts quickly at slip to complete the catch!",
+        "gone! %s holds on in the slip cordon!",
+        "the slip fielder is rewarded, well done %s!",
+        "%s takes a smart catch at slip to open the innings brightly for the bowlers!",
+        "a good, clean take at slip from %s!",
+        "the powerplay slip cordon strikes again, %s with the catch!",
+    ]
+
+    # a clean catch taken by a fielder stationed out at the deep boundary
+    # (fast bowlers and the tail always field there - see
+    # Team.AssignFieldingPositions)
+    commentary_caught_deep = [
+        "taken at the deep! %s holds on right on the boundary!",
+        "well judged and well caught on the boundary line by %s!",
+        "%s takes a good catch out at the deep!",
+        "safely taken at the fence by %s!",
+        "gone! %s completes the catch right on the rope!",
+        "%s times his jump perfectly to take that on the boundary!",
+        "a good running catch out at the deep from %s!",
+        "the fielder at the deep, %s, doesn't drop that one!",
+        "%s judges the skier well out on the boundary!",
+        "caught on the boundary rope by %s!",
+        "%s takes a well-held catch right at the edge of the field!",
+        "that's out! %s holds his nerve out at the deep!",
+        "a big hit, but %s is there at the boundary to finish it off!",
+        "%s completes a fine catch way out in the deep!",
+        "well tracked and well taken at the deep by %s!",
+        "the boundary fielder %s gets under it and takes the catch!",
+        "%s makes no mistake with that one out on the fence!",
+        "a skied shot, safely pouched at the deep by %s!",
+        "%s holds on at the boundary, right under the swirling ball!",
+        "gone! caught right on the rope by %s!",
     ]
