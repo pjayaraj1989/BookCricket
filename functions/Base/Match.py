@@ -1929,7 +1929,7 @@ class Match:
             break
         return streak
 
-    def _PushChaseDecided(self, chasing_won):
+    def _PushChaseDecided(self, chasing_won, finishing_run=None, finisher=None):
         """
         Fire a big, immediate full-screen "victory moment" popup right after
         the ball that decides a limited-overs run-chase (won or lost) - a
@@ -1940,6 +1940,12 @@ class Match:
         Args:
             chasing_won: True if the chasing side reached the target, False
                 if it fell short (the defending side held on).
+            finishing_run: the runs scored on the ball that sealed the
+                chase, if known - a 4 or 6 gets an extra "finished in
+                style" flourish (a captain sealing it themselves gets an
+                even more pointed one). None for a chase decided some
+                other way (e.g. a D/L revision), or a lost chase.
+            finisher: the Player on strike for that finishing ball.
 
         Returns:
             None
@@ -1953,7 +1959,20 @@ class Match:
         )
         line = Randomize(pool)
         PrintInColor(line, winner.color)
-        utilities.PushEvent("match_decided", {"team": winner.name, "text": line})
+        data = {"team": winner.name, "text": line}
+
+        if chasing_won and finishing_run in (4, 6) and finisher is not None:
+            style_pool = (
+                commentary.commentary_finished_in_style_captain
+                if finisher.attr.iscaptain
+                else commentary.commentary_finished_in_style
+            )
+            style_comment = Randomize(style_pool) % GetSurname(finisher.name)
+            PrintInColor(style_comment, winner.color)
+            data["styleComment"] = style_comment
+            data["finishingRun"] = finishing_run
+
+        utilities.PushEvent("match_decided", data)
 
     def _PushLastOverTension(self, ball):
         """
@@ -3119,7 +3138,11 @@ class Match:
                             % TeamRef(batting_team),
                             Style.BRIGHT,
                         )
-                        self._PushChaseDecided(chasing_won=True)
+                        self._PushChaseDecided(
+                            chasing_won=True,
+                            finishing_run=run,
+                            finisher=player_on_strike,
+                        )
                     else:
                         PrintInColor(
                             Randomize(commentary.commentary_lost_chasing)
@@ -3140,7 +3163,11 @@ class Match:
                         Randomize(commentary.commentary_match_won_chasing),
                         Fore.LIGHTGREEN_EX,
                     )
-                    self._PushChaseDecided(chasing_won=True)
+                    self._PushChaseDecided(
+                        chasing_won=True,
+                        finishing_run=run,
+                        finisher=player_on_strike,
+                    )
                     self.status = False
                     self.UpdateLastPartnership()
                     if not self.autoplay: input("press enter to continue...")
