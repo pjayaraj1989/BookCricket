@@ -95,7 +95,7 @@
       "color": "lgreen"
     },
 	
-	"South-Africa": {
+	"SouthAfrica": {
       "players": [
         {"name": "Herschelle Gibbs","batting": 8, "opener1":  1},
         {"name": "Graeme Smith","batting": 8,"opener2": 1, "captain":1},

@@ -351,6 +351,34 @@ main {
   display: block;
 }
 
+.projected-score {
+  margin-top: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #1e4530;
+  border-radius: 4px;
+  background: #0f2c1e;
+  color: #7fe3a3;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: center;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.projected-score.flash {
+  animation: projected-score-flash 1s ease;
+}
+
+@keyframes projected-score-flash {
+  0% {
+    background: #6fbf8f;
+    color: #03100a;
+  }
+  100% {
+    background: #0f2c1e;
+    color: #7fe3a3;
+  }
+}
+
 /* full-screen intro cover, shown once on load */
 .intro-splash {
   position: fixed;

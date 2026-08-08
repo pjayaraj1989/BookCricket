@@ -4609,3 +4609,54 @@ class commentary:
         "a serious risk this - %s and %s go for the third run!",
         "the fielder still has a shot at it as %s and %s push for three!",
     ]
+
+    # the throw is in - which of the two runners is caught short of the
+    # crease. Takes the endangered batsman's surname (can be either the
+    # striker or the non-striker, whoever is racing to the danger end)
+    commentary_runout_in_danger = [
+        "and it's %s who is short of his ground!",
+        "%s is the man in trouble here!",
+        "%s is caught well short at the danger end!",
+        "the throw is at %s's end - he's in real trouble!",
+        "%s dives desperately, but is he in?",
+        "it's %s racing to the danger end!",
+        "%s is stranded mid-pitch!",
+        "the danger end is %s's - and the bails are off!",
+        "%s stretches every sinew to make his ground!",
+        "oh no, %s is well short of the crease!",
+        "%s is scrambling to get back!",
+        "it's %s who has to survive this one!",
+        "the throw targets %s's end!",
+        "%s lunges for the crease - this is desperately close!",
+        "%s is the one in the firing line!",
+        "a full-length dive from %s - has he made it?",
+        "%s might just be caught short here!",
+        "all eyes on %s at the danger end!",
+        "%s is the man racing the throw!",
+        "the run out chance is against %s!",
+    ]
+
+    # a keeper-catch nick so clear the batsman doesn't wait for the umpire -
+    # he walks off on his own. Takes the batsman's surname
+    commentary_batsman_walks = [
+        "he knows he's hit it - %s walks!",
+        "no need for the umpire there, %s is walking off!",
+        "sporting stuff from %s, walking without waiting for the decision!",
+        "%s doesn't even look at the umpire - he's off!",
+        "a thin edge, and %s walks straight away!",
+        "honesty from %s, he's given himself out!",
+        "%s tucks the bat under his arm and walks!",
+        "the finger was never needed, %s walks off!",
+        "%s knew it the moment he nicked it - he's walking!",
+        "a gentleman's exit from %s, walking on the edge!",
+        "%s doesn't wait for the appeal - straight off he goes!",
+        "you have to admire that, %s walks without a fuss!",
+        "the umpire's job is done for him, %s walks!",
+        "%s heard the nick as clearly as everyone else - he's off!",
+        "no drama, no review, %s simply walks!",
+        "%s gives it up himself - a rare sight these days!",
+        "an honest cricketer, %s walks the moment he feathers it!",
+        "%s turns and walks before the fielders even finish appealing!",
+        "the keeper barely appeals - %s is already walking!",
+        "credit to %s, no lingering, just a straight walk off!",
+    ]

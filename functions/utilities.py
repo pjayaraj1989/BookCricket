@@ -287,7 +287,7 @@ def PushEvent(kind, data=None):
             "partnership_broken", "chase_update", "drinks_break",
             "too_many_extras", "stumps", "innings_analysis", "run_out_drama",
             "stumping_drama", "appeal_drama", "clean_catch", "first_over_drama",
-            "captain_out", "no_ball").
+            "captain_out", "no_ball", "batsman_walks").
         data: Optional dict of extra fields for the frontend to render.
 
     Returns:
@@ -560,6 +560,25 @@ def PushScorecard(match):
         if batting.batting_second:
             first_innings_over_history = _over_history_series(bowling)
 
+    # Projected final score at the current run rate - limited-overs first
+    # innings only (a chasing side's yardstick is the target, not a
+    # projection, and a Test innings has no fixed length to project to).
+    # Held back for the first over so a couple of early boundaries don't
+    # flash a silly 300+ number.
+    projected_score = None
+    if (
+        not is_test
+        and match.overs
+        and not batting.batting_second
+        and _int(batting.total_balls) >= 6
+        and _int(batting.wickets_fell) < 10
+    ):
+        projected_score = _int(
+            round(
+                batting.total_score / batting.total_balls * int(match.overs) * 6
+            )
+        )
+
     # Once a chase is actually decided (target reached, or the chasing side
     # is all out), "Need 0 more · RRR: 0.00" reads as broken rather than
     # informative - replace the target line with the plain result instead.
@@ -619,6 +638,7 @@ def PushScorecard(match):
         "runsNeeded": runs_needed,
         "wicketsInHand": wickets_in_hand,
         "ballsRemaining": balls_remaining,
+        "projectedScore": projected_score,
         "overHistory": over_history,
         "firstInningsOverHistory": first_innings_over_history,
         "firstInningsTeam": bowling.name if first_innings_over_history is not None else None,
@@ -715,7 +735,14 @@ def PushMatchHighlights(match):
                 ],
             })
             top_batters.extend(
-                {"name": p.name, "team": team.name, "runs": _int(p.runs), "balls": _int(p.balls)}
+                {
+                    "name": p.name, "team": team.name,
+                    "runs": _int(p.runs), "balls": _int(p.balls),
+                    # undismissed and actually batted = not out (a Test's
+                    # aggregated totals skip this - an asterisk on a
+                    # two-innings aggregate wouldn't mean anything)
+                    "notOut": bool(p.status and p.balls > 0),
+                }
                 for p in team.team_array
             )
             top_bowlers.extend(
