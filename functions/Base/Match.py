@@ -1970,7 +1970,7 @@ class Match:
             style_comment = Randomize(style_pool) % GetSurname(finisher.name)
             PrintInColor(style_comment, winner.color)
             data["styleComment"] = style_comment
-            data["finishingRun"] = finishing_run
+            data["finishingRun"] = int(finishing_run)
 
         utilities.PushEvent("match_decided", data)
 
