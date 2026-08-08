@@ -10,6 +10,7 @@ const eventPaneEl = document.getElementById("eventPane");
 const runRateGraphEl = document.getElementById("runRateGraph");
 const runRateLegendEl = document.getElementById("runRateLegend");
 const runRateSvgEl = document.getElementById("runRateSvg");
+const projectedScoreEl = document.getElementById("projectedScore");
 const simOverlayEl = document.getElementById("simOverlay");
 const triviaPanelEl = document.getElementById("triviaPanel");
 
@@ -665,8 +666,39 @@ function renderScorecard(state) {
 
   liveScorecardEl.innerHTML = parts.join("");
   renderRunRateGraph(state);
+  renderProjectedScore(state);
   updateDeclareButton(state);
   updateSimulateInningsButton(state);
+}
+
+// wickets count of the last state render, per batting team - lets the
+// projected score flash the moment a fresh wicket shows up in the state
+let lastProjectedWickets = null;
+let lastProjectedTeam = null;
+
+function renderProjectedScore(state) {
+  if (!projectedScoreEl) return;
+  if (state.projectedScore == null) {
+    projectedScoreEl.style.display = "none";
+    lastProjectedWickets = null;
+    lastProjectedTeam = null;
+    return;
+  }
+  projectedScoreEl.style.display = "";
+  projectedScoreEl.textContent =
+    "Projected: " + state.projectedScore + " (at current rate)";
+
+  // a new wicket for the same batting side - flash the projection, since
+  // this is exactly the moment it's most likely to swing
+  const sameInnings = state.battingTeam === lastProjectedTeam;
+  if (sameInnings && lastProjectedWickets != null && state.wickets > lastProjectedWickets) {
+    projectedScoreEl.classList.remove("flash");
+    // restart the CSS animation even if the class was still applied
+    void projectedScoreEl.offsetWidth;
+    projectedScoreEl.classList.add("flash");
+  }
+  lastProjectedWickets = state.wickets;
+  lastProjectedTeam = state.battingTeam;
 }
 
 const RUN_RATE_COLOR_CURRENT = "#7fe3a3";
@@ -810,9 +842,11 @@ function buildInningsCardHtml(innings) {
     let name = b.name;
     if (b.captain) name += " (c)";
     if (b.keeper) name += " (wk)";
-    // a batsman who did not bat has no score to show
+    // a batsman who did not bat has no score to show; a not-out batsman
+    // gets the traditional asterisk on his score (45* style)
     const dnb = b.dismissal === "DNB";
-    const num = dnb ? "" : b.runs + " (" + b.balls + ")";
+    const star = b.dismissal === "not out" ? "*" : "";
+    const num = dnb ? "" : b.runs + star + " (" + b.balls + ")";
     parts.push(
       '<tr><td class="name">' + escapeHtml(name) + "</td>" +
       '<td class="dismissal">' + escapeHtml(b.dismissal) + "</td>" +
@@ -1152,6 +1186,9 @@ function buildRunOutDramaCard(data) {
     commentEl.textContent = String(data.comment);
     wrap.appendChild(commentEl);
   }
+  // the throw stage also names the runner caught short - can be either
+  // batsman, the hitter or the partner backing up (see _PushRunOutDrama)
+  appendComment(wrap, data && data.dangerComment);
   return wrap;
 }
 
@@ -2206,6 +2243,16 @@ function renderEvent(kind, data) {
     showEventPane(buildAppealDramaCard(data), 3000, "takeover");
   } else if (kind === "clean_catch") {
     showEventPane(buildCleanCatchCard(data), 3000, "takeover");
+  } else if (kind === "batsman_walks") {
+    // an edge so plain the batsman gives himself out - no umpire, no review
+    const batsmanName = data && data.batsman ? String(data.batsman) : "";
+    const walkCard = buildPlayerCard(batsmanName, "Walked");
+    const walkBadge = document.createElement("div");
+    walkBadge.className = "event-achievement-badge";
+    walkBadge.textContent = "🚶 HE'S WALKING!";
+    walkCard.insertBefore(walkBadge, walkCard.firstChild);
+    appendComment(walkCard, data && data.comment);
+    showEventPane(walkCard, 3200, "takeover");
   } else if (kind === "first_over_drama") {
     showEventPane(buildFirstOverDramaCard(data), 4000, "takeover");
   } else if (kind === "captain_out") {
@@ -2436,9 +2483,10 @@ function renderMatchHighlights(highlights) {
 
     parts.push('<div class="mh-inn-col"><div class="mh-sub">Batting</div><ul class="mh-list">');
     (inn.topBatters || []).forEach((b) => {
+      const star = b.dismissal === "not out" ? "*" : "";
       parts.push(
         "<li>" + mhThumb(b.name) + "<span>" + escapeHtml(b.name) + " " +
-        b.runs + " (" + b.balls + ")</span></li>"
+        b.runs + star + " (" + b.balls + ")</span></li>"
       );
     });
     parts.push("</ul></div>");
@@ -2458,9 +2506,10 @@ function renderMatchHighlights(highlights) {
   if ((highlights.topBatters || []).length) {
     parts.push('<h4>Top Scorers</h4><ul class="mh-list">');
     highlights.topBatters.forEach((b) => {
+      const star = b.notOut ? "*" : "";
       parts.push(
         "<li>" + mhThumb(b.name) + "<span>" + escapeHtml(b.name) + " (" +
-        escapeHtml(b.team) + ") - " + b.runs + " (" + b.balls + ")</span></li>"
+        escapeHtml(b.team) + ") - " + b.runs + star + " (" + b.balls + ")</span></li>"
       );
     });
     parts.push("</ul>");

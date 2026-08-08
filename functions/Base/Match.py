@@ -3366,10 +3366,16 @@ class Match:
                     self.UpdateDismissal(dismissal)
                     return
             elif dismissal.startswith("c +"):
-                # a keeper catch is always the genuinely uncertain nick
-                # behind the bat (see GenerateDismissal) - the umpire gives
-                # it out on the appeal, and the batsman can review it for a
-                # missing edge
+                # a keeper catch is the nick behind the bat (see
+                # GenerateDismissal). If the batsman walked, there's no
+                # appeal, no umpire's decision, and nothing to review -
+                # the dismissal simply stands
+                if getattr(self, "_nick_walked", False):
+                    self._nick_walked = False
+                    self.UpdateDismissal(dismissal)
+                    return
+                # otherwise the umpire gives it out on the appeal, and the
+                # batsman can review it for a missing edge
                 PrintInColor(
                     Randomize(commentary.commentary_caught_appeal), Fore.LIGHTRED_EX
                 )
@@ -3396,21 +3402,58 @@ class Match:
                 # the spot or refers it upstairs, and the third umpire's
                 # verdict can overturn it
                 kind = "runout" if "runout" in dismissal else "stumped"
+                runout_ctx = getattr(self, "_runout_context", None) if kind == "runout" else None
+                self._runout_context = None
                 if not self._CheckThirdUmpire(dismissal, kind):
-                    run = 0  # third umpire reprieve - the batsman survives
+                    # third umpire reprieve - the batsman survives. For a
+                    # run-out that means the attempted run was made safely
+                    # too, so the batsmen keep everything they ran: the
+                    # completed runs plus the attempted one. Handing that
+                    # total to the normal post-loop flow credits the hitter
+                    # and the team, counts the ball faced, and rotates
+                    # strike on an odd count - exactly like ordinary running
+                    run = (runout_ctx["completed"] + 1) if runout_ctx else 0
                     used_drs = True
                     break
+                if runout_ctx:
+                    # OUT. The runs completed before the fatal attempt were
+                    # already home and safe - credited to the hitter (who
+                    # played the shot), the team, and against the bowler,
+                    # whoever ends up dismissed
+                    completed = runout_ctx["completed"]
+                    hitter, partner = runout_ctx["hitter"], runout_ctx["partner"]
+                    victim = runout_ctx["victim"]
+                    if completed:
+                        batting_team.total_score += completed
+                        hitter.runs += completed
+                        bowler.runs_given += completed
+                    # the ball faced belongs to the hitter; BatsmanOut only
+                    # bumps the dismissed player's count, so top the hitter
+                    # up when it's the partner who was caught short
+                    if victim is partner:
+                        hitter.balls += 1
+                    # BatsmanOut dismisses whoever is flagged on strike -
+                    # point it at the runner actually caught short, which
+                    # can be either batsman mid-run
+                    victim.onstrike = True
+                    (partner if victim is hitter else hitter).onstrike = False
                 self.UpdateDismissal(dismissal)
                 return
             else:
                 self.UpdateDismissal(dismissal)
                 return
 
-        # no wicket was rolled, but on a dot ball the fielding side
+        # no wicket was rolled, but on a genuine dot ball the fielding side
         # occasionally has a shout of their own - a plausible LBW/catch
         # appeal the umpire turned down, reviewable on the bowling team's
-        # own DRS quota (separate from the batting side's)
-        if run == 0:
+        # own DRS quota (separate from the batting side's). Skip this when
+        # run == 0 only because the batting side's own review just
+        # overturned an out decision on THIS ball - that delivery already
+        # had its review, and re-reviewing the same not-out call would let
+        # the fielding side immediately contest the verdict the batting
+        # side just won. Also skip on a free hit, where only run-outs are
+        # dismissable (LBW/catch appeals are impossible)
+        if run == 0 and not used_drs and not is_free_hit:
             reprieve_dismissal = self._MaybeBowlingReview()
             if reprieve_dismissal is not None:
                 self.UpdateDismissal(reprieve_dismissal)
@@ -3538,10 +3581,16 @@ class Match:
             batting_team.ball_history.append(run)
             field = Randomize(self._FieldShotPool("ground_shot", bowler))
             comment = Randomize(commentary.commentary_ground_shot)
+            if used_drs:
+                # a reprieved run-out keeping the runs they ran - the drama
+                # and the third-umpire verdict already told the story, so no
+                # fresh shot flavour (and definitely no dropped-catch line)
+                comment = "Not out - and they keep the runs they ran!"
+                field = ""
             if run == 1:
                 on_strike.singles += 1
-                # detect if its a dropped catch
-                catch_drop = Randomize([True, False])
+                # detect if its a dropped catch (never mid run-out reprieve)
+                catch_drop = Randomize([True, False]) if not used_drs else False
                 # get fielders list
                 fielder = Randomize(
                     [
@@ -5599,30 +5648,31 @@ class Match:
         the single being taken, then - if it's actually worth the risk (see
         _ShouldRiskSecondRun) - the batsmen turning back for a second,
         rarer still a third (_ShouldRiskThirdRun), and finally the
-        fielder's throw at the stumps.
+        fielder's throw at the stumps, aimed at whichever runner is caught
+        short - EITHER batsman can be the one in danger, the hitter or
+        the partner backing up.
 
-        The runs actually completed before the fatal attempt (0, 1, or 2)
-        are always credited to the team total and the striker's score here
-        - regardless of whatever the third umpire later rules on the
-        specific run being attempted, those earlier ones were already home
-        and safe. Purely reflects real running-between-the-wickets scoring;
-        the out/not-out decision on the attempted run itself still goes
-        through _CheckThirdUmpire exactly as before.
+        Purely the narrative build-up plus the who/how-many bookkeeping;
+        the actual crediting of completed runs, strike handling and the
+        out/not-out verdict live in Ball()'s run-out branch (via the
+        context this returns), because only there is the third umpire's
+        decision known.
 
         Args:
             fielder: the Player who fields the ball and throws.
 
         Returns:
-            None
+            dict or None: {"completed": runs safely completed before the
+            fatal attempt (0/1/2), "victim": the Player caught short,
+            "hitter": the striker who played the shot, "partner": the
+            non-striker} - or None if the pair couldn't be read.
         """
         batting_team = self.batting_team
         pair = batting_team.current_pair
-        # BatsmanOut always dismisses whoever is on strike (see Pair.py) - the
-        # non-striker is their running partner for this call
         striker = next((x for x in pair if x.onstrike), None)
         partner = next((x for x in pair if not x.onstrike), None)
         if striker is None or partner is None:
-            return
+            return None
 
         pace = 0 if self.fast else 1.2
 
@@ -5672,14 +5722,18 @@ class Match:
                     % (GetSurname(striker.name), GetSurname(partner.name)),
                 )
 
-        # the runs already completed before this attempt count regardless
-        # of how the run-out itself is eventually decided
-        if completed_runs:
-            batting_team.total_score += completed_runs
-            striker.runs += completed_runs
+        # either runner can be the one caught short - the batsmen swap ends
+        # with every crossing, so which of them faces the danger end is a
+        # coin flip by the time the throw comes in
+        victim = Randomize([striker, partner])
 
-        # 3. the throw - fielder rather than batsmen from here on
+        # 3. the throw - fielder rather than batsmen from here on, plus
+        # who's caught short of their ground
         comment = Randomize(commentary.commentary_runout_throw) % GetSurname(fielder.name)
+        danger_comment = (
+            Randomize(commentary.commentary_runout_in_danger)
+            % GetSurname(victim.name)
+        )
         utilities.PushEvent(
             "run_out_drama",
             {
@@ -5687,11 +5741,21 @@ class Match:
                 "fielder": fielder.name,
                 "team": self.bowling_team.name,
                 "comment": comment,
+                "victim": victim.name,
+                "dangerComment": danger_comment,
             },
         )
         PrintInColor(comment, self.bowling_team.color)
+        PrintInColor(danger_comment, self.bowling_team.color)
         if pace:
             time.sleep(pace)
+
+        return {
+            "completed": completed_runs,
+            "victim": victim,
+            "hitter": striker,
+            "partner": partner,
+        }
 
     def _PushStumpingDrama(self, keeper, bowler):
         """
@@ -5969,9 +6033,35 @@ class Match:
                     GetShortName(bowler.name),
                 )
             if is_nick:
-                # the appeal itself, played out before the DRS review that
-                # may still follow (see Ball(), unchanged)
-                self._PushAppealDrama(bowler, "catch", out=True)
+                # sometimes the edge is so obvious the batsman doesn't wait
+                # for the umpire at all - he walks. No appeal, no decision,
+                # and (see Ball()'s "c +" branch) nothing left to review
+                striker = next(
+                    (x for x in self.batting_team.current_pair if x.onstrike), None
+                )
+                walked = striker is not None and random.random() < 0.25
+                self._nick_walked = walked
+                if walked:
+                    walk_comment = (
+                        Randomize(commentary.commentary_batsman_walks)
+                        % GetSurname(striker.name)
+                    )
+                    PrintInColor(walk_comment, self.batting_team.color)
+                    utilities.PushEvent(
+                        "batsman_walks",
+                        {
+                            "batsman": striker.name,
+                            "keeper": keeper.name,
+                            "bowler": bowler.name,
+                            "comment": walk_comment,
+                        },
+                    )
+                    if not self.fast:
+                        time.sleep(1.2)
+                else:
+                    # the appeal itself, played out before the DRS review
+                    # that may still follow (see Ball(), unchanged)
+                    self._PushAppealDrama(bowler, "catch", out=True)
             else:
                 # no doubt at all about this one - its own pop-up so it
                 # visibly reads as a different kind of wicket, not just
@@ -5985,8 +6075,10 @@ class Match:
             fielder.runouts += 1
             dismissal_str = "runout %s" % (GetShortName(fielder.name))
             # the attempted run itself, played out before the third umpire's
-            # verdict (which _CheckThirdUmpire still handles, unchanged)
-            self._PushRunOutDrama(fielder)
+            # verdict; who was caught short and how many runs were already
+            # safely completed is picked up by Ball()'s run-out branch once
+            # the verdict is in (see _runout_context)
+            self._runout_context = self._PushRunOutDrama(fielder)
 
         # check if fielder is on fire!
         if fielder.runouts >= 2 or fielder.catches >= 2:
