@@ -1327,7 +1327,7 @@ class commentary:
         "what a useful partnership this by %s and %s!",
         "this was a magnificent partnership by %s and %s",
         "take a bow %s, %s, one of the best partnerships ever!",
-        "ends a terrific partnership between these two.. good work %s, %s!",
+        "a terrific milestone for this partnership.. good work %s, %s!",
         "%s and %s have really put this innings back on track!",
         "a wonderful stand between %s and %s, just what the team needed!",
         "%s and %s batting beautifully together, building something special!",
@@ -1349,7 +1349,7 @@ class commentary:
         "%s and %s have batted the opposition out of ideas here!",
         "some fine running and cleaner hitting from %s and %s in this stand!",
         "%s and %s have made batting look easy in this partnership!",
-        "a defining partnership so far, %s and %s deserve the applause!",
+        "a defining partnership, %s and %s deserve the applause!",
         "%s and %s have shared the workload beautifully in this stand!",
         "credit to %s and %s, a partnership built on patience and class!",
     ]
