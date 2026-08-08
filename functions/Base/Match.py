@@ -5524,13 +5524,48 @@ class Match:
 
         return random.random() < chance
 
+    def _ShouldRiskThirdRun(self):
+        """
+        Whether the batsmen, having already turned back for a second, push
+        it further still for a third - genuinely rare (running three is
+        uncommon to begin with), for the run-out drama build-up. Only ever
+        asked after _ShouldRiskSecondRun has already said yes. Same idea as
+        _ShouldRiskSecondRun: no point with the match already won, and the
+        odds tighten or loosen with the chase situation; otherwise a flat,
+        rare baseline.
+
+        Returns:
+            bool
+        """
+        bt = self.batting_team
+        chance = 0.12
+
+        if self.overs and bt.batting_second and bt.target:
+            runs_needed = bt.target - bt.total_score
+            if runs_needed <= 2:
+                return False
+            rrr = bt.GetRequiredRate()
+            crr = bt.GetCurrentRate()
+            if rrr > 0:
+                ratio = rrr / max(crr, 0.5)
+                chance = min(0.3, max(0.04, 0.12 * ratio))
+
+        return random.random() < chance
+
     def _PushRunOutDrama(self, fielder):
         """
         Play out the attempted run itself before the third umpire's verdict:
         the single being taken, then - if it's actually worth the risk (see
-        _ShouldRiskSecondRun) - the batsmen turning back for a second, and
-        finally the fielder's throw at the stumps. Purely a big-screen
-        narrative build-up; the actual out/not-out decision still goes
+        _ShouldRiskSecondRun) - the batsmen turning back for a second,
+        rarer still a third (_ShouldRiskThirdRun), and finally the
+        fielder's throw at the stumps.
+
+        The runs actually completed before the fatal attempt (0, 1, or 2)
+        are always credited to the team total and the striker's score here
+        - regardless of whatever the third umpire later rules on the
+        specific run being attempted, those earlier ones were already home
+        and safe. Purely reflects real running-between-the-wickets scoring;
+        the out/not-out decision on the attempted run itself still goes
         through _CheckThirdUmpire exactly as before.
 
         Args:
@@ -5577,13 +5612,30 @@ class Match:
         # 2. do they turn back for a second? Realistic to the match
         # situation (see _ShouldRiskSecondRun) - this is where a routine run
         # becomes a genuine race against the fielder
+        completed_runs = 0
         going_for_two = self._ShouldRiskSecondRun()
         if going_for_two:
+            completed_runs = 1
             push(
                 "second",
                 Randomize(commentary.commentary_runout_call_second)
                 % (GetSurname(striker.name), GetSurname(partner.name)),
             )
+
+            # 2b. rarer still - do they push it all the way to a third?
+            if self._ShouldRiskThirdRun():
+                completed_runs = 2
+                push(
+                    "third",
+                    Randomize(commentary.commentary_runout_call_third)
+                    % (GetSurname(striker.name), GetSurname(partner.name)),
+                )
+
+        # the runs already completed before this attempt count regardless
+        # of how the run-out itself is eventually decided
+        if completed_runs:
+            batting_team.total_score += completed_runs
+            striker.runs += completed_runs
 
         # 3. the throw - fielder rather than batsmen from here on
         comment = Randomize(commentary.commentary_runout_throw) % GetSurname(fielder.name)
