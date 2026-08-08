@@ -184,7 +184,6 @@ class commentary:
         "threaded the gap beautifully and it races away to the fence!",
         "silky timing, no power needed for that one!",
         "leans into the drive and its four all the way!",
-        "cut hard and it flies to the boundary!",
         "clipped off the pads, four more!",
         "the gap was there and he found it, four runs!",
         "short and wide and punished hard!",
@@ -217,6 +216,19 @@ class commentary:
         "Terrific batting this.. what would be the reply from the bowler?",
         "Another one of those, and there will be a chat between the bowler and his captain!",
         "he goes bang!",
+    ]
+    # extra "four" reactions that only make sense off the right bowler type
+    # (see commentary_four) - a cut needs real pace to work with; charging
+    # down the track or sweeping is specifically a spin-countering shot
+    commentary_four_pace = [
+        "cut hard and it flies to the boundary!",
+        "short and wide, and that's cut away for four!",
+        "picked the length early and cut it superbly!",
+    ]
+    commentary_four_spin = [
+        "danced down the track and drove it away for four!",
+        "reads the length early and sweeps it away for four!",
+        "gets down the pitch and lofts it over mid on for four!",
     ]
     commentary_ground_shot = [
         "not timed well but will get some runs",
@@ -396,7 +408,6 @@ class commentary:
         "the off stump is cartwheeling!",
         "played all around it, bowled!",
         "full and straight what a ball",
-        "what a yorker! he is on fire!",
         "bowled him!",
         "poor footwork!.. bowled him",
         "got him! and the bowler lets out a roar!",
@@ -417,8 +428,21 @@ class commentary:
         "done him! peach of a delivery!",
         "Knocked his middle stump out!... And there is a stare at the batsman!",
         "Bowled him! And he is showing the batsman the way to the dressing room!",
-        "done him with a toe crushing yorker!",
         "oh bowledimm!, an unplayable delivery!",
+    ]
+    # extra "bowled" reactions that only make sense off the right bowler
+    # type (see commentary_bowled) - a yorker is a fast, full delivery
+    # aimed at the base of the stumps; a spinner undoes a batsman with
+    # flight and turn instead
+    commentary_bowled_pace = [
+        "what a yorker! he is on fire!",
+        "done him with a toe crushing yorker!",
+        "searing pace, and that's far too quick for him!",
+    ]
+    commentary_bowled_spin = [
+        "flighted it beautifully, and he's beaten in the air and bowled!",
+        "turned past the bat and cannoned into the stumps!",
+        "tossed it up, and the batsman is undone by the loop!",
     ]
     commentary_in_a_row = [
         "that's 3 in a row!",
@@ -582,24 +606,29 @@ class commentary:
     commentary_stumped_advance = [
         "%s comes down the track to %s - and is beaten all ends up!",
         "%s advances at %s, gets nowhere near it!",
-        "Tempted down the pitch by %s, %s is deceived by the flight!",
         "%s charges %s and completely misses the line of it!",
         "That's drawn %s out of the crease - beaten by %s!",
-        "%s skips down to %s and is done in by the turn!",
         "A charge down the track from %s against %s - and he's missed it!",
-        "%s is lured forward by %s, beaten by extra bounce and turn!",
         "%s advances but %s has him in two minds - beaten!",
         "Out of his ground already - %s beaten by a beauty from %s!",
         "%s comes down the wicket to %s, completely deceived!",
-        "The flight from %s has %s in trouble, well out of his crease!",
         "%s dances down to %s and gets it all wrong!",
         "Drawn forward by %s, %s is well beaten by that one!",
         "%s ventures down the track against %s - and misses everything!",
-        "That looped one from %s has %s at sea, stranded down the track!",
         "%s takes a stride at %s and is beaten by the guile!",
         "A rush of blood from %s - beaten by %s and stranded!",
-        "%s is deceived in flight by %s, well out of his ground!",
         "%s advances on %s, but the ball goes past everything!",
+    ]
+
+    # the same moment, but only makes sense off a spinner - the batsman is
+    # drawn out by the flight/turn, not just slow pace in general
+    commentary_stumped_advance_spin = [
+        "%s is tempted down the pitch by %s, deceived by the flight!",
+        "%s skips down to %s and is done in by the turn!",
+        "%s is lured forward by %s, beaten by extra bounce and turn!",
+        "%s is deceived by the flight from %s, well out of his crease!",
+        "%s is left at sea by that looped one from %s, stranded down the track!",
+        "%s is deceived in flight by %s, well out of his ground!",
     ]
 
     # the keeper's lightning-quick removal of the bails
@@ -630,7 +659,6 @@ class commentary:
         "swift work by the keeper %s!",
         "that's out! stumped.. bravo %s!",
         "%s takes the bails off in a flash!",
-        "that spun hard, batsman misses and quick work behind the stumps by %s!",
         "tries for a wild shot and missed it.. quick stumping by %s!",
         "batsman misses it and swift work %s!",
         "stumped, %s looks confident, no need to refer it!",
@@ -639,6 +667,12 @@ class commentary:
         "terrific stumping by %s!!",
         "quick stumping! %s appeals, umpire says out!",
         "the keeper is lightning quick %s!",
+    ]
+    # the same moment, but only makes sense off a spinner
+    commentary_stumped_spin = [
+        "that spun hard, batsman misses and quick work behind the stumps by %s!",
+        "beaten by the turn, and %s does the rest in a flash!",
+        "deceived by the flight and turn, quick stumping by %s!",
     ]
     commentary_caught = [
         "in the air.. and taken by %s!",
