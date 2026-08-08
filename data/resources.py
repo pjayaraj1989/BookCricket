@@ -81,11 +81,16 @@ class resources:
         "Billy Bowden",
     ]
 
-    # fielders
+    # fielders - shot descriptions any bowler type can concede. Type-specific
+    # ones (a cut needs pace and bounce to work with; a sweep or a charge
+    # down the track is a spin-countering shot) live in fields_pace/
+    # fields_spin below instead, and Match.py's four/six/ground-shot
+    # commentary only mixes those in when the bowler actually matches -
+    # see the "invalid commentary" fix: a cut/yorker off a spinner, or a
+    # sweep/short-leg shot off a pacer, doesn't happen in real cricket
     fields = {
         4: [
             "that's gone over first slip!",
-            "between the first slip and short third man!",
             "through the covers",
             "hit nice and straight!",
             "chipped in the air over the fielder at midwicket",
@@ -93,16 +98,10 @@ class resources:
             "steered between the covers",
             "punched off the backfoot",
             "driven off the front foot",
-            "advances down the ground",
             "driven through extra cover",
             "over extra cover",
-            "that is a fierce square cut!",
             "worked that through short midwicket",
-            "reverse sweep",
-            "delicately steered it through slips...",
             "smashed like a bullet!",
-            "upper cut over the keepers hands!",
-            "soft hands... steered it through second slip!",
             "in the air... just over the fielder at point!",
             "hit through midoff",
             "delicately pushed it to fine leg",
@@ -112,19 +111,13 @@ class resources:
             "lofted in the air",
             "driven like a tracer bullet!",
             "driven like a rocket!",
-            "steered it towards the gap between deep third man and deep backward point",
             "hit hard and nearly killed the umpire!",
-            "cut hard through point",
             "smashed it over midwicket",
-            "driven through silly mid on",
             "wristy flick between midwicket and square leg",
             "driven between extra cover and mid-off",
             "flicks it towards the leg side",
             "hit hard and just missed his partners head!",
             "solidly played through extra cover",
-            "square cut over the point fielder",
-            "short ball punished through leg side",
-            "swept through fine leg!",
         ],
         6: [
             "straight down the ground",
@@ -137,12 +130,9 @@ class resources:
             "over deep extra cover!",
             "moves across the stumps and smashes it through leg side",
             "blasted that through the covers",
-            "advances down the ground",
             "smashed it over long off",
-            "cuts it hard over point",
         ],
         "ground_shot": [
-            "runs past the slips",
             "driven through the covers",
             "drive through extra cover",
             "worked that into the gap",
@@ -150,16 +140,64 @@ class resources:
             "driven nicely through midwicket",
             "hit that hard through point",
             "steered it towards fine leg",
-            "between short leg and silly mid on",
             "between point and cover",
             "through square leg",
-            "between first slip and short third man",
             "between point and backward point",
             "well timed it into the leg side!",
-            "between leg slip and the gully",
             "steered expertly into the gap!",
             "advances and drives it straight!",
             "punched through extra cover",
             "runs it down the third man",
+        ],
+    }
+
+    # shots that only make sense against pace - need real pace and bounce to
+    # work with (a cut, an upper cut, a steer off the seam past the slips),
+    # or a genuinely fast, short delivery to begin with
+    fields_pace = {
+        4: [
+            "that is a fierce square cut!",
+            "delicately steered it through slips...",
+            "upper cut over the keepers hands!",
+            "soft hands... steered it through second slip!",
+            "steered it towards the gap between deep third man and deep backward point",
+            "cut hard through point",
+            "square cut over the point fielder",
+            "short ball punished through leg side",
+            "between the first slip and short third man!",
+        ],
+        6: [
+            "cuts it hard over point",
+            "pulls it away in front of square, that's gone all the way!",
+            "picks the bouncer and hooks it for six!",
+            "upper-cut over the keeper's head, and that's out of the ground!",
+        ],
+        "ground_shot": [
+            "runs past the slips",
+            "between first slip and short third man",
+            "between leg slip and the gully",
+        ],
+    }
+
+    # shots that only make sense against spin - a batsman gets down the
+    # track or sweeps because the ball is slower and gives them time; a
+    # fielder stands at short leg/silly mid-on because it's safe to
+    fields_spin = {
+        4: [
+            "advances down the ground",
+            "reverse sweep",
+            "driven through silly mid on",
+            "swept through fine leg!",
+        ],
+        6: [
+            "advances down the ground and launches it out of the park!",
+            "down the track and smashed over long on!",
+            "slog-sweeps it into the stands!",
+            "switch-hit! what audacity, and it's gone all the way for six!",
+        ],
+        "ground_shot": [
+            "between short leg and silly mid on",
+            "danced down the track and worked it away",
+            "swept fine for a single",
         ],
     }

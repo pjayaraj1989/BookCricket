@@ -3269,6 +3269,30 @@ class Match:
         utilities.PushScorecard(self)
         return
 
+    def _FieldShotPool(self, key, bowler):
+        """
+        The shot-description pool for a boundary/ground shot (see
+        resources.fields), widened with the pace- or spin-only shots that
+        actually make sense off this bowler - a cut or an upper-cut needs
+        real pace and bounce to work with; a sweep or a charge down the
+        track is a shot played specifically to counter spin. Keeps a cut
+        shot six, or a sweep, from ever being attributed to the wrong kind
+        of bowler.
+
+        Args:
+            key: 4, 6, or "ground_shot" - which resources.fields pool.
+            bowler: the Player who bowled the delivery.
+
+        Returns:
+            list: the combined pool to Randomize() from.
+        """
+        pool = list(resources.fields[key])
+        if bowler.attr.ispacer:
+            pool += resources.fields_pace[key]
+        elif bowler.attr.isspinner:
+            pool += resources.fields_spin[key]
+        return pool
+
     def Ball(self, run):
         """
         Play a ball.
@@ -3414,8 +3438,15 @@ class Match:
                 )
             batting_team.fours += 1
 
-            field = Randomize(resources.fields[4])
-            comment = Randomize(commentary.commentary_four)
+            field = Randomize(self._FieldShotPool(4, bowler))
+            four_pool = commentary.commentary_four + (
+                commentary.commentary_four_pace
+                if bowler.attr.ispacer
+                else commentary.commentary_four_spin
+                if bowler.attr.isspinner
+                else []
+            )
+            comment = Randomize(four_pool)
             PrintInColor(field + " FOUR! " + comment, Fore.LIGHTGREEN_EX)
             logger.info("FOUR")
             # check if first ball hit for a boundary
@@ -3465,7 +3496,7 @@ class Match:
                 PrintInColor(
                     Randomize(commentary.commentary_in_a_row), Fore.LIGHTGREEN_EX
                 )
-            field = Randomize(resources.fields[6])
+            field = Randomize(self._FieldShotPool(6, bowler))
             comment = Randomize(commentary.commentary_six)
             PrintInColor(field + " SIX! " + comment, Fore.LIGHTGREEN_EX)
             logger.info("SIX")
@@ -3505,7 +3536,7 @@ class Match:
         else:
             bowler.ball_history.append(run)
             batting_team.ball_history.append(run)
-            field = Randomize(resources.fields["ground_shot"])
+            field = Randomize(self._FieldShotPool("ground_shot", bowler))
             comment = Randomize(commentary.commentary_ground_shot)
             if run == 1:
                 on_strike.singles += 1
@@ -4416,7 +4447,10 @@ class Match:
                 GetSurname(player_onstrike.name),
             )
         elif "st " in dismissal:
-            comment = Randomize(commentary.commentary_stumped) % GetSurname(keeper.name)
+            stumped_pool = commentary.commentary_stumped + (
+                commentary.commentary_stumped_spin if bowler.attr.isspinner else []
+            )
+            comment = Randomize(stumped_pool) % GetSurname(keeper.name)
         # if bowler is the catcher
         elif "c&b" in dismissal:
             comment = Randomize(commentary.commentary_return_catch) % GetSurname(
@@ -4447,7 +4481,14 @@ class Match:
                     player_dismissed.name
                 )
             else:
-                comment = Randomize(commentary.commentary_bowled)
+                bowled_pool = commentary.commentary_bowled + (
+                    commentary.commentary_bowled_pace
+                    if bowler.attr.ispacer
+                    else commentary.commentary_bowled_spin
+                    if bowler.attr.isspinner
+                    else []
+                )
+                comment = Randomize(bowled_pool)
 
         # comment dismissal
         PrintInColor(comment, Style.BRIGHT)
@@ -5675,7 +5716,10 @@ class Match:
 
         pace = 0 if self.fast else 1.2
 
-        comment = Randomize(commentary.commentary_stumped_advance) % (
+        advance_pool = commentary.commentary_stumped_advance + (
+            commentary.commentary_stumped_advance_spin if bowler.attr.isspinner else []
+        )
+        comment = Randomize(advance_pool) % (
             GetSurname(striker.name), GetSurname(bowler.name)
         )
         utilities.PushEvent(
@@ -5832,13 +5876,23 @@ class Match:
         dismissal_str = None
         # now get a list of fielders
         fielder = Randomize(bowling_team.team_array)
-        # list of mode of dismissals
+        # list of mode of dismissals - a stumping needs the keeper standing
+        # up to the stumps, which only happens against a spinner or a
+        # genuinely slow medium pacer (attr.bowling with neither the
+        # "pacer" nor "spinner" flag set - e.g. a part-timer like Kohli);
+        # a true fast bowler (attr.ispacer) is never stumped off, the
+        # keeper stands back for that pace
         if bowler.attr.isspinner:
             dismissal_types = ["c", "st", "runout", "lbw", "b"]
             dismissal_prob = [0.38, 0.2, 0.02, 0.2, 0.2]
-        else:
+        elif bowler.attr.ispacer:
             dismissal_types = ["c", "runout", "lbw", "b"]
             dismissal_prob = [0.45, 0.05, 0.25, 0.25]
+        else:
+            # medium pace: stumpings do happen here, just far less often
+            # than against a spinner
+            dismissal_types = ["c", "st", "runout", "lbw", "b"]
+            dismissal_prob = [0.43, 0.05, 0.05, 0.235, 0.235]
 
         # generate dismissal
         dismissal = choice(dismissal_types, 1, p=dismissal_prob, replace=False)[0]
