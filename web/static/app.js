@@ -1815,11 +1815,13 @@ function renderEvent(kind, data) {
     // card ("victory", below) that follows the scorecards and summaries
     const team = data && data.team ? String(data.team) : "";
     const text = data && data.text ? String(data.text) : "";
-    showEventPane(
-      team ? buildVictoryCard(team, text) : buildMiscCard("misc/victory", "🏆", text),
-      4200,
-      "takeover"
-    );
+    const decidedCard = team
+      ? buildVictoryCard(team, text)
+      : buildMiscCard("misc/victory", "🏆", text);
+    // the chase was sealed with a boundary - an extra "finished in style"
+    // flourish (see Match._PushChaseDecided)
+    appendComment(decidedCard, data && data.styleComment);
+    showEventPane(decidedCard, 4200, "takeover");
   } else if (kind === "victory") {
     const caption = data && data.result ? String(data.result) : "Victory!";
     const team = data && data.team ? String(data.team) : "";
@@ -2337,6 +2339,9 @@ function renderEvent(kind, data) {
       '<span class="drs-bulb red"></span><span class="drs-bulb green"></span>';
     wrap.appendChild(lights);
     if (currentBattingTeam) wrap.appendChild(teamFlagBadge(currentBattingTeam, true));
+    // the moment the light settles - see Match.CheckDRS/_CheckBowlingReview/
+    // _CheckThirdUmpire, which already pick a result-appropriate line
+    appendComment(wrap, data && data.comment);
     showEventPane(wrap, 3000, "takeover");
   }
 }

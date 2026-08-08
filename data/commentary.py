@@ -4498,3 +4498,55 @@ class commentary:
         "the keeper completely misjudges that one, four byes! wide says %s!",
         "an expensive moment for the fielding side, that's away for four! wide by %s!",
     ]
+
+    # the chase is sealed with a boundary - the big-screen "finished in
+    # style" flourish, shown alongside the regular chase-decided flavour.
+    # Takes the finishing batsman's surname
+    commentary_finished_in_style = [
+        "%s finishes it off in style!",
+        "%s seals it with a boundary, exactly how you want to finish!",
+        "%s brings up the win in the most emphatic fashion!",
+        "what a way to finish it, %s!",
+        "%s wraps it up with a flourish!",
+        "that's how you finish a chase, %s in some style!",
+        "%s closes it out with a bang!",
+        "a boundary to remember, %s finishes the job in style!",
+        "%s ends it with real flair!",
+        "the perfect finish from %s!",
+        "%s brings the house down with that finishing blow!",
+        "job done, and done in style by %s!",
+        "%s couldn't have scripted a better finish!",
+        "that's a statement finish from %s!",
+        "%s seals the win with a touch of class!",
+        "the crowd erupts as %s finishes it off in style!",
+        "%s takes the team home in the most dramatic fashion!",
+        "a fitting end to the chase from %s!",
+        "%s brings it home with a bang!",
+        "what a way to get over the line, %s finishes in style!",
+    ]
+
+    # same moment, but the finishing batsman is the captain - a little
+    # extra flourish for leading from the front. Takes the captain's
+    # surname
+    commentary_finished_in_style_captain = [
+        "the captain doing it in style! %s finishes it off himself!",
+        "what a way for the skipper to seal it, %s in some style!",
+        "captain %s leads from the front and finishes the job in style!",
+        "the leader delivers when it matters most, %s finishes in style!",
+        "the captain and now the match-winner too, %s finishes in style!",
+        "leading by example, %s seals the win in style!",
+        "the skipper takes matters into his own hands, %s finishes it in style!",
+        "a captain's finish if ever there was one, %s in some style!",
+        "%s shows exactly why he's the captain, sealing it in style!",
+        "the captain delivers the perfect finish, %s in style!",
+        "%s the leader finishes the chase in the most fitting way!",
+        "a captain's innings capped with a captain's finish, %s in style!",
+        "%s leads his side home in the most stylish fashion!",
+        "the skipper %s finishes it off with real authority!",
+        "what better way to finish than the captain doing it himself, %s in style!",
+        "%s the captain seals the deal with real flair!",
+        "a fitting finish from the man leading the side, %s in style!",
+        "the captain's stamp on this chase, %s finishes in style!",
+        "%s the skipper brings it home in some style!",
+        "leadership from the front, %s finishes the chase in style!",
+    ]
