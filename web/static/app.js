@@ -1120,13 +1120,18 @@ function buildRunOutDramaCard(data) {
 
     wrap.appendChild(row);
   } else {
-    // "single" or "second": both batsmen, running between the wickets
-    badge.textContent = stage === "second" ? "🏃💨 Going for two!" : "🏃 Quick single!";
+    // "single", "second", or (rarer still) "third": both batsmen, running
+    // between the wickets
+    badge.textContent =
+      {
+        second: "🏃💨 Going for two!",
+        third: "🏃💨💨 Going for three!",
+      }[stage] || "🏃 Quick single!";
     wrap.appendChild(badge);
 
     const names = (data && data.batsmen) || [];
     const row = document.createElement("div");
-    row.className = "run-out-run-row" + (stage === "second" ? " risky" : "");
+    row.className = "run-out-run-row" + (stage === "second" || stage === "third" ? " risky" : "");
 
     row.appendChild(buildPlayerCard(String(names[0] || "")));
     const track = document.createElement("div");

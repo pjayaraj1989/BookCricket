@@ -4550,3 +4550,28 @@ class commentary:
         "%s the skipper brings it home in some style!",
         "leadership from the front, %s finishes the chase in style!",
     ]
+
+    # the batsmen push for a third run after already completing two - rare,
+    # and genuinely risky. Takes the striker's and non-striker's surnames
+    commentary_runout_call_third = [
+        "they've turned back again! %s and %s are going for a third!",
+        "unbelievable running - %s sends %s back for a third run!",
+        "two isn't enough, %s wants a third! this is bold from %s!",
+        "a very risky third run on offer - %s and %s push for it!",
+        "they're greedy for one more! %s and %s go for the third!",
+        "%s is calling for a third! %s covers the ground superbly!",
+        "three on offer here - %s and %s aren't stopping at two!",
+        "audacious running from %s and %s, going for a third!",
+        "they push it to the limit! %s and %s go for three!",
+        "%s wants every run going, sending %s back for a third!",
+        "that's real hunger for runs - %s and %s go for three!",
+        "a bold call for a third run from %s and %s!",
+        "the legs are tiring, but %s and %s push for a third anyway!",
+        "%s and %s are chancing their arm, going for three!",
+        "three runs there for the taking, says %s to %s!",
+        "they've asked for one more - %s and %s stretch it to three!",
+        "gutsy running from %s and %s, turning for a third!",
+        "%s isn't satisfied with two, %s is sent back again for three!",
+        "a serious risk this - %s and %s go for the third run!",
+        "the fielder still has a shot at it as %s and %s push for three!",
+    ]
