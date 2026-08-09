@@ -2,8 +2,19 @@
 
 # read venue data
 import json
+import os
 
-from BookCricket import data_path, venue_data
+# same paths BookCricket.py computes for itself (repo root, one level up from
+# this file's own functions/ directory) - computed independently rather than
+# imported from BookCricket, since that import runs both ways: BookCricket.py
+# imports this module, and importing BookCricket.py directly as a script
+# (rather than via `import BookCricket`) re-executes it under a second
+# module name, which recurses right back into this half-finished import and
+# fails with "cannot import name ... from partially initialized module"
+_repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+data_path = os.path.join(_repo_root, "data")
+venue_data = os.path.join(data_path, "venue_data.json")
+
 from data.resources import *
 from data.commentary import *
 from functions.helper import Venue
@@ -14,7 +25,6 @@ from functions.utilities import ChooseFromOptions, PrintInColor, Randomize, Erro
 import random
 from numpy.random import choice
 from colorama import Fore, Style
-import os
 
 
 def GetVenue(venue_data, autoplay):
