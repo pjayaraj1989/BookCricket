@@ -1298,18 +1298,8 @@ function buildAppealDramaCard(data) {
 // counterpart to buildAppealDramaCard's keeper-nick case
 function buildCleanCatchCard(data) {
   const fielderName = data && data.fielder ? String(data.fielder) : "";
-  const isReturnCatch = !!(data && data.isReturnCatch);
-  // where the fielder was standing (see Team.AssignFieldingPositions) -
-  // shown alongside "Caught" when it's notable (not the generic case)
-  const positionLabel = {
-    slip: "Slip", deep: "Deep", covers: "Covers", point: "Point",
-  }[data && data.position];
 
-  let role = "Caught";
-  if (isReturnCatch) role = "Caught & Bowled";
-  else if (positionLabel) role = "Caught (" + positionLabel + ")";
-
-  const card = buildPlayerCard(fielderName, role);
+  const card = buildPlayerCard(fielderName);
   const badge = document.createElement("div");
   badge.className = "event-achievement-badge";
   badge.textContent = "🙌 CAUGHT!";
@@ -1407,6 +1397,200 @@ function buildCaptainOutCard(data) {
   }
 
   appendComment(wrap, data && data.comment);
+  return wrap;
+}
+
+// bowled dismissal: ball travels and hits the stumps
+// (see Match._PushBowledDrama)
+function buildBowledDramaCard(data) {
+  const bowlerName = data && data.bowler ? String(data.bowler) : "";
+
+  const wrap = document.createElement("div");
+  wrap.className = "event-player bowled-drama";
+
+  const badge = document.createElement("div");
+  badge.className = "event-achievement-badge";
+  badge.textContent = "⚡ BOWLED!";
+  wrap.appendChild(badge);
+
+  // animated ball hitting stumps
+  const animContainer = document.createElement("div");
+  animContainer.className = "bowled-animation-container";
+
+  const bowledSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  bowledSvg.setAttribute("viewBox", "0 0 300 150");
+  bowledSvg.setAttribute("class", "bowled-svg");
+  bowledSvg.innerHTML = `
+    <defs>
+      <pattern id="ball-pattern" patternUnits="userSpaceOnUse" width="20" height="20">
+        <circle cx="10" cy="10" r="8" fill="none" stroke="#FF0000" stroke-width="2"/>
+        <path d="M 5 10 Q 10 8, 15 10" stroke="white" stroke-width="1" fill="none"/>
+      </pattern>
+    </defs>
+    <circle class="bowled-ball" cx="20" cy="75" r="12" fill="url(#ball-pattern)"/>
+    <line x1="0" y1="140" x2="300" y2="140" stroke="#8B4513" stroke-width="4"/>
+    <g class="bowled-stumps">
+      <line x1="270" y1="110" x2="270" y2="140" stroke="#DAA520" stroke-width="3"/>
+      <line x1="280" y1="110" x2="280" y2="140" stroke="#DAA520" stroke-width="3"/>
+      <line x1="290" y1="110" x2="290" y2="140" stroke="#DAA520" stroke-width="3"/>
+      <line x1="260" y1="110" x2="300" y2="110" stroke="#DAA520" stroke-width="2"/>
+    </g>
+  `;
+  animContainer.appendChild(bowledSvg);
+
+  wrap.appendChild(animContainer);
+  wrap.appendChild(buildPlayerCard(bowlerName, "Bowler"));
+
+  if (data && data.comment) {
+    const commentEl = document.createElement("div");
+    commentEl.className = "event-captain-comment";
+    commentEl.textContent = String(data.comment);
+    wrap.appendChild(commentEl);
+  }
+  return wrap;
+}
+
+// a catch at the deep boundary line (see Match._PushCleanCatch): fielder
+// running across and diving/jumping to catch
+function buildCaughtDeepDramaCard(data) {
+  const fielderName = data && data.fielder ? String(data.fielder) : "";
+
+  const wrap = document.createElement("div");
+  wrap.className = "event-player caught-deep-drama";
+
+  const badge = document.createElement("div");
+  badge.className = "event-achievement-badge";
+  badge.textContent = "🌠 CAUGHT AT THE BOUNDARY!";
+  wrap.appendChild(badge);
+
+  // animated boundary catch
+  const animContainer = document.createElement("div");
+  animContainer.className = "caught-deep-animation-container";
+
+  const boundaryAnimation = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  boundaryAnimation.setAttribute("viewBox", "0 0 400 150");
+  boundaryAnimation.setAttribute("class", "caught-deep-svg");
+  boundaryAnimation.innerHTML = `
+    <line x1="0" y1="140" x2="400" y2="140" stroke="#2d5016" stroke-width="8" class="boundary-line"/>
+    <circle class="boundary-ball" cx="100" cy="50" r="10" fill="#FF0000"/>
+    <g class="boundary-fielder">
+      <circle cx="320" cy="80" r="8" fill="#FFD700"/>
+      <line x1="320" y1="88" x2="310" y2="120" stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="320" y1="88" x2="330" y2="120" stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="315" y1="90" x2="300" y2="100" stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="325" y1="90" x2="340" y2="100" stroke="#1a1a1a" stroke-width="2"/>
+    </g>
+  `;
+  animContainer.appendChild(boundaryAnimation);
+
+  wrap.appendChild(animContainer);
+  wrap.appendChild(buildPlayerCard(fielderName));
+
+  if (data && data.comment) {
+    const commentEl = document.createElement("div");
+    commentEl.className = "event-captain-comment";
+    commentEl.textContent = String(data.comment);
+    wrap.appendChild(commentEl);
+  }
+  return wrap;
+}
+
+function buildWonderfulInningsCard(data) {
+  const playerName = data && data.batter ? String(data.batter) : "";
+  const runs = data && data.runs != null ? String(data.runs) : "";
+  const balls = data && data.balls != null ? String(data.balls) : "";
+  const sr = data && data.sr != null ? Number(data.sr).toFixed(1) : "";
+  const fours = data && data.fours != null ? String(data.fours) : "";
+  const sixes = data && data.sixes != null ? String(data.sixes) : "";
+
+  const wrap = document.createElement("div");
+  wrap.className = "event-player wonderful-innings-display";
+
+  const badge = document.createElement("div");
+  badge.className = "event-achievement-badge";
+  badge.textContent = "🌟 WONDERFUL INNINGS!";
+  wrap.appendChild(badge);
+
+  wrap.appendChild(buildPlayerCard(playerName));
+
+  // stats row: runs, SR, boundaries
+  const statsRow = document.createElement("div");
+  statsRow.className = "wonderful-innings-stats";
+
+  if (runs && balls) {
+    const runsStat = document.createElement("div");
+    runsStat.className = "wonderful-innings-stat";
+    runsStat.innerHTML = "<div class='stat-value'>" + runs + "</div><div class='stat-label'>Runs (" + balls + " balls)</div>";
+    statsRow.appendChild(runsStat);
+  }
+  if (sr) {
+    const srStat = document.createElement("div");
+    srStat.className = "wonderful-innings-stat";
+    srStat.innerHTML = "<div class='stat-value'>" + sr + "</div><div class='stat-label'>Strike Rate</div>";
+    statsRow.appendChild(srStat);
+  }
+  const boundariesDiv = document.createElement("div");
+  boundariesDiv.className = "wonderful-innings-stat";
+  boundariesDiv.innerHTML = "<div class='stat-value'>4s: " + fours + " | 6s: " + sixes + "</div><div class='stat-label'>Boundaries</div>";
+  statsRow.appendChild(boundariesDiv);
+
+  wrap.appendChild(statsRow);
+
+  if (data && data.comment) {
+    const commentEl = document.createElement("div");
+    commentEl.className = "event-captain-comment";
+    commentEl.textContent = String(data.comment);
+    wrap.appendChild(commentEl);
+  }
+  return wrap;
+}
+
+function buildAllRounderCard(data) {
+  const playerName = data && data.player ? String(data.player) : "";
+  const runs = data && data.runs != null ? String(data.runs) : "";
+  const wickets = data && data.wickets != null ? String(data.wickets) : "";
+  const catches = data && data.catches != null ? String(data.catches) : "";
+
+  const wrap = document.createElement("div");
+  wrap.className = "event-player all-rounder-display";
+
+  const badge = document.createElement("div");
+  badge.className = "event-achievement-badge";
+  badge.textContent = "⭐ ALL-ROUNDER PERFORMANCE!";
+  wrap.appendChild(badge);
+
+  wrap.appendChild(buildPlayerCard(playerName));
+
+  // stats row: batting, bowling, fielding
+  const statsRow = document.createElement("div");
+  statsRow.className = "all-rounder-stats";
+
+  if (runs) {
+    const batStat = document.createElement("div");
+    batStat.className = "all-rounder-stat";
+    batStat.innerHTML = "<div class='stat-value'>🏏 " + runs + "</div><div class='stat-label'>Runs</div>";
+    statsRow.appendChild(batStat);
+  }
+  if (wickets) {
+    const bowlStat = document.createElement("div");
+    bowlStat.className = "all-rounder-stat";
+    bowlStat.innerHTML = "<div class='stat-value'>⚾ " + wickets + "</div><div class='stat-label'>Wickets</div>";
+    statsRow.appendChild(bowlStat);
+  }
+  if (catches) {
+    const fieldStat = document.createElement("div");
+    fieldStat.className = "all-rounder-stat";
+    fieldStat.innerHTML = "<div class='stat-value'>🧤 " + catches + "</div><div class='stat-label'>Catches</div>";
+    statsRow.appendChild(fieldStat);
+  }
+  wrap.appendChild(statsRow);
+
+  if (data && data.comment) {
+    const commentEl = document.createElement("div");
+    commentEl.className = "event-captain-comment";
+    commentEl.textContent = String(data.comment);
+    wrap.appendChild(commentEl);
+  }
   return wrap;
 }
 
@@ -1919,6 +2103,14 @@ function renderEvent(kind, data) {
         tooLateEl.textContent = tooLateComment;
         card.appendChild(tooLateEl);
       }
+      // captaincy commentary for big partnerships (50+ runs)
+      const captaincyComment = data && data.captaincyComment ? String(data.captaincyComment) : "";
+      if (captaincyComment) {
+        const captaincyEl = document.createElement("div");
+        captaincyEl.className = "event-captaincy-comment";
+        captaincyEl.textContent = captaincyComment;
+        card.appendChild(captaincyEl);
+      }
       showEventPane(card, 4000, "takeover");
     }
   } else if (kind === "next_batsmen") {
@@ -2257,6 +2449,14 @@ function renderEvent(kind, data) {
     showEventPane(buildFirstOverDramaCard(data), 4000, "takeover");
   } else if (kind === "captain_out") {
     showEventPane(buildCaptainOutCard(data), 4000, "takeover");
+  } else if (kind === "wonderful_innings") {
+    showEventPane(buildWonderfulInningsCard(data), 4500, "takeover");
+  } else if (kind === "all_rounder_display") {
+    showEventPane(buildAllRounderCard(data), 4500, "takeover");
+  } else if (kind === "bowled_drama") {
+    showEventPane(buildBowledDramaCard(data), 3500, "takeover");
+  } else if (kind === "caught_deep_drama") {
+    showEventPane(buildCaughtDeepDramaCard(data), 3500, "takeover");
   } else if (kind === "runout") {
     const ump = data && data.umpire ? String(data.umpire) : "";
     showEventPane(buildUmpireDecisionCard(ump, "RUN OUT"), 3000, "takeover");
