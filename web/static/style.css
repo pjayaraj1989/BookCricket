@@ -853,6 +853,23 @@ main {
   font-size: clamp(0.95rem, 2.4vw, 1.3rem);
 }
 
+.event-captaincy-comment {
+  margin-top: 0.7rem;
+  padding: 0.6rem;
+  font-size: 0.9rem;
+  color: #7fe3a3;
+  background: rgba(111, 191, 143, 0.15);
+  border-left: 3px solid #6fbf8f;
+  text-align: left;
+  font-style: italic;
+}
+
+.event-pane.takeover .event-captaincy-comment {
+  font-size: clamp(0.95rem, 2.4vw, 1.2rem);
+  padding: 0.8rem;
+  border-left-width: 4px;
+}
+
 .event-countdown-num {
   font-size: 3.2rem;
   font-weight: 900;
@@ -1344,6 +1361,157 @@ main {
   0%, 100% { transform: translateX(0) rotate(0deg); }
   25% { transform: translateX(-4px) rotate(-3deg); }
   75% { transform: translateX(4px) rotate(3deg); }
+}
+
+/* bowled dismissal animation (see buildBowledDramaCard) - ball travels to
+   stumps and hits them */
+.bowled-animation-container {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+  height: 180px;
+}
+
+.bowled-svg {
+  width: 100%;
+  max-width: 400px;
+  height: 100%;
+}
+
+.bowled-ball {
+  animation: bowled-ball-path 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes bowled-ball-path {
+  0% { cx: 20; cy: 75; }
+  100% { cx: 270; cy: 75; }
+}
+
+.bowled-stumps {
+  animation: bowled-impact-shake 0.4s ease-in-out forwards 0.6s;
+}
+
+@keyframes bowled-impact-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+
+/* caught at deep boundary animations (see buildCaughtDeepDramaCard) -
+   fielder runs to boundary and catches */
+.caught-deep-animation-container {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+  height: 180px;
+}
+
+.caught-deep-svg {
+  width: 100%;
+  max-width: 500px;
+  height: 100%;
+}
+
+.boundary-ball {
+  animation: caught-deep-ball-arc 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes caught-deep-ball-arc {
+  0% { cx: 100; cy: 50; }
+  50% { cx: 200; cy: 20; }
+  100% { cx: 320; cy: 50; }
+}
+
+/* fielder runs to the right and jumps */
+.boundary-fielder {
+  animation: caught-deep-fielder-run 1s ease-in-out forwards;
+}
+
+@keyframes caught-deep-fielder-run {
+  0% { transform: translateX(0); }
+  70% { transform: translateX(60px); }
+  100% { transform: translateX(60px) translateY(-20px); }
+}
+
+.boundary-line {
+  animation: caught-deep-line-flash 0.3s ease-in forwards 0.9s;
+}
+
+@keyframes caught-deep-line-flash {
+  from { stroke: #2d5016; stroke-width: 8; }
+  to { stroke: #90EE90; stroke-width: 12; }
+}
+
+/* wonderful innings display - batsman played a great knock */
+.wonderful-innings-display {
+  background: linear-gradient(135deg, #4d3a1a 0%, #2c1f0f 100%);
+  border: 2px solid #f2a13b;
+  box-shadow: 0 0 20px rgba(242, 161, 59, 0.4);
+}
+
+.wonderful-innings-stats {
+  display: flex;
+  justify-content: space-around;
+  gap: 1.5rem;
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(44, 31, 15, 0.7);
+  border-radius: 8px;
+}
+
+.wonderful-innings-stat {
+  text-align: center;
+  flex: 1;
+}
+
+.wonderful-innings-stat .stat-value {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #f2d16b;
+  margin-bottom: 0.3rem;
+}
+
+.wonderful-innings-stat .stat-label {
+  font-size: 0.75rem;
+  color: #f2a13b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* all-rounder performance display - player excelling with bat/ball/field */
+.all-rounder-display {
+  background: linear-gradient(135deg, #1a4d2e 0%, #0f2c1e 100%);
+  border: 2px solid #6fbf8f;
+  box-shadow: 0 0 20px rgba(111, 191, 143, 0.4);
+}
+
+.all-rounder-stats {
+  display: flex;
+  justify-content: space-around;
+  gap: 1.5rem;
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(15, 44, 30, 0.7);
+  border-radius: 8px;
+}
+
+.all-rounder-stat {
+  text-align: center;
+  flex: 1;
+}
+
+.all-rounder-stat .stat-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #7fe3a3;
+  margin-bottom: 0.3rem;
+}
+
+.all-rounder-stat .stat-label {
+  font-size: 0.75rem;
+  color: #6fbf8f;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 /* multi-card rows (teams flags, umpires, commentators) fill the screen too;

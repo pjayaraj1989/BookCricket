@@ -4660,3 +4660,83 @@ class commentary:
         "the keeper barely appeals - %s is already walking!",
         "credit to %s, no lingering, just a straight walk off!",
     ]
+
+    # wonderful/great innings when batsman gets dismissed: praising a solid
+    # performance with runs and strike rate. Takes player surname
+    commentary_wonderful_innings = [
+        "what a wonderful knock from %s - he's played brilliantly today!",
+        "%s has been a class act with the bat today - a superb innings!",
+        "that's a match-winning performance from %s before he departs!",
+        "what a brilliant innings from %s - he's left his mark on this game!",
+        "%s has played with such style and substance - truly magnificent!",
+        "a captain's knock from %s - exactly what his team needed!",
+        "%s has been the pillar of this innings - absolutely top-class!",
+        "he's played with such authority - a wonderful innings from %s!",
+        "%s will be remembered for this stunning display of batting!",
+        "that's championship cricket from %s - a performance to cherish!",
+        "what a gem of an innings from %s - full of character and skill!",
+        "%s has single-handedly put his team in the contest with that knock!",
+        "an absolute masterclass from %s - batting at its finest!",
+        "%s has shown all his class and temperament in this wonderful innings!",
+        "a performance that will live long in the memory - brilliant from %s!",
+        "%s has been the backbone of his team's effort - superb cricket!",
+        "that's the kind of innings that inspires - well played, %s!",
+        "%s has batted like a true professional - simply outstanding!",
+        "he's played with such elegance and precision - great innings, %s!",
+        "%s has shown why he's a match-winner - a truly special performance!",
+    ]
+
+    # captaincy/fielding that breaks a partnership: smart captaincy,
+    # field placement, and ground fielding. No arguments
+    commentary_partnership_break_captaincy = [
+        "brilliant captaincy from the skipper, breaking that stand!",
+        "the field placement does the job - the captain's reading of the game is spot on!",
+        "smart thinking from the captain pays off with that breakthrough!",
+        "that's what you call inspired captaincy - right man in the right place!",
+        "the skipper's tactical acumen just broke the back of the partnership!",
+        "clever field setup by the captain - that's the mark of a great leader!",
+        "the captain's gamble works perfectly - what a read of the game!",
+        "superb captaincy to break that threatening stand!",
+        "the fielding captain's strategy has done the trick!",
+        "a captain's knock - intelligent field placement breaks the partnership!",
+        "the skipper sets the perfect trap and it works!",
+        "that's championship captaincy - the field was set perfectly!",
+        "brilliant captaincy just handed the initiative back to the bowling team!",
+        "the skipper's tactical brilliance shines through - the partnership is broken!",
+        "smart captaincy and even smarter fielding - a devastating combination!",
+        "the captain reads the game like a book - partnership down!",
+        "inspired leadership from the skipper turns the momentum!",
+        "that's astute captaincy - placing the fielders exactly where they needed to be!",
+        "the captain's tactical nous breaks the dangerous stand!",
+        "brilliant piece of captaincy to engineer that breakthrough!",
+    ]
+
+    # all-rounder performance: player excels with both bat and ball (and/or
+    # field). Takes player surname
+    commentary_all_rounder_performance = [
+        "%s is the difference-maker today - unstoppable with bat and ball!",
+        "what a performance from %s - a complete all-rounder display!",
+        "%s is simply too good - scoring runs AND taking wickets!",
+        "the perfect all-rounder shift from %s, now he's on fire with the ball!",
+        "%s making his mark everywhere - batting brilliance followed by bowling genius!",
+        "you can't stop %s - dominating the game with both disciplines!",
+        "what a turnaround from %s - just settled in as a batter, now strikes with the ball!",
+        "%s is having the day of his career - both bat and ball firing!",
+        "the all-rounder's dream match for %s - runs and wickets flowing!",
+        "pure class from %s - the complete package on display today!",
+        "%s is everywhere - setting the field alight with bat and ball!",
+        "a masterclass from %s - the all-rounder at his very best!",
+        "unstoppable force, that %s - scoring and bowling with equal brilliance!",
+        "%s is the standout performer - runs AND breakthroughs!",
+        "what a day it is for %s - dominating both ends of the scale!",
+        "the all-rounder's dream for %s - both bat and ball are weapons today!",
+        "%s showing why he's a complete cricketer - brilliant batting, brilliant bowling!",
+        "absolute brilliance from %s - just can't get him out of the game!",
+        "%s is the match-winner today - both with runs and with wickets!",
+        "the complete cricketer, %s - excelling in every role!",
+        "what a specimen, %s - batting like a champion, bowling like a demon!",
+        "%s is putting on a masterclass in all-round cricket!",
+        "from set batter to match-winning bowler - that's %s for you!",
+        "%s is the true MVP today - multitalented and utterly clinical!",
+        "the stuff of legends - %s performing like a complete all-rounder!",
+    ]

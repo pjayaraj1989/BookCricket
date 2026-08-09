@@ -1112,7 +1112,7 @@ class Match:
             # already start at their __init__ defaults) - it's what lets a team
             # bat a *second* time in a Test match without old figures bleeding in.
             batting_team.StartBattingInnings()
-            bowling_team.StartBowlingInnings()
+            bowling_team.StartBowlingInnings(is_test=self.is_test, overs_limit=self.overs)
             # make the pair reachable immediately, so a crash during the very
             # first over resumes with a valid current_pair
             batting_team.current_pair = pair
@@ -3067,7 +3067,7 @@ class Match:
 
             # if not wide
             else:
-                self.Ball(run)
+                self.Ball(run, ball_in_over=ball)
                 ball += 1
                 if run != -1:
                     total_runs_in_over += run
@@ -3293,12 +3293,14 @@ class Match:
             pool += resources.fields_spin[key]
         return pool
 
-    def Ball(self, run):
+    def Ball(self, run, ball_in_over=None):
         """
         Play a ball.
 
         Args:
             run: The number of runs scored on the ball.
+            ball_in_over: The ball number within the over (1-6), used to detect
+                last ball for keep-strike logic in clutch situations.
 
         Returns:
             None
@@ -3310,6 +3312,42 @@ class Match:
 
         # get who is on strike
         on_strike = next((x for x in pair if x.onstrike), None)
+
+        # in clutch chasing situations, strong batsman on strike may try to
+        # keep strike by converting even runs to a single on the last ball.
+        # This can sometimes result in a run-out if attempting the risky single.
+        if (
+            ball_in_over == 6
+            and run in (0, 2, 4, 6)
+            and batting_team.batting_second
+            and batting_team.target
+            and on_strike is not None
+        ):
+            # check if it's a tight chase: runs needed > 0, and we're in
+            # penultimate/final overs with wickets in hand
+            runs_needed = batting_team.target - batting_team.total_score
+            overs_left = (self.overs - int(batting_team.total_balls // 6)) if self.overs else 999
+            is_tight = (
+                runs_needed > 0
+                and overs_left <= 2
+                and batting_team.wickets_fell < 8
+            )
+            if is_tight:
+                # check if strong batsman with weak partner: batting attr diff >= 2
+                partner = next((x for x in pair if not x.onstrike), None)
+                if (
+                    partner
+                    and on_strike.attr.batting - partner.attr.batting >= 2
+                ):
+                    # try to keep strike probabilistically (30% chance)
+                    if random.random() < 0.30:
+                        # on penultimate over, risky single could result in run-out
+                        if overs_left == 2 and run > 0 and random.random() < 0.15:
+                            # attempt run-out on risky single
+                            run = -1
+                        else:
+                            # convert to single to keep strike
+                            run = 1
 
         # this legal delivery consumes any pending free hit (a no-ball earlier
         # in the over set it; wides/no-balls don't reach Ball(), so it survives
@@ -3367,15 +3405,35 @@ class Match:
                     return
             elif dismissal.startswith("c +"):
                 # a keeper catch is the nick behind the bat (see
-                # GenerateDismissal). If the batsman walked, there's no
-                # appeal, no umpire's decision, and nothing to review -
-                # the dismissal simply stands
+                # GenerateDismissal). The appeal drama was already shown;
+                # if the batsman walked, show that now and finalize the
+                # dismissal. Otherwise, proceed to DRS review
                 if getattr(self, "_nick_walked", False):
+                    walked_name = getattr(self, "_nick_walked_name", "")
                     self._nick_walked = False
+                    self._nick_walked_name = None
+                    walk_comment = (
+                        Randomize(commentary.commentary_batsman_walks)
+                        % walked_name
+                    )
+                    PrintInColor(walk_comment, self.batting_team.color)
+                    keeper_name = self.bowling_team.keeper.name
+                    bowler_name = self.bowling_team.current_bowler.name
+                    utilities.PushEvent(
+                        "batsman_walks",
+                        {
+                            "batsman": walked_name,
+                            "keeper": keeper_name,
+                            "bowler": bowler_name,
+                            "comment": walk_comment,
+                        },
+                    )
+                    if not self.fast:
+                        time.sleep(1.2)
                     self.UpdateDismissal(dismissal)
                     return
-                # otherwise the umpire gives it out on the appeal, and the
-                # batsman can review it for a missing edge
+                # otherwise the batsman didn't walk, so the umpire's
+                # decision from the appeal stands and can be reviewed via DRS
                 PrintInColor(
                     Randomize(commentary.commentary_caught_appeal), Fore.LIGHTRED_EX
                 )
@@ -3669,11 +3727,23 @@ class Match:
             bowler.ball_history.append("Wkt")
             batting_team.ball_history.append("Wkt")
             bowler.wkts += 1
-            # check if he had batted well in the first innings
-            if bowler.runs > 50:
-                PrintInColor(
-                    Randomize(commentary.commentary_all_round_bowler) % bowler.name,
-                    bowling_team.color,
+            # check if player is excelling in multiple disciplines: batting
+            # (50+ runs) and bowling (taking wickets), or good fielding stats
+            runs_solid = bowler.runs >= 50
+            catches_solid = bowler.catches >= 2
+            bowls_solid = True  # just took a wicket
+            if (runs_solid and bowls_solid) or (catches_solid and runs_solid):
+                comment = Randomize(commentary.commentary_all_rounder_performance) % GetSurname(bowler.name)
+                PrintInColor(comment, bowling_team.color)
+                utilities.PushEvent(
+                    "all_rounder_display",
+                    {
+                        "player": bowler.name,
+                        "runs": int(bowler.runs),
+                        "wickets": int(bowler.wkts),
+                        "catches": int(bowler.catches),
+                        "comment": comment,
+                    },
                 )
 
         # update wkts, balls, etc
@@ -3718,6 +3788,30 @@ class Match:
                     "batter": player_dismissed.name,
                     "bowler": bowler.name,
                     "text": Randomize(commentary.commentary_first_ball_wicket),
+                },
+            )
+
+        # wonderful innings pop-up: batsman had a great knock (50+ runs or
+        # 30+ runs with strong SR) before getting dismissed
+        runs = player_dismissed.runs
+        balls = player_dismissed.balls
+        sr = player_dismissed.strikerate if balls > 0 else 0
+        is_wonderful = (
+            (runs >= 50)
+            or (runs >= 30 and balls > 0 and sr >= 120)
+        )
+        if is_wonderful:
+            comment = Randomize(commentary.commentary_wonderful_innings) % GetSurname(player_dismissed.name)
+            utilities.PushEvent(
+                "wonderful_innings",
+                {
+                    "batter": player_dismissed.name,
+                    "runs": int(runs),
+                    "balls": int(balls),
+                    "sr": float(sr),
+                    "fours": int(player_dismissed.fours),
+                    "sixes": int(player_dismissed.sixes),
+                    "comment": comment,
                 },
             )
 
@@ -3904,6 +3998,13 @@ class Match:
             else:
                 breakthrough_data["kind"] = "bowler"
                 breakthrough_data["bowler"] = bowler.name
+
+            # for big partnerships (50+ runs), celebrate the captaincy that
+            # broke it - smart fielding placement and tactical acumen
+            if partnership.runs >= 50:
+                breakthrough_data["captaincyComment"] = Randomize(
+                    commentary.commentary_partnership_break_captaincy
+                )
 
             # is this breakthrough actually worth much? Reuses the same
             # chase-difficulty read as the "how's the chase going" pop-up
@@ -5871,6 +5972,35 @@ class Match:
         if not self.fast:
             time.sleep(1.2)
 
+    def _PushBowledDrama(self, bowler):
+        """
+        Show a big-screen animation for a bowled dismissal: spinning ball
+        turning into stumps (spinner) or swinging/straight ball hitting stumps
+        (pacer).
+
+        Args:
+            bowler: the Player who bowled the delivery.
+
+        Returns:
+            None
+        """
+        is_spinner = bowler.attr.isspinner
+        comment = Randomize(
+            commentary.commentary_bowled_spin if is_spinner else commentary.commentary_bowled_pace
+        )
+
+        utilities.PushEvent(
+            "bowled_drama",
+            {
+                "isSpinner": is_spinner,
+                "bowler": bowler.name,
+                "comment": comment,
+            },
+        )
+        PrintInColor(comment, Fore.LIGHTGREEN_EX)
+        if not self.fast:
+            time.sleep(1.2)
+
     def _PushCleanCatch(self, fielder, bowler, in_powerplay=False):
         """
         Show a big-screen pop-up for a clean, unappealed catch - no umpire
@@ -5916,6 +6046,17 @@ class Match:
                 "comment": comment,
             },
         )
+        # animate a catch at the deep boundary line (fast bowlers and tail
+        # always field there - see Team.AssignFieldingPositions)
+        if position == "deep":
+            utilities.PushEvent(
+                "caught_deep_drama",
+                {
+                    "fielder": fielder.name,
+                    "bowler": bowler.name,
+                    "comment": comment,
+                },
+            )
         PrintInColor(comment, Fore.LIGHTGREEN_EX)
         if not self.fast:
             time.sleep(1.2)
@@ -5973,6 +6114,9 @@ class Match:
                 # the appeal itself, played out before the DRS check that
                 # may still follow (see Ball(), unchanged)
                 self._PushAppealDrama(bowler, "lbw", out=True)
+            else:
+                # bowled: ball turning/swinging into the stumps
+                self._PushBowledDrama(bowler)
         elif dismissal == "st":
             # stumped
             dismissal_str = "st +%s b %s" % (
@@ -6033,35 +6177,43 @@ class Match:
                     GetShortName(bowler.name),
                 )
             if is_nick:
+                # the appeal itself, played out before checking if the
+                # batsman will walk or wait for a DRS review (see Ball())
+                self._PushAppealDrama(bowler, "catch", out=True)
                 # sometimes the edge is so obvious the batsman doesn't wait
-                # for the umpire at all - he walks. No appeal, no decision,
-                # and (see Ball()'s "c +" branch) nothing left to review
+                # for the umpire's verdict at all - he walks. This only
+                # happens early in a non-clutch innings, never during a
+                # chase or when wickets are running thin (see Ball()'s
+                # "c +" branch)
                 striker = next(
                     (x for x in self.batting_team.current_pair if x.onstrike), None
                 )
-                walked = striker is not None and random.random() < 0.25
+                # gate: walk only in early overs of first innings, with
+                # wickets in hand, never when chasing
+                can_walk = (
+                    striker is not None
+                    and not self.batting_team.batting_second
+                    and self.batting_team.wickets_fell <= 6
+                )
+                if can_walk:
+                    # powerplay limits: first 5 overs (T20/5-over), 6 overs
+                    # (ODI) - though for simplicity we check balls < 30 which
+                    # covers most limited-overs formats
+                    overs_played = int(self.batting_team.total_balls // 6)
+                    if self.is_test:
+                        # Test: allow walks only in first session
+                        can_walk = overs_played < (self.overs_per_session or 90)
+                    else:
+                        # limited overs: check format-specific powerplay
+                        # T20/5-over: 5 overs; ODI: 6 overs; anything else: 5
+                        powerplay_overs = (
+                            6 if self.overs and self.overs >= 50 else 5
+                        )
+                        can_walk = overs_played < powerplay_overs
+
+                walked = can_walk and random.random() < 0.25
                 self._nick_walked = walked
-                if walked:
-                    walk_comment = (
-                        Randomize(commentary.commentary_batsman_walks)
-                        % GetSurname(striker.name)
-                    )
-                    PrintInColor(walk_comment, self.batting_team.color)
-                    utilities.PushEvent(
-                        "batsman_walks",
-                        {
-                            "batsman": striker.name,
-                            "keeper": keeper.name,
-                            "bowler": bowler.name,
-                            "comment": walk_comment,
-                        },
-                    )
-                    if not self.fast:
-                        time.sleep(1.2)
-                else:
-                    # the appeal itself, played out before the DRS review
-                    # that may still follow (see Ball(), unchanged)
-                    self._PushAppealDrama(bowler, "catch", out=True)
+                self._nick_walked_name = striker.name if walked else None
             else:
                 # no doubt at all about this one - its own pop-up so it
                 # visibly reads as a different kind of wicket, not just

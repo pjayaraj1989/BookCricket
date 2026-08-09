@@ -97,11 +97,15 @@ class Team:
         self.opening_pair[0].onstrike, self.opening_pair[1].onstrike = True, False
         self.opening_pair[0].onfield, self.opening_pair[1].onfield = True, True
 
-    def StartBowlingInnings(self):
+    def StartBowlingInnings(self, is_test=False, overs_limit=None):
         """
         Reset this team's bowling figures for a new innings (the opposing
         team's next innings). Called at the top of every innings (Match.Play)
         for the bowling side; a no-op in effect for limited-overs matches.
+
+        Args:
+            is_test: True if this is a Test match (slip fielding never applies)
+            overs_limit: Total overs in the match (50 for ODI, 20 for T20, None for Test)
 
         Returns:
             None
@@ -110,9 +114,9 @@ class Team:
         self.current_bowler = None
         for p in self.team_array:
             p.ResetBowlingInnings()
-        self.AssignFieldingPositions()
+        self.AssignFieldingPositions(is_test=is_test, overs_limit=overs_limit)
 
-    def AssignFieldingPositions(self):
+    def AssignFieldingPositions(self, is_test=False, overs_limit=None):
         """
         Give every fielder a plausible position based on their role in the
         XI - purely flavour, read by GenerateDismissal to decide who
@@ -124,8 +128,12 @@ class Team:
           covers/extra-cover/midwicket area
         - fast bowlers always field out at the deep boundary
         - everyone else follows their spot in the batting order: top order
-          at slip, middle order at point, the tail out at the deep with
-          the quicks
+          at slip (limited-overs powerplay only), middle order at point,
+          the tail out at the deep with the quicks
+
+        Args:
+            is_test: True if this is a Test match (slip fielding never applies)
+            overs_limit: Total overs in the match (50 for ODI, 20 for T20, None for Test)
 
         Returns:
             None
@@ -143,13 +151,27 @@ class Team:
         ):
             self.captain.field_position = "covers"
 
+        # slip fielding only applies in limited-overs powerplay: first 5 overs
+        # (T20) or first 10 overs (ODI), never in Tests
+        allow_slip = (
+            not is_test
+            and overs_limit is not None
+        )
+
         top_order = self.team_array[:4]
         middle_order = self.team_array[4:7]
         tail = self.team_array[7:]
 
         for p in top_order:
             if p.field_position is None:
-                p.field_position = "deep" if p.attr.ispacer else "slip"
+                if p.attr.ispacer:
+                    p.field_position = "deep"
+                elif allow_slip:
+                    p.field_position = "slip"
+                else:
+                    # after powerplay in limited-overs, or in Tests: top order
+                    # fields at point instead
+                    p.field_position = "point"
         for p in middle_order:
             if p.field_position is None:
                 p.field_position = "deep" if p.attr.ispacer else "point"
