@@ -4471,6 +4471,32 @@ class commentary:
         "gone! caught right on the rope by %s!",
     ]
 
+    # a bat-pad catch off the spinner, taken by the close-in fielder crouched
+    # at silly point a couple of yards from the bat - a Test-match field only
+    # (see Match.GenerateDismissal)
+    commentary_caught_silly_point = [
+        "bat-pad! taken at silly point by %s!",
+        "off the inside edge onto the pad, and %s snaffles it at silly point!",
+        "gone! %s pouches it at silly point, inches from the bat!",
+        "that's turned and taken the edge, %s reacts brilliantly at silly point!",
+        "%s is crouched right under the batsman's nose and takes a fine catch!",
+        "bat, pad, and straight to %s at silly point! superb reflexes!",
+        "the close-in fielder is rewarded! well taken %s at silly point!",
+        "no time to think there, but %s clings on at silly point!",
+        "%s takes a sharp one at silly point off the glove and pad!",
+        "the short catcher does his job, %s with the take at silly point!",
+        "beaten by the turn, and %s is waiting at silly point!",
+        "brave fielding! %s holds on at silly point from point-blank range!",
+        "%s doesn't flinch at silly point and takes a brilliant bat-pad catch!",
+        "that popped up off the pad, and %s gobbles it at silly point!",
+        "the helmet and the courage pay off, %s catches it at silly point!",
+        "spun past the inside edge onto the pad, %s takes it at silly point!",
+        "a fine catch under the lid! %s at silly point!",
+        "%s was standing so close he could shake hands, and he's taken it!",
+        "off the splice and straight to silly point where %s waits!",
+        "gone! the bat-pad trap works, %s takes it at silly point!",
+    ]
+
     # Test cricket, very early in the innings: the batsman lets one go
     # through to the keeper rather than playing a shot. Takes the bowler's
     # and batsman's surnames, in that order

@@ -6020,7 +6020,7 @@ class Match:
         if not self.fast:
             time.sleep(1.2)
 
-    def _PushCleanCatch(self, fielder, bowler, in_powerplay=False):
+    def _PushCleanCatch(self, fielder, bowler, in_powerplay=False, position=None):
         """
         Show a big-screen pop-up for a clean, unappealed catch - no umpire
         or verdict involved, just the fielder's face and a flavoured line.
@@ -6039,14 +6039,23 @@ class Match:
             bowler: the Player who bowled the delivery.
             in_powerplay: True inside the first 5 overs of a limited-overs
                 innings - only relevant to the slip-catch flavour.
+            position: overrides where the catch was taken from, for postings
+                the captain sets per delivery rather than for the innings
+                ("silly point" against a spinner in a Test - see
+                GenerateDismissal). Defaults to the fielder's standing post.
 
         Returns:
             None
         """
         is_return_catch = fielder is bowler
-        position = None if is_return_catch else getattr(fielder, "field_position", None)
+        if is_return_catch:
+            position = None
+        elif position is None:
+            position = getattr(fielder, "field_position", None)
         if is_return_catch:
             pool = commentary.commentary_return_catch
+        elif position == "silly point":
+            pool = commentary.commentary_caught_silly_point
         elif in_powerplay and position == "slip":
             pool = commentary.commentary_caught_slip
         elif position == "deep":
@@ -6165,12 +6174,32 @@ class Match:
             # caught-and-bowled) with no doubt at all, so no appeal and
             # nothing to review
             is_nick = random.random() < 0.45
+            # a catch taken at silly point, decided per delivery rather than
+            # from the fielder's standing post - the close-in cordon only
+            # comes in when the spinner is on (see below)
+            at_silly_point = False
             if is_nick:
                 fielder = keeper
             else:
-                fielder = Randomize(
-                    [p for p in bowling_team.team_array if p is not keeper]
-                )
+                candidates = [p for p in bowling_team.team_array if p is not keeper]
+                # against spin in a Test, the captain posts a man at silly
+                # point a couple of yards from the bat, and a fair share of
+                # the catches off the spinner are the bat-pad taken there.
+                # Never a quick (they field out at the deep - see
+                # Team.AssignFieldingPositions) and never the bowler himself
+                close_in = [
+                    p for p in candidates if p is not bowler and not p.attr.ispacer
+                ]
+                if (
+                    self.is_test
+                    and bowler.attr.isspinner
+                    and close_in
+                    and random.random() < 0.3
+                ):
+                    fielder = Randomize(close_in)
+                    at_silly_point = True
+                else:
+                    fielder = Randomize(candidates)
             fielder.catches += 1
             if fielder.catches == 5:
                 utilities.PushEvent(
@@ -6241,7 +6270,12 @@ class Match:
                 in_powerplay = (
                     self.overs is not None and self.batting_team.total_balls < 30
                 )
-                self._PushCleanCatch(fielder, bowler, in_powerplay=in_powerplay)
+                self._PushCleanCatch(
+                    fielder,
+                    bowler,
+                    in_powerplay=in_powerplay,
+                    position="silly point" if at_silly_point else None,
+                )
         elif dismissal == "runout":
             fielder.runouts += 1
             dismissal_str = "runout %s" % (GetShortName(fielder.name))
