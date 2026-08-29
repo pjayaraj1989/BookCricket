@@ -6989,6 +6989,32 @@ class Match:
         sessions_left = max(self.sessions_per_day - self.session, 0)
         return int(in_session + sessions_left * self.overs_per_session)
 
+    def _InningsStillLive(self):
+        """
+        Whether the innings can still receive another ball.
+
+        The over-loop only tests for all-out/declared at the TOP of the next
+        iteration, so the last wicket of an innings falls inside PlayOver and
+        _PostOverDisplay still runs once afterwards. Per-over displays that
+        look ahead ("N overs left today", "new ball due in N overs") have to
+        check for themselves, or they announce things for an innings that is
+        already finished - and when it's the match's last innings, that reads
+        as the game talking after it's over.
+
+        Returns:
+            bool: True while another ball is still possible.
+        """
+        batting_team = self.batting_team
+        if not self.status or batting_team is None:
+            return False
+        if batting_team.wickets_fell >= 10:
+            return False
+        if getattr(batting_team, "innings_over", False):
+            return False
+        if getattr(batting_team, "declared", False):
+            return False
+        return True
+
     def _CheckSecondNewBall(self):
         """
         The second new ball: available to the fielding captain once the
@@ -7002,7 +7028,7 @@ class Match:
         Returns:
             None
         """
-        if not self.is_test or not self.status:
+        if not self.is_test or not self._InningsStillLive():
             return
 
         overs = self.batting_team.total_balls // 6
@@ -7048,7 +7074,7 @@ class Match:
         Returns:
             None
         """
-        if not self.status or not self.is_test:
+        if not self.is_test or not self._InningsStillLive():
             return
         left = self.OversRemainingInDay()
         if left is None:
