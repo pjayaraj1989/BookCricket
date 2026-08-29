@@ -288,7 +288,8 @@ def PushEvent(kind, data=None):
             "too_many_extras", "stumps", "innings_analysis", "run_out_drama",
             "stumping_drama", "appeal_drama", "clean_catch", "first_over_drama",
             "captain_out", "no_ball", "batsman_walks", "bowled_drama",
-            "caught_deep_drama", "all_rounder_display", "wonderful_innings").
+            "caught_deep_drama", "all_rounder_display", "wonderful_innings",
+            "new_ball_due", "new_ball_taken").
         data: Optional dict of extra fields for the frontend to render.
 
     Returns:

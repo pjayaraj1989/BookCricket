@@ -1998,6 +1998,20 @@ function renderEvent(kind, data) {
     const drinksCard = buildMiscCard("misc/drinks_break", "🥤", "Drinks break", "", data && data.team);
     appendComment(drinksCard, data && data.comment);
     showEventPane(drinksCard, 3000, "takeover");
+  } else if (kind === "new_ball_due") {
+    // just a heads-up in the overs before the ball falls due - kept short,
+    // since it fires once an over for five overs running
+    const togo = data && data.oversToGo;
+    const sub = togo ? togo + (togo === 1 ? " over to go" : " overs to go") : "";
+    const dueCard = buildMiscCard("misc/new_ball", "🔴", "Second new ball due", sub);
+    appendComment(dueCard, data && data.comment);
+    showEventPane(dueCard, 2000, "takeover");
+  } else if (kind === "new_ball_taken") {
+    const takenCard = buildMiscCard(
+      "misc/new_ball", "🔴", "Second new ball taken", "", data && data.team
+    );
+    appendComment(takenCard, data && data.comment);
+    showEventPane(takenCard, 3500, "takeover");
   } else if (kind === "stumps") {
     const day = data && data.day;
     const sub = day ? "End of Day " + day : "";
