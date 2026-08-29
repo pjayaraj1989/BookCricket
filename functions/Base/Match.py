@@ -56,6 +56,7 @@ class Match:
             "commentators": None,
             "drs": False,
             "free_hit": False,  # next legal delivery is a free hit (after a no-ball)
+            "free_hit_enabled": True,  # limited-overs only; off lets older/retro teams play without the rule
             "firstinnings": None,
             "secondinnings": None,
             "batting_first": None,
@@ -5276,6 +5277,23 @@ class Match:
             if not self.autoplay:
                 input("press enter to continue")
 
+        # free hit is a modern limited-overs rule; let older/retro teams play
+        # without it (Test cricket never has it regardless, see NoBall handling).
+        # self.is_test isn't set until after Toss() returns, so check
+        # match_type directly here.
+        if self.match_type != "Test":
+            if self.autoplay:
+                free_hit_opted = "y"
+            else:
+                free_hit_opted = ChooseFromOptions(
+                    ["y", "n"], "Use the free hit rule for this match? ", 5
+                )
+            self.free_hit_enabled = free_hit_opted == "y"
+            if not self.free_hit_enabled:
+                PrintInColor("Free hit rule disabled", Style.BRIGHT)
+                if not self.autoplay:
+                    input("press enter to continue")
+
         self.status = True
         return
 
@@ -5454,8 +5472,9 @@ class Match:
                 },
             )
             # the next legal delivery is a free hit - a limited-overs rule only,
-            # Test cricket has no free hit
-            if not self.is_test:
+            # Test cricket has no free hit, and it can be disabled per-match
+            # for older/retro teams that never played under this rule
+            if not self.is_test and self.free_hit_enabled:
                 self.free_hit = True
                 PrintInColor(
                     Randomize(commentary.commentary_free_hit), Fore.LIGHTGREEN_EX
