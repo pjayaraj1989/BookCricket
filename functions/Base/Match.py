@@ -89,6 +89,20 @@ class Match:
             "new_ball_overs": 80,
             "new_balls_taken": 0,  # new balls taken beyond the opening one
             "new_ball_warned_at": 0,  # innings over the countdown last fired on
+            # the new ball swings for a few overs after it's taken, which is
+            # the quicks' window (see _NewBallSwingFactor)
+            "new_ball_taken_over": 0,  # innings over the last one was taken
+            "new_ball_swing_overs": 5,
+            "new_ball_pace_boost": 2.0,  # wicket-rate factor the over it's taken
+            # the other side of the coin: once the ball is worn a good spinner
+            # starts to grip and turn it (see _OldBallSpinFactor)
+            "spin_old_ball_overs": 20,  # ball age at which spin starts to bite
+            "spin_old_ball_peak": 30,  # further overs until it bites fully
+            "spin_old_ball_boost": 1.8,  # wicket-rate factor at full bite
+            # innings overs at which Test batting moves from watchful, to set,
+            # to freed up (see GenerateRun's phase distributions)
+            "test_early_overs": 30,
+            "test_late_overs": 70,
             # rainy-Test rain sequence (all no-op on dry venues / limited-overs)
             "rain_enabled": False,
             "rain_done": False,
@@ -1128,6 +1142,7 @@ class Match:
             # for the next one starts again from scratch
             self.new_balls_taken = 0
             self.new_ball_warned_at = 0
+            self.new_ball_taken_over = 0
 
             # reset accumulators for this innings. For limited-overs matches this
             # is a no-op in effect (each team only ever calls it once, and fields
@@ -4200,6 +4215,158 @@ class Match:
         #     utilities.PlotOversBarGraph(batting_team.over_history, batting_team.over_wkt_history, "RR Graph")
         return
 
+    def _ApplyTestSkillMatchup(self, prob, bowler, striker):
+        """
+        Bend a Test innings' run distribution by how far the bowler outclasses
+        the batter, or the other way round.
+
+        Limited-overs still uses the flat ">= 4" cliff in GenerateRun, where a
+        single rating point took a batter from a wicket every 55 balls to one
+        every 4, every gap of 4 or more was treated alike, and nothing below
+        the threshold mattered at all. Here each rating point is worth about
+        22% on the wicket rate, so the whole rating range does something and
+        nothing jumps.
+
+        The extra wicket probability comes out of the scoring shots, and a
+        bowler on top additionally turns some of what is left into dots - so
+        being outclassed means getting out more often AND scoring more slowly.
+        The cliff had that backwards: it raised the boundary rate.
+
+        Args:
+            prob: this ball's phase distribution, over run_array
+                [-1, 0, 1, 2, 3, 4, 5, 6].
+            bowler: the bowler.
+            striker: the batter on strike.
+
+        Returns:
+            list: a new distribution summing to 1.0 (prob itself is never
+                mutated - the phase lists are shared).
+        """
+        diff = bowler.attr.bowling - striker.attr.batting
+        if diff == 0:
+            return prob
+
+        # a rating point either way is worth ~22% on the wicket rate, clamped
+        # so the ends of the rating range stay playable rather than farcical
+        mult = min(max(1.225 ** diff, 0.5), 5.0)
+        # a dominant bowler converts part of the scoring into dots; a dominant
+        # batter does the reverse
+        pressure = min(max((mult - 1.0) * 0.12, -0.10), 0.30)
+        return self._BendDistribution(prob, mult, pressure)
+
+    def _BendDistribution(self, prob, wicket_mult, pressure):
+        """
+        Scale a run distribution's wicket probability and shift some of the
+        scoring into dots (or the other way round), keeping the result a valid
+        distribution. Shared by the skill matchup and the new-ball swing
+        window, which both make a bowler more dangerous in the same two ways.
+
+        Args:
+            prob: distribution over run_array [-1, 0, 1, 2, 3, 4, 5, 6].
+            wicket_mult: factor on the wicket probability (capped at a 0.25
+                absolute wicket rate so no combination runs away).
+            pressure: fraction of the remaining scoring probability to move
+                into dots; negative moves dots back into scoring.
+
+        Returns:
+            list: a new distribution summing to 1.0 (prob is never mutated -
+                the phase lists are shared).
+        """
+        wicket = min(prob[0] * wicket_mult, 0.25)
+        dot = prob[1]
+        scoring = list(prob[2:])
+
+        # refit dot + scoring into whatever the new wicket rate leaves
+        old_rest = dot + sum(scoring)
+        if old_rest <= 0:
+            return prob
+        scale = (1.0 - wicket) / old_rest
+        dot *= scale
+        scoring = [p * scale for p in scoring]
+
+        if pressure > 0:
+            dot += pressure * sum(scoring)
+            scoring = [p * (1.0 - pressure) for p in scoring]
+        elif pressure < 0:
+            moved = -pressure * dot
+            total = sum(scoring)
+            if total > 0:
+                dot -= moved
+                scoring = [p + moved * (p / total) for p in scoring]
+
+        out = [wicket, dot] + scoring
+        total = sum(out)
+        return [p / total for p in out]
+
+    def _NewBallSwingFactor(self, bowler):
+        """
+        How much help a seamer is getting from a newly taken ball. The second
+        new ball is hard and shiny and swings for a handful of overs, which is
+        a pace bowler's window - a spinner gets nothing from it (if anything a
+        new ball is harder to grip and turn).
+
+        Strongest the over it's taken and fading linearly across
+        new_ball_swing_overs, so the danger period tails off rather than
+        switching off.
+
+        Args:
+            bowler: the bowler on. None or a spinner gets no help.
+
+        Returns:
+            float: multiplier on the wicket probability, 1.0 for no help.
+        """
+        if not self.is_test or not self.new_balls_taken:
+            return 1.0
+        if bowler is None or not bowler.attr.ispacer:
+            return 1.0
+        elapsed = (self.batting_team.total_balls // 6) - self.new_ball_taken_over
+        if elapsed < 0 or elapsed >= self.new_ball_swing_overs:
+            return 1.0
+        remaining = float(self.new_ball_swing_overs - elapsed) / self.new_ball_swing_overs
+        return 1.0 + (self.new_ball_pace_boost - 1.0) * remaining
+
+    def _BallAgeOvers(self):
+        """
+        How many overs old the ball currently in use is - measured from the
+        start of the innings, or from the last new ball if one has been taken.
+
+        Returns:
+            int: the ball's age in overs (0 in a limited-overs match, which
+                never changes ball).
+        """
+        if not self.is_test:
+            return 0
+        overs = self.batting_team.total_balls // 6
+        return max(overs - self.new_ball_taken_over, 0)
+
+    def _OldBallSpinFactor(self, bowler):
+        """
+        How much help a spinner is getting from a worn ball. The shine goes,
+        the seam roughs up and the pitch wears, and from around
+        spin_old_ball_overs a good finger or wrist spinner starts finding grip
+        and turn - the mirror image of the quicks' new-ball window.
+
+        Ramps in over spin_old_ball_peak overs rather than switching on, and
+        scales with the bowler's rating so a part-time spinner gets little out
+        of it and a front-line one gets the lot. Seamers get nothing.
+
+        Args:
+            bowler: the bowler on. None or a seamer gets no help.
+
+        Returns:
+            float: multiplier on the wicket probability, 1.0 for no help.
+        """
+        if not self.is_test or bowler is None or not bowler.attr.isspinner:
+            return 1.0
+        age = self._BallAgeOvers()
+        if age < self.spin_old_ball_overs:
+            return 1.0
+        # how far into the wear-in this ball is, and how much this bowler can
+        # do with it (nothing at rating 5, everything at 9)
+        ramp = min(float(age - self.spin_old_ball_overs) / self.spin_old_ball_peak, 1.0)
+        skill = min(max((bowler.attr.bowling - 5.0) / 4.0, 0.0), 1.0)
+        return 1.0 + (self.spin_old_ball_boost - 1.0) * ramp * skill
+
     def GenerateRun(self, over, player_on_strike):
         """
         Generate the number of runs scored on a ball.
@@ -4219,16 +4386,33 @@ class Match:
         # run array: [-1(wkt), 0, 1, 2, 3, 4, 5, 6]
         run_array = [-1, 0, 1, 2, 3, 4, 5, 6]
 
-        # Test batting: watchful and risk-averse - mostly dots, singles and
-        # twos (occupying the crease, rotating strike), and even rarer to
-        # get out than to find a boundary. This is the neutral baseline for
-        # an average batter against an average bowler - the batter/bowler
-        # skill matchup below adjusts it further either way.
-        prob_test = [0.025, 0.40, 0.40, 0.15, 0.01, 0.0, 0.015, 0.0]
+        # Test batting, by phase of the innings: watchful against the new
+        # ball, freer once the batters are set and the ball has gone soft.
+        # Runs come from dots broken by the occasional boundary rather than a
+        # stream of singles, which is what makes a Test innings read like one.
+        # Columns line up with run_array: [wkt, 0, 1, 2, 3, 4, 5, 6].
+        #
+        # Two things are deliberate here. A five is a freak event in cricket
+        # (overthrows, penalty runs) rather than a shot a batter plays, so it
+        # sits at zero in every phase. And the wicket rate is held flat across
+        # the phases - the phases change how batters score, not how often they
+        # get out.
+        #                   wkt     dot      1      2      3      4    5     6
+        prob_test_early = [0.018, 0.720, 0.160, 0.060, 0.004, 0.035, 0.0, 0.003]
+        prob_test_set   = [0.018, 0.680, 0.180, 0.067, 0.005, 0.045, 0.0, 0.005]
+        prob_test_late  = [0.018, 0.635, 0.201, 0.075, 0.006, 0.055, 0.0, 0.010]
 
         prob = venue.run_prob_t20
         if self.is_test:
-            prob = prob_test
+            # phase off the batting side's own overs, so it tracks this
+            # innings rather than how long the match has been going
+            innings_overs = batting_team.total_balls // 6
+            if innings_overs < self.test_early_overs:
+                prob = prob_test_early
+            elif innings_overs < self.test_late_overs:
+                prob = prob_test_set
+            else:
+                prob = prob_test_late
         elif overs == 50:
             # if ODI, override the prob
             prob = venue.run_prob
@@ -4257,7 +4441,20 @@ class Match:
         # if initial overs, play carefully based on RR
         # if death overs, try to go big
         # but, if batsman is poor and bowler is skilled, more chances of getting out
-        if bowler.attr.bowling - player_on_strike.attr.batting >= 4:
+        if self.is_test:
+            # Tests grade the matchup smoothly across the whole rating range
+            prob = self._ApplyTestSkillMatchup(prob, bowler, player_on_strike)
+            # ... hand the quicks a window when a new ball is taken, and the
+            # spinners one once it has worn (never both - a ball is either
+            # new or old)
+            swing = self._NewBallSwingFactor(bowler)
+            if swing > 1.0:
+                prob = self._BendDistribution(prob, swing, (swing - 1.0) * 0.10)
+            else:
+                grip = self._OldBallSpinFactor(bowler)
+                if grip > 1.0:
+                    prob = self._BendDistribution(prob, grip, (grip - 1.0) * 0.10)
+        elif bowler.attr.bowling - player_on_strike.attr.batting >= 4:
             prob = [0.25, 0.20, 0.20, 0.15, 0.05, 0.05, 0.05, 0.05]
 
         # endgame: batsmen only run what's needed to win - with 1 to win
@@ -6184,8 +6381,9 @@ class Match:
                 innings - only relevant to the slip-catch flavour.
             position: overrides where the catch was taken from, for postings
                 the captain sets per delivery rather than for the innings
-                ("silly point" against a spinner in a Test - see
-                GenerateDismissal). Defaults to the fielder's standing post.
+                ("silly point", "first slip" or "leg slip" against a spinner
+                in a Test), or how it came ("mishit"). See GenerateDismissal.
+                Defaults to the fielder's standing post.
 
         Returns:
             None
@@ -6199,8 +6397,21 @@ class Match:
             pool = commentary.commentary_return_catch
         elif position == "silly point":
             pool = commentary.commentary_caught_silly_point
+        elif position == "leg slip":
+            pool = commentary.commentary_caught_leg_slip
+        elif position == "mishit":
+            pool = commentary.commentary_caught_mishit
         elif in_powerplay and position == "slip":
+            # limited-overs powerplay cordon, unchanged
             pool = commentary.commentary_caught_slip
+        elif self.is_test and position in ("first slip", "slip"):
+            # a Test cordon reads differently off spin (gripping, turning)
+            # than off seam (edged away from the body)
+            pool = (
+                commentary.commentary_caught_slip_spin
+                if bowler.attr.isspinner
+                else commentary.commentary_caught_slip_pace
+            )
         elif position == "deep":
             pool = commentary.commentary_caught_deep
         else:
@@ -6260,10 +6471,21 @@ class Match:
         # keeper stands back for that pace
         if bowler.attr.isspinner:
             dismissal_types = ["c", "st", "runout", "lbw", "b"]
-            dismissal_prob = [0.38, 0.2, 0.02, 0.2, 0.2]
+            if self._OldBallSpinFactor(bowler) > 1.0:
+                # a gripping, turning old ball takes the edge or draws the
+                # mishit far more often than it finds a way through the gate
+                dismissal_prob = [0.50, 0.20, 0.02, 0.18, 0.10]
+            else:
+                dismissal_prob = [0.38, 0.2, 0.02, 0.2, 0.2]
         elif bowler.attr.ispacer:
             dismissal_types = ["c", "runout", "lbw", "b"]
-            dismissal_prob = [0.45, 0.05, 0.25, 0.25]
+            if self._NewBallSwingFactor(bowler) > 1.0:
+                # a hard, swinging new ball beats the edge or hits the pad
+                # far more often than it knocks over the stumps, and nobody
+                # is stealing risky singles into it
+                dismissal_prob = [0.55, 0.02, 0.30, 0.13]
+            else:
+                dismissal_prob = [0.45, 0.05, 0.25, 0.25]
         else:
             # medium pace: stumpings do happen here, just far less often
             # than against a spinner
@@ -6316,31 +6538,59 @@ class Match:
             # clean, obvious catches elsewhere in the field (or a
             # caught-and-bowled) with no doubt at all, so no appeal and
             # nothing to review
-            is_nick = random.random() < 0.45
-            # a catch taken at silly point, decided per delivery rather than
-            # from the fielder's standing post - the close-in cordon only
-            # comes in when the spinner is on (see below)
-            at_silly_point = False
+            # with a new ball in a seamer's hand the catch is far more often
+            # an edge carrying through to the keeper than a shot picked out
+            # in the field
+            nick_chance = 0.60 if self._NewBallSwingFactor(bowler) > 1.0 else 0.45
+            is_nick = random.random() < nick_chance
+            # where the catch is taken, decided per delivery rather than from
+            # the fielder's standing post: the cordon a captain sets depends
+            # on who is bowling and how old the ball is, neither of which the
+            # once-per-innings Team.AssignFieldingPositions can know
+            catch_position = None
             if is_nick:
                 fielder = keeper
             else:
                 candidates = [p for p in bowling_team.team_array if p is not keeper]
-                # against spin in a Test, the captain posts a man at silly
-                # point a couple of yards from the bat, and a fair share of
-                # the catches off the spinner are the bat-pad taken there.
-                # Never a quick (they field out at the deep - see
-                # Team.AssignFieldingPositions) and never the bowler himself
+                # close catchers are specialists: never a quick (they field
+                # out at the deep - see Team.AssignFieldingPositions) and
+                # never the bowler himself
                 close_in = [
                     p for p in candidates if p is not bowler and not p.attr.ispacer
                 ]
-                if (
-                    self.is_test
-                    and bowler.attr.isspinner
-                    and close_in
-                    and random.random() < 0.3
-                ):
+                if self.is_test and close_in:
+                    roll = random.random()
+                    if bowler.attr.isspinner:
+                        # against spin the captain rings the bat: a man at
+                        # silly point, and once the ball grips, catchers at
+                        # first and leg slip for the edge
+                        if self._OldBallSpinFactor(bowler) > 1.0:
+                            # worn ball: the edge to slip is in play alongside
+                            # the bat-pad, and the rest are mishits ballooning
+                            # up as batters try to get after the turn
+                            if roll < 0.20:
+                                catch_position = "silly point"
+                            elif roll < 0.40:
+                                catch_position = "first slip"
+                            elif roll < 0.55:
+                                catch_position = "leg slip"
+                            else:
+                                catch_position = "mishit"
+                        elif roll < 0.30:
+                            # newer ball: little turn yet, so bat-pad only
+                            catch_position = "silly point"
+                    elif bowler.attr.ispacer:
+                        # a seamer always has a cordon behind the bat in a
+                        # Test, and it thickens for a hard new ball
+                        slip_chance = (
+                            0.55 if self._NewBallSwingFactor(bowler) > 1.0 else 0.30
+                        )
+                        if roll < slip_chance:
+                            catch_position = "slip"
+                # a close catcher is a specialist post; a mishit can be taken
+                # by anyone out in the ring
+                if catch_position in ("silly point", "first slip", "leg slip", "slip"):
                     fielder = Randomize(close_in)
-                    at_silly_point = True
                 else:
                     fielder = Randomize(candidates)
             fielder.catches += 1
@@ -6417,7 +6667,7 @@ class Match:
                     fielder,
                     bowler,
                     in_powerplay=in_powerplay,
-                    position="silly point" if at_silly_point else None,
+                    position=catch_position,
                 )
         elif dismissal == "runout":
             fielder.runouts += 1
@@ -6760,6 +7010,8 @@ class Match:
 
         if overs >= due_at:
             self.new_balls_taken += 1
+            # opens the swing window for the quicks (see _NewBallSwingFactor)
+            self.new_ball_taken_over = overs
             captain = self.bowling_team.captain
             name = GetSurname(captain.name) if captain is not None else "the captain"
             comment = Randomize(commentary.commentary_new_ball_taken) % name

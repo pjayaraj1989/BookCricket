@@ -4731,6 +4731,108 @@ class commentary:
         "gone! the bat-pad trap works, %s takes it at silly point!",
     ]
 
+    # an edge off a seamer taken in the slip cordon in a Test - worded to sit
+    # equally well behind a brand new ball or an old one, unlike
+    # commentary_caught_slip above, which is written for the limited-overs
+    # powerplay ("open the innings", "the powerplay slip cordon")
+    commentary_caught_slip_pace = [
+        "found the edge, and %s takes it in the cordon!",
+        "that's the nick, safely swallowed by %s at slip!",
+        "away from the body, edged, and %s does the rest!",
+        "%s takes a fine catch at slip - the seamer gets his reward!",
+        "drawn into the shot and edged to %s in the slips!",
+        "the cordon does its job, %s holds on!",
+        "a thick edge flies to %s at slip and sticks!",
+        "%s dives low to his left and takes a superb catch at slip!",
+        "beaten for pace, and %s accepts the edge in the cordon!",
+        "there's the outside edge, and %s makes no mistake at slip!",
+        "%s snaffles it at slip, the seamer has his man!",
+        "that seamed away just enough - edged, and taken by %s!",
+        "a regulation edge to slip, comfortably held by %s!",
+        "%s reacts sharply in the cordon and clings on!",
+        "the extra bounce did it, edged and taken by %s at slip!",
+        "gone! feathered to the slips where %s waits!",
+        "%s takes it at chest height in the slip cordon!",
+        "poked at one outside off, and %s gobbles it up at slip!",
+        "the slip cordon is rewarded for its patience, %s with the catch!",
+        "edged and gone, %s makes it look routine at slip!",
+    ]
+
+    # an edge off a gripping old ball, taken at first slip to the spinner -
+    # a Test field once the ball has worn (see Match.GenerateDismissal)
+    commentary_caught_slip_spin = [
+        "that's the edge, and %s takes it at first slip!",
+        "turned past the outside edge and straight to %s at slip!",
+        "the spinner finds the edge, %s does the rest at first slip!",
+        "gripped, turned, edged - beautifully taken by %s at slip!",
+        "%s snaffles the edge at first slip off the spinner!",
+        "there's the turn and there's the edge, %s pouches it at slip!",
+        "the ball bit into the surface, took the edge, and %s held on at slip!",
+        "%s takes a smart catch at first slip as the ball rips past the bat!",
+        "beaten by the turn and caught at slip, well held %s!",
+        "a lovely piece of bowling, and %s completes it at first slip!",
+        "the edge flies to first slip where %s is waiting!",
+        "%s clings on at slip as the spinner strikes!",
+        "that one ragged square, took the shoulder of the bat, %s takes it at slip!",
+        "sharp turn, thick edge, and %s makes no mistake at first slip!",
+        "%s takes it low at first slip - the spinner has his man!",
+        "the ball spat off the rough and %s accepts the edge at slip!",
+        "caught at first slip! %s reacts brilliantly to the edge!",
+        "%s pockets the edge at slip, the old ball doing plenty!",
+        "the drift, the dip, the turn - and %s takes the edge at slip!",
+        "gone! edged to first slip and safely held by %s!",
+    ]
+
+    # an edge off the inside half or the glove, taken behind square on the leg
+    # side at leg slip - the spinner's other catcher on a worn pitch
+    commentary_caught_leg_slip = [
+        "off the glove and straight to %s at leg slip!",
+        "that's taken the inside edge, %s takes it at leg slip!",
+        "the sweep goes wrong and %s pouches it at leg slip!",
+        "%s takes a sharp one at leg slip off the pad and glove!",
+        "the ball turned in, took the inside edge, and %s held it at leg slip!",
+        "leg slip in play, and %s makes the catch count!",
+        "brushed the glove on the way through, %s takes it at leg slip!",
+        "%s is perfectly placed at leg slip and holds on!",
+        "a tickle down the leg side and %s snaps it up at leg slip!",
+        "the leg slip catcher is rewarded! well taken %s!",
+        "that came off the inside edge onto the glove, %s takes it at leg slip!",
+        "%s dives to his right at leg slip and takes a beauty!",
+        "the sweep only found the glove, and %s was there at leg slip!",
+        "gone! feathered to leg slip where %s waits!",
+        "a fine catch at leg slip from %s, the trap works perfectly!",
+        "%s takes it at leg slip - the captain's field pays off!",
+        "the ball turned into the pads, took the glove, %s accepts it at leg slip!",
+        "beaten on the inside and caught at leg slip by %s!",
+        "%s holds a smart chance at leg slip off the spinner!",
+        "that's the leg-side edge, and %s gobbles it at leg slip!",
+    ]
+
+    # a batter going after the turn and getting it horribly wrong - the ball
+    # ballooning up off the toe or leading edge to a fielder in the ring
+    commentary_caught_mishit = [
+        "that's a horrible mishit, and %s takes it comfortably!",
+        "skied off the toe of the bat, %s settles under it!",
+        "the batter went for the big one and only found %s!",
+        "leading edge, up in the air, and %s does the rest!",
+        "a complete misjudgement of the turn, %s takes a simple catch!",
+        "that's ballooned up off the splice - %s waits and takes it!",
+        "went down the track and got nowhere near it, %s accepts the offering!",
+        "a nothing shot, and %s pouches the easiest of chances!",
+        "sliced high into the air, and %s is underneath it!",
+        "the slog goes straight up, %s calls for it and takes it!",
+        "off the leading edge and looping to %s!",
+        "%s barely has to move for that one - a dreadful mishit!",
+        "trying to force it against the spin, and %s takes the catch!",
+        "up goes the ball, up goes the finger - well taken %s!",
+        "the turn beat the bat completely, and %s snaffles the skier!",
+        "%s judges the swirling catch well - a poor shot punished!",
+        "that's hit uppishly and straight down %s's throat!",
+        "a wild swing across the line, %s makes it look easy!",
+        "the ball spun and popped up off the bat, %s does the rest!",
+        "%s takes a straightforward catch off a truly awful shot!",
+    ]
+
     # Test cricket, very early in the innings: the batsman lets one go
     # through to the keeper rather than playing a shot. Takes the bowler's
     # and batsman's surnames, in that order
