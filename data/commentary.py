@@ -2710,6 +2710,188 @@ class commentary:
         "he had a horrible time with the ball earlier, lets see if he can bat",
     ]
 
+    # Test cricket, a side's SECOND innings: recalling what a batsman did with
+    # the bat first time round - said when he walks out and again when he goes
+    # (see Match._FirstInningsBattingRecall). Every line takes the batsman's
+    # surname and then his first-innings figure, in that order. Split by how
+    # well he did, so a duck never gets a century's write-up.
+    # 50 or more first time round
+    commentary_first_innings_bat_big = [
+        "%s made %s in the first innings - this is a man the bowlers already fear.",
+        "remember %s? he made %s first time around, and it was pure class.",
+        "%s: %s in the first innings. He's already left his mark on this Test.",
+        "the first innings brought %s a fine %s - he looked untroubled throughout.",
+        "%s scored %s last time out, and he made it look ridiculously easy.",
+        "%s has %s from the first innings behind him - a serious knock.",
+        "there's real pedigree here: %s made %s in the first dig.",
+        "%s was the thorn in their side with %s in the opening innings.",
+        "%s made %s in the first innings and barely offered a chance.",
+        "%s: a first-innings %s. The bowlers know exactly how much work this is.",
+        "%s built a superb %s in the first innings - patience and placement.",
+        "%s owns this pitch - %s in the first innings said as much.",
+        "%s stroked his way to %s in the first innings, a knock of real quality.",
+        "%s already has %s in this match, and he looked in complete control.",
+        "%s made %s first time up - the sort of innings that decides a Test.",
+        "%s and his %s in the first innings: the standout knock of the match so far.",
+        "%s has runs in the bank - %s in the first innings, and plenty of time at the crease.",
+        "%s: %s in the first innings, and not a hint of trouble against pace or spin.",
+        "%s punished them for %s in the opening innings. They'll want him early.",
+        "%s made %s last time - this is the wicket they want most.",
+    ]
+
+    # a start that never became a big score (roughly 20 to 49)
+    commentary_first_innings_bat_start = [
+        "%s got to %s in the first innings before throwing it away - he'll be annoyed.",
+        "%s made %s in the first innings, a start he never converted.",
+        "%s: %s first time round. Solid without ever taking control.",
+        "%s looked good for %s in the first innings, then gave it up.",
+        "%s made a workmanlike %s in the opening innings.",
+        "%s got in and got out for %s in the first innings - the story of his match so far.",
+        "%s: a first-innings %s. There's a bigger score in him.",
+        "%s contributed %s in the first innings, useful but unfinished.",
+        "%s made %s last time out - he'll feel he owed his side more.",
+        "%s reached %s in the first innings before the lapse in concentration.",
+        "%s scored %s in the first dig, and looked settled before he went.",
+        "%s: %s in the first innings. Good enough to suggest he can go big here.",
+        "%s made %s first time round - a start, and no more than that.",
+        "%s got to %s in the first innings, then found a way to get himself out.",
+        "%s posted %s in the opening innings, a knock that promised more.",
+        "%s made %s in the first innings and looked in decent nick doing it.",
+        "%s: %s first time up. He'll want to turn that into something substantial.",
+        "%s made %s in the first innings - the platform was there, the big score wasn't.",
+        "%s managed %s in the first innings, quietly effective.",
+        "%s made %s in the opening innings. The hard work was done, then it wasn't.",
+    ]
+
+    # an unbeaten score below a fifty: he was stranded, not dismissed, so the
+    # "start"/"low" pools below - which all assume he got out - would
+    # contradict the scorecard. Takes the surname and the bare score, the
+    # "not out" being carried by the line itself.
+    commentary_first_innings_bat_unbeaten = [
+        "%s was left unbeaten on %s in the first innings, stranded at the end.",
+        "%s finished %s not out first time round - he simply ran out of partners.",
+        "%s: %s not out in the first innings, still there when it all ended.",
+        "%s was stranded on %s not out in the opening innings.",
+        "%s remained unbeaten on %s in the first innings, watching the wickets tumble.",
+        "%s ended the first innings %s not out, one of the few to stand firm.",
+        "%s was %s not out first time up - undefeated, if not for long enough.",
+        "%s saw out the first innings on %s not out.",
+        "%s: unbeaten on %s in the first dig. The bowlers never did get him.",
+        "%s finished the opening innings on %s not out, left high and dry.",
+        "%s was there at the close on %s not out in the first innings.",
+        "%s went unbeaten on %s in the first innings - no bowler could shift him.",
+        "%s was left with %s not out in the opening innings as the tail fell away.",
+        "%s: %s not out first time round, and he'll want a longer stay here.",
+        "%s ended up %s not out in the first innings, short of partners rather than form.",
+        "%s stayed unbeaten on %s to the end of the first innings.",
+        "%s was %s not out in the opening innings, unmoved at the crease.",
+        "%s finished on %s not out in the first dig, the innings folding around him.",
+        "%s remained %s not out first time up, denied the chance to build.",
+        "%s closed the first innings unbeaten on %s.",
+    ]
+
+    # a failure first time round (under 20, and out) - the figure may read
+    # "a duck", so no line here may put an article in front of it
+    commentary_first_innings_bat_low = [
+        "%s fell for %s in the first innings - he has plenty to prove here.",
+        "%s made %s in the first innings, a rare failure he'll want to bury.",
+        "%s went for %s first time round. The bowlers fancy their chances.",
+        "%s: %s in the first innings. He owes his side a score.",
+        "%s was dismissed for %s in the opening innings and never got going.",
+        "%s made %s in the first innings - this attack has his number so far.",
+        "%s fell cheaply for %s first time up. He'll be desperate to make amends.",
+        "%s could only manage %s in the first innings.",
+        "%s got %s in the first dig - a scratchy stay that never settled.",
+        "%s made %s in the first innings and looked uncomfortable throughout.",
+        "%s: %s first time round. He knows he was well below his best.",
+        "%s departed for %s in the opening innings - they'll target him again.",
+        "%s managed %s in the first innings, and the pressure is on.",
+        "%s fell for %s in the first innings. A big one here would change his match.",
+        "%s made %s first time out - he hasn't found any rhythm in this Test yet.",
+        "%s made %s in the first innings, and questions are being asked.",
+        "%s was undone for %s in the opening innings.",
+        "%s made %s in the first innings, and he's still searching for form.",
+        "%s went for %s first time round - a score he'll want to forget.",
+        "%s scratched around for %s in the first innings before falling.",
+    ]
+
+    # Test cricket, a side's second innings: recalling what a bowler did with
+    # the ball when he bowled at this side the first time - said as he comes
+    # on for his first over of the innings (see
+    # Match._FirstInningsBowlingRecall). Every line takes the bowler's surname
+    # and then his first-innings figures ("4 for 62"), in that order.
+    # three wickets or more first time round
+    commentary_first_innings_ball_good = [
+        "%s took %s in the first innings - he's been their most dangerous bowler.",
+        "%s: %s in the first innings. He's already had this line-up in trouble.",
+        "the first innings brought %s figures of %s - outstanding stuff.",
+        "%s ripped through them in the opening innings, %s the reward.",
+        "%s claimed %s first time round, and he'll fancy his chances again.",
+        "%s returned %s in the first innings - a spell that shaped this Test.",
+        "%s has %s in this match already, and he's bowling with real menace.",
+        "%s: figures of %s in the first innings. The batsmen know the danger.",
+        "%s ran through the top order in the first innings to finish with %s.",
+        "%s picked up %s first time up - he's been relentless.",
+        "%s bagged %s in the opening innings and never let the pressure off.",
+        "%s took %s in the first dig, and he's the man they least want to face.",
+        "%s: %s in the first innings, and every bit as threatening now.",
+        "%s tore in to take %s in the first innings - a genuinely hostile spell.",
+        "%s finished with %s in the opening innings. He's found something in this pitch.",
+        "%s grabbed %s in the first innings and looked unplayable at times.",
+        "%s has already taken %s in this Test - the batsmen have no answers.",
+        "%s: %s first time round. He's earned every wicket here.",
+        "%s dismantled them in the first innings, %s the damage.",
+        "%s took %s in the first innings, and the confidence is obvious.",
+    ]
+
+    # one or two wickets first time round
+    commentary_first_innings_ball_ok = [
+        "%s took %s in the first innings - steady without running through them.",
+        "%s: %s in the first innings, a decent if unspectacular return.",
+        "%s claimed %s first time round and kept things tight.",
+        "%s returned %s in the opening innings - he did a job for his captain.",
+        "%s picked up %s in the first innings, and he'll want more here.",
+        "%s had %s in the first dig - honest, hard-working stuff.",
+        "%s: figures of %s in the first innings. Room for improvement.",
+        "%s managed %s in the opening innings without ever dominating.",
+        "%s took %s first time up - he bowled better than the figures suggest.",
+        "%s finished with %s in the first innings, a modest return.",
+        "%s got %s in the first innings and never quite found his rhythm.",
+        "%s: %s in the opening innings. He'll be looking for a bigger impact.",
+        "%s claimed %s in the first innings - useful work in a long spell.",
+        "%s took %s first time round, chipping in when it mattered.",
+        "%s ended with %s in the first innings, solid support work.",
+        "%s had %s in the opening innings - not his most threatening spell.",
+        "%s: %s in the first innings, and he knows there's more in him.",
+        "%s took %s in the first dig, doing the containing job well.",
+        "%s returned %s first time up. Effective in patches.",
+        "%s picked up %s in the first innings, quietly going about his work.",
+    ]
+
+    # wicketless first time round
+    commentary_first_innings_ball_poor = [
+        "%s returned %s in the first innings - a spell to forget.",
+        "%s: %s in the opening innings. Still hunting his first wicket of the match.",
+        "%s went wicketless first time round, finishing with %s.",
+        "%s toiled through the first innings without reward, %s off his overs.",
+        "%s had %s in the first dig - the wickets simply wouldn't come.",
+        "%s: %s in the first innings, and plenty to prove with the ball here.",
+        "%s bowled his heart out in the opening innings and came away with %s.",
+        "%s finished with %s in the first innings - not the return he wanted.",
+        "%s managed %s in the first innings, beaten by a flat pitch and stubborn batting.",
+        "%s ended the first innings with %s. He'll be desperate for a breakthrough.",
+        "%s: %s first time round - a rare quiet outing for him.",
+        "%s came away with %s in the first innings, and the frustration showed.",
+        "%s had %s in the opening innings without ever looking like striking.",
+        "%s: %s in the first dig. This is a chance to put that right.",
+        "%s finished the first innings with %s, and the batsmen got after him.",
+        "%s returned %s first time up - the wicket column stayed stubbornly empty.",
+        "%s posted %s in the first innings, plenty of effort and no luck.",
+        "%s finished with %s in the opening innings, searching for answers.",
+        "%s bowled a long spell in the first innings with nothing to show, %s.",
+        "%s: %s in the first innings. He owes himself a wicket here.",
+    ]
+
     # check if bowler is spinner
     commentary_spinner_into_attack = [
         "the spinner, to start the over!",
