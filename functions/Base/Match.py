@@ -1102,6 +1102,17 @@ class Match:
                 },
             )
 
+            # a Test second innings: remind everyone what these two did with
+            # the bat first time round (read before StartBattingInnings below
+            # resets the live figures - the recall comes off the snapshot in
+            # innings_history, so the order doesn't actually matter, but the
+            # openers are the only batsmen who never pass through
+            # GetNextBatsman)
+            for opener in pair:
+                recall = self._FirstInningsBattingRecall(opener, batting_team)
+                if recall:
+                    PrintInColor(recall, batting_team.color)
+
             # fresh milestone tracking for this innings (team-total and stand pop-ups)
             self.team_score_milestone_shown = 0
             self.partnership_milestone_shown = 0
@@ -3840,6 +3851,12 @@ class Match:
             ),
         )
 
+        # a Test second innings: set the knock that just ended against what he
+        # made with the bat first time round
+        recall = self._FirstInningsBattingRecall(player_dismissed, batting_team)
+        if recall:
+            PrintInColor(recall, batting_team.color)
+
         # check if player dismissed is captain - and, rarer still, whether
         # it's the opposing captain who actually got him. A run-out credits
         # no bowler at all, so the "wicket-taker" there is the fielder who
@@ -4797,6 +4814,11 @@ class Match:
                         batting_team.color,
                     )
 
+            # a Test second innings: what he did with the bat first time round
+            recall = self._FirstInningsBattingRecall(pair[ind], batting_team)
+            if recall:
+                PrintInColor(recall, batting_team.color)
+
             # now new batter on field
             pair[ind].onfield = True
 
@@ -5489,6 +5511,103 @@ class Match:
 
         return extra
 
+    def _FirstInningsBattingRecall(self, player, batting_team):
+        """
+        Recall how this batsman did with the bat in his side's first innings.
+
+        Only says anything in a Test once the batting side already has a
+        completed innings behind them - i.e. their second innings, the third
+        or fourth of the match. Team.innings_history is Test-only and holds
+        the innings this team BATTED, so entry [0] is their first (see
+        BuildInningsSummary, which snapshots the card before the figures are
+        reset for the next innings).
+
+        Args:
+            player: the batsman to look up.
+            batting_team: the side currently batting (the player's own side).
+
+        Returns:
+            str: a commentary line, or None when there is nothing to recall
+                (not a Test, no completed innings yet, or he didn't bat).
+        """
+        if not self.is_test or not batting_team.innings_history:
+            return None
+        card = next(
+            (
+                b
+                for b in batting_team.innings_history[0].batting_card
+                if b["name"] == player.name
+            ),
+            None,
+        )
+        if card is None or card["dismissal"] == "DNB":
+            return None
+
+        runs = int(card["runs"])
+        not_out = card["dismissal"] == "not out"
+        figure = "%d" % runs
+        if runs >= 50:
+            # nothing in the big pool asserts he was dismissed, so it reads
+            # correctly either way
+            pool = commentary.commentary_first_innings_bat_big
+            if not_out:
+                figure = "%d not out" % runs
+        elif not_out:
+            # stranded rather than dismissed - the pools below would have him
+            # falling for a score he was never out on
+            pool = commentary.commentary_first_innings_bat_unbeaten
+        elif runs >= 20:
+            pool = commentary.commentary_first_innings_bat_start
+        else:
+            pool = commentary.commentary_first_innings_bat_low
+            # "a duck" where a bare 0 would read badly; every line in the low
+            # pool is written to take either
+            if runs == 0:
+                figure = "a duck"
+        return Randomize(pool) % (GetSurname(player.name), figure)
+
+    def _FirstInningsBowlingRecall(self, bowler, batting_team):
+        """
+        Recall how this bowler did with the ball the first time he bowled at
+        this side, for his introduction in their second innings.
+
+        An innings' bowling card is stored on the team that BATTED it (see
+        BuildInningsSummary), so the current bowling side's first-innings
+        figures live in batting_team.innings_history[0] - the same entry
+        _FirstInningsBattingRecall reads. That holds under a follow-on too,
+        where the same side bats twice in a row.
+
+        Args:
+            bowler: the bowler to look up.
+            batting_team: the side currently batting (the bowler's opponents).
+
+        Returns:
+            str: a commentary line, or None when there is nothing to recall
+                (not a Test, no completed innings yet, or he didn't bowl).
+        """
+        if not self.is_test or not batting_team.innings_history:
+            return None
+        card = next(
+            (
+                b
+                for b in batting_team.innings_history[0].bowling_card
+                if b["name"] == bowler.name
+            ),
+            None,
+        )
+        if card is None:
+            return None
+
+        wkts = int(card["wickets"])
+        figure = "%d for %d" % (wkts, int(card["runs"]))
+        if wkts >= 3:
+            pool = commentary.commentary_first_innings_ball_good
+        elif wkts >= 1:
+            pool = commentary.commentary_first_innings_ball_ok
+        else:
+            pool = commentary.commentary_first_innings_ball_poor
+        return Randomize(pool) % (GetSurname(bowler.name), figure)
+
     def GetBowlerComments(self):
         """
         Get comments about the current bowler.
@@ -5513,6 +5632,16 @@ class Match:
             PrintInColor(
                 Randomize(commentary.commentary_medium_into_attack), Style.BRIGHT
             )
+
+        # first over of this innings for him (balls_bowled is reset per
+        # innings): in a Test second innings, recall what he did with the ball
+        # when he bowled at this side first time round. Gated to his
+        # introduction so it doesn't repeat at the top of every over
+        if bowler.balls_bowled == 0:
+            recall = self._FirstInningsBowlingRecall(bowler, self.batting_team)
+            if recall:
+                PrintInColor(recall, Style.BRIGHT)
+
         # check if it is his last over!
         if (BallsToOvers(bowler.balls_bowled) == self.bowler_max_overs - 1) and (
             bowler.balls_bowled != 0
