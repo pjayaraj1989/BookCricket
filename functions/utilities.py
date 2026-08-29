@@ -615,6 +615,9 @@ def PushScorecard(match):
         "maxDays": _int(match.max_days) if is_test else None,
         "session": _int(match.session) if is_test else None,
         "sessionsPerDay": _int(match.sessions_per_day) if is_test else None,
+        # overs still scheduled today (see Match.OversRemainingInDay) - the
+        # Test counterpart to totalOvers, which a Test innings doesn't have
+        "oversLeftToday": _int(match.OversRemainingInDay()) if is_test else None,
         # drives the GUI's Declare button: Test only, never during a chase
         "declareEligible": bool(
             is_test

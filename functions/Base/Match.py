@@ -1792,9 +1792,12 @@ class Match:
         self.DisplayScore()
         # extrapolating a "projected final score" from self.overs is a
         # limited-overs-only concept - meaningless (and would crash on
-        # self.overs being None) for a Test innings
+        # self.overs being None) for a Test innings, which counts down the
+        # day's overs instead
         if not self.is_test:
             self.DisplayProjectedScore()
+        else:
+            self.DisplayOversRemainingInDay()
 
         # the full (batting/bowling/fall-of-wickets) scorecard snapshot is
         # already pushed to the web UI's side pane after every ball (see the
@@ -6702,6 +6705,54 @@ class Match:
             print("%s: %s" % (str(crr), proj_score(crr)), end=" ")
             crr += 1.0
         print("\n")
+
+    def OversRemainingInDay(self):
+        """
+        Overs still scheduled today: what is left of the current session plus
+        every session after it. The Test counterpart to self.overs (a Test
+        innings has no fixed length, but the day does).
+
+        Scheduled, not promised - rain burns overs off this clock
+        (_BurnOversToRain), and a session break is only taken at the top of an
+        over (_AdvanceSessionIfNeeded), so the current session's remainder
+        reads 0 for the moment between the last over of a session and the
+        break being processed.
+
+        Returns:
+            int: overs left in the day, or None for a limited-overs match
+                (which has no day/session clock at all).
+        """
+        if not self.is_test:
+            return None
+        in_session = max(self.overs_per_session - self.overs_bowled_this_session, 0)
+        sessions_left = max(self.sessions_per_day - self.session, 0)
+        return int(in_session + sessions_left * self.overs_per_session)
+
+    def DisplayOversRemainingInDay(self):
+        """
+        Print how much play is left in the day - the Test counterpart to
+        DisplayProjectedScore, which is meaningless without a fixed innings
+        length.
+
+        Returns:
+            None
+        """
+        if not self.status or not self.is_test:
+            return
+        left = self.OversRemainingInDay()
+        if left is None:
+            return
+        PrintInColor(
+            "Day %s, Session %s/%s: %s over%s left today"
+            % (
+                str(self.day),
+                str(self.session),
+                str(self.sessions_per_day),
+                str(left),
+                "" if left == 1 else "s",
+            ),
+            Style.BRIGHT,
+        )
 
     def DisplayBowlingStats(self):
         """

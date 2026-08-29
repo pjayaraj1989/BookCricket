@@ -607,9 +607,15 @@ function renderScorecard(state) {
     '<div class="team-line"><span>' + escapeHtml(state.battingTeam) + "</span>" +
     '<span class="score">' + state.score + "/" + state.wickets + "</span></div>"
   );
+  // a Test has no innings length to count down, so it counts down the day's
+  // scheduled overs instead (see Match.OversRemainingInDay)
+  const oversLeftToday =
+    state.oversLeftToday === null || state.oversLeftToday === undefined
+      ? ""
+      : "  ·  " + state.oversLeftToday + " left today";
   const oversLine = state.isTest
     ? "Day " + state.day + "/" + state.maxDays + "  ·  Session " + state.session + "/" + state.sessionsPerDay +
-      "  ·  Overs: " + Number(state.overs).toFixed(1)
+      "  ·  Overs: " + Number(state.overs).toFixed(1) + oversLeftToday
     : "Overs: " + Number(state.overs).toFixed(1) + "/" + state.totalOvers;
   parts.push(
     '<div class="sub-line">' + oversLine + "  ·  CRR: " + Number(state.crr).toFixed(2) + "</div>"
