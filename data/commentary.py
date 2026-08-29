@@ -1807,6 +1807,58 @@ class commentary:
         "a probing first spell expected from %s",
     ]
 
+    # Test cricket: the second new ball falls due every 80 overs of an
+    # innings. The countdown over the 5 overs before it (see
+    # Match._CheckSecondNewBall) - one placeholder, the number of overs still
+    # to go, already worded as "3 overs" / "1 over"
+    commentary_new_ball_due = [
+        "the second new ball is available in %s.",
+        "%s until the fielding captain can call for the second new ball.",
+        "not long now - the new ball comes into play in %s.",
+        "the batsmen will be eyeing the clock: new ball due in %s.",
+        "%s to go before the second new ball is on offer.",
+        "the old ball is doing very little; relief is %s away.",
+        "keep an eye on this - the second new ball is %s off.",
+        "%s remaining before the captain gets a fresh cherry.",
+        "the new ball beckons, just %s away now.",
+        "%s left on this ball before a shiny new one is available.",
+        "the fielding side are counting down: %s to the new ball.",
+        "a hard new ball is %s away, and the batsmen know it.",
+        "%s to survive before the second new ball can be taken.",
+        "the second new ball becomes available in %s.",
+        "%s of the old ball left, and then the captain has a decision.",
+        "this ball is old and soft - a new one is %s away.",
+        "the countdown is on: %s until the second new ball.",
+        "%s more, and there's a brand new ball waiting.",
+        "the batsmen would love to see off the next %s.",
+        "%s to go, and then the captain can take the second new ball.",
+    ]
+
+    # the fielding captain calling for the second new ball once it falls due -
+    # one placeholder, the captain's surname
+    commentary_new_ball_taken = [
+        "the second new ball is taken! %s wastes no time at all.",
+        "%s calls for the new ball, and the quicks are rubbing their hands.",
+        "there it is - %s takes the second new ball.",
+        "a brand new cherry for the bowlers, %s has called for it.",
+        "%s signals to the umpire: the second new ball is in play.",
+        "the hard new ball is here, and %s will fancy his chances now.",
+        "%s takes the new ball the moment it becomes available.",
+        "out comes the shiny red one - %s wants wickets.",
+        "the second new ball is in the hands of the quicks, %s making the call.",
+        "%s doesn't hesitate - new ball, and the field comes up.",
+        "a fresh ball for a fresh assault, %s has taken it.",
+        "the umpires hand over the new ball, %s gets his wish.",
+        "%s opts for the second new ball, and the game changes again.",
+        "new ball taken! %s turns back to his strike bowlers.",
+        "the shine is back, and so is the danger - %s takes it.",
+        "%s reaches for the second new ball without a second thought.",
+        "here comes the hard ball, %s has made the call.",
+        "the batsmen brace themselves: %s has taken the new ball.",
+        "%s wants the second new ball, and who can blame him.",
+        "the second new ball it is - %s throws it to his fastest bowler.",
+    ]
+
     commentary_milestone = [
         "Its been a terrific knock by %s today..!",
         "what a fine innings this has been from %s!",

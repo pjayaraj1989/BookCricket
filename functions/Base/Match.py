@@ -83,6 +83,12 @@ class Match:
             "match_drawn": False,
             "declare_eligible": False,
             "follow_on_margin": 200,
+            # second new ball: available every 80 overs of a Test innings,
+            # with a countdown over the 5 overs before it comes due. Both
+            # fields are per-innings and reset when a new innings starts
+            "new_ball_overs": 80,
+            "new_balls_taken": 0,  # new balls taken beyond the opening one
+            "new_ball_warned_at": 0,  # innings over the countdown last fired on
             # rainy-Test rain sequence (all no-op on dry venues / limited-overs)
             "rain_enabled": False,
             "rain_done": False,
@@ -1118,6 +1124,10 @@ class Match:
             self.partnership_milestone_shown = 0
             self.partnership_tracked_wkt = 0
             self.drinks_breaks_fired = set()
+            # every innings starts on a brand new ball, so the 80-over clock
+            # for the next one starts again from scratch
+            self.new_balls_taken = 0
+            self.new_ball_warned_at = 0
 
             # reset accumulators for this innings. For limited-overs matches this
             # is a no-op in effect (each team only ever calls it once, and fields
@@ -1798,6 +1808,7 @@ class Match:
             self.DisplayProjectedScore()
         else:
             self.DisplayOversRemainingInDay()
+            self._CheckSecondNewBall()
 
         # the full (batting/bowling/fall-of-wickets) scorecard snapshot is
         # already pushed to the web UI's side pane after every ball (see the
@@ -6727,6 +6738,54 @@ class Match:
         in_session = max(self.overs_per_session - self.overs_bowled_this_session, 0)
         sessions_left = max(self.sessions_per_day - self.session, 0)
         return int(in_session + sessions_left * self.overs_per_session)
+
+    def _CheckSecondNewBall(self):
+        """
+        The second new ball: available to the fielding captain once the
+        innings is new_ball_overs (80) overs old, and every 80 overs after
+        that. Warns over the 5 overs before it falls due, then announces the
+        captain taking it.
+
+        Test-only - a limited-overs innings never lasts long enough for the
+        rule to mean anything. Called once per completed over.
+
+        Returns:
+            None
+        """
+        if not self.is_test or not self.status:
+            return
+
+        overs = self.batting_team.total_balls // 6
+        due_at = self.new_ball_overs * (self.new_balls_taken + 1)
+
+        if overs >= due_at:
+            self.new_balls_taken += 1
+            captain = self.bowling_team.captain
+            name = GetSurname(captain.name) if captain is not None else "the captain"
+            comment = Randomize(commentary.commentary_new_ball_taken) % name
+            PrintInColor(comment, Fore.LIGHTCYAN_EX)
+            utilities.PushEvent(
+                "new_ball_taken",
+                {
+                    "captain": captain.name if captain is not None else None,
+                    "team": self.bowling_team.name,
+                    "over": int(overs),
+                    "comment": comment,
+                },
+            )
+            return
+
+        # the 5 overs before it comes due, once per over
+        to_go = due_at - overs
+        if to_go <= 5 and overs != self.new_ball_warned_at:
+            self.new_ball_warned_at = overs
+            over_word = "%d over%s" % (to_go, "" if to_go == 1 else "s")
+            comment = Randomize(commentary.commentary_new_ball_due) % over_word
+            PrintInColor(comment, Style.BRIGHT)
+            utilities.PushEvent(
+                "new_ball_due",
+                {"oversToGo": int(to_go), "comment": comment},
+            )
 
     def DisplayOversRemainingInDay(self):
         """
