@@ -6,8 +6,38 @@ on:
             - "**"
 
 jobs:
-  run-script:
+  smoke-match:
     runs-on: ubuntu-latest
+    # a match is seconds of CPU; anything near this means it is wedged on
+    # something (a blocking network call, or Error_Exit's input() with no tty)
+    # and should fail fast rather than sit on a runner
+    timeout-minutes: 15
+
+    # one leg per format, so a break in the Test-only code (phase scoring,
+    # fatigue, the new ball) can't hide behind a passing limited-overs run and
+    # vice versa. They run in parallel, so the job takes about as long as the
+    # slowest match rather than the sum. fail-fast is off deliberately: if one
+    # format breaks we still want to see whether the others did.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # 5 overs a side - the quick shape check: toss, both innings, result
+          - name: five-over
+            label: 5-over exhibition
+            args: "5 fast skipnames"
+          # a full 50-over ODI, which is the only thing that exercises the
+          # venue run_prob distribution (anything else uses run_prob_t20)
+          - name: odi
+            label: 50-over ODI
+            args: "50 fast skipnames"
+          # a complete Test: every innings, both sides twice where the result
+          # needs it, plus sessions/days, the second new ball and fatigue
+          - name: test-match
+            label: Test match
+            args: "20 test fast skipnames"
+
+    name: Play a ${{ matrix.label }}
 
     steps:
       - name: Checkout repository
@@ -18,21 +48,26 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Play a randomized 5-over smoke match
+      - name: Play the match
         run: |
           cd $GITHUB_WORKSPACE
           chmod +x ./ci/scripts/run.sh
-          # minimal, fast sanity check on every push/MR: teams and venue are
-          # picked at random by ReadData()/GetVenue() under autoplay, "fast"
-          # skips PlayOver's per-ball sleep so this finishes in seconds. A
-          # non-zero exit here (an uncaught exception) fails the job - see
-          # the nightly Test-match workflow for a slower, more thorough run.
-          ./ci/scripts/run.sh $GITHUB_WORKSPACE 5 fast
+          # teams and venue are picked at random by ReadData()/GetVenue()
+          # under autoplay, so every run covers a different pairing. "fast"
+          # skips the per-ball and drama sleeps; "skipnames" bypasses the
+          # Wikipedia roster check, which rate-limits (HTTP 429) once several
+          # matches run in quick succession - the nightly job still runs that
+          # check, where a throttle costs nothing. A non-zero exit here (an
+          # uncaught exception) fails the job.
+          # NOTE: the overs value is ignored for a Test match (Match.overs is
+          # unbounded there) but is still required positionally.
+          ./ci/scripts/run.sh $GITHUB_WORKSPACE ${{ matrix.args }}
           ls -la $GITHUB_WORKSPACE/logs/
 
       - name: Upload log file
         uses: actions/upload-artifact@v4
         with:
-          name: ci-log
+          # one artifact per format; names must be unique across matrix legs
+          name: ci-log-${{ matrix.name }}
           # use a glob relative to the workspace; do not rely on shell env expansion here
           path: logs/**
