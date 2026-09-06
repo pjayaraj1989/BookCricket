@@ -1,7 +1,12 @@
 
 # accept arguments workspace name, overs, and optional extra BookCricket.py
-# autoplay flags ("test", "fast")
-# usage: ./run.sh <workspace_name> <overs> [test] [fast]
+# autoplay flags ("test", "fast", "skipnames")
+# usage: ./run.sh <workspace_name> <overs> [test] [fast] [skipnames]
+#
+# "skipnames" bypasses the autoplay Wikipedia roster check. That check makes
+# one request per player, so several matches in a row get HTTP 429 and the run
+# dies on an unrelated network limit - always pass it when running more than
+# one match in a job.
 
 WORKSPACE=$1
 OVERS=$2

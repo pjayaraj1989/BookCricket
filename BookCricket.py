@@ -92,7 +92,7 @@ def _console_start_menu():
 
 def run_game(autoplay=False, overs=None, format_override=None, fast=False,
              resume_id=None, resume_blob=None, save_owner=None,
-             series=False, resume_kind="match"):
+             series=False, resume_kind="match", skip_name_check=False):
     """
     Play interactive rounds of BookCricket until the player chooses to stop.
 
@@ -174,6 +174,10 @@ def run_game(autoplay=False, overs=None, format_override=None, fast=False,
             # real (non-autoplay) games auto-save every over for resume
             match.save_enabled = not autoplay
             match.save_client_id = save_owner
+            # the autoplay roster check hits Wikipedia once per player, which
+            # rate-limits (HTTP 429) when several matches run back to back -
+            # CI passes "skipnames" so a throttled lookup can't fail the build
+            match.skip_name_check = skip_name_check
             match.PlayMatch(ScriptPath)
         while True:
             if autoplay:
@@ -197,8 +201,9 @@ if __name__ == "__main__":
     overs = None
     format_override = None
     fast = False
+    skip_name_check = False
     # check if an argument is passed for autoplay
-    # usage: BookCricket.py autoplay <overs> [test] [fast]
+    # usage: BookCricket.py autoplay <overs> [test] [fast] [skipnames]
     if len(sys.argv) > 2 and sys.argv[1] == 'autoplay':
         autoplay = True
         overs = sys.argv[2]
@@ -207,8 +212,11 @@ if __name__ == "__main__":
             format_override = 'test'
         if 'fast' in extra_args:
             fast = True
+        if 'skipnames' in extra_args:
+            skip_name_check = True
     else:
         autoplay = False
-    run_game(autoplay, overs, format_override, fast)
+    run_game(autoplay, overs, format_override, fast,
+             skip_name_check=skip_name_check)
     if autoplay:
         sys.exit()
