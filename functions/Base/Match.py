@@ -99,6 +99,25 @@ class Match:
             "spin_old_ball_overs": 20,  # ball age at which spin starts to bite
             "spin_old_ball_peak": 30,  # further overs until it bites fully
             "spin_old_ball_boost": 1.8,  # wicket-rate factor at full bite
+            # fatigue (Test only - see _UpdateFatigue and Player.fatigue).
+            # Bowlers tire by bowling and recover by NOT bowling; batters tire
+            # by facing and, more so, by running. The intervals only take the
+            # edge off - a night's sleep is what actually restores anyone.
+            # Recovery is deliberately far slower per over than the cost of
+            # bowling one: nobody can bowl consecutive overs, so a bowler is
+            # resting 3-4 overs out of every 4-5 and symmetric rates would
+            # mean fatigue could never accumulate at all.
+            # Bowling is spread thin here - a bowler gets roughly one over in
+            # five, so eight overs of work is spread over forty overs of match
+            # time. Recovery and the interval multipliers therefore have to be
+            # gentle, or a day's bowling never accumulates into anything.
+            "fatigue_enabled": True,
+            "fatigue_bowl_per_over": 0.070,  # before rating/type scaling
+            "fatigue_bat_per_ball": 0.0022,  # standing still; running costs more
+            "fatigue_recovery_per_over": 0.004,  # for anyone not bowling/batting
+            "fatigue_drinks_keep": 0.92,  # multiplier at a drinks break
+            "fatigue_interval_keep": 0.80,  # multiplier at lunch/tea
+            "fatigue_notice_at": 0.30,  # fatigue at which it gets remarked on
             # innings overs at which Test batting moves from watchful, to set,
             # to freed up (see GenerateRun's phase distributions)
             "test_early_overs": 30,
@@ -1824,6 +1843,9 @@ class Match:
         else:
             self.DisplayOversRemainingInDay()
             self._CheckSecondNewBall()
+            # the bowler pays for the over he just sent down; everyone off the
+            # job gets a breather
+            self._UpdateFatigue()
 
         # the full (batting/bowling/fall-of-wickets) scorecard snapshot is
         # already pushed to the web UI's side pane after every ball (see the
@@ -1897,6 +1919,8 @@ class Match:
             ):
                 self.drinks_break_fired_this_session = True
                 utilities.PushEvent("drinks_break", {"team": bt.name, "comment": Randomize(commentary.commentary_drinks_break) % TeamRef(bt)})
+                # a few minutes and a drink takes the edge off, no more
+                self._RestAtBreak(self.fatigue_drinks_keep)
 
     def _UpdateBoundaryStreak(self, batsman, run):
         """
@@ -2390,6 +2414,9 @@ class Match:
                 },
             )
             self.session += 1
+            # a proper interval - lunch or tea - buys back rather more than
+            # drinks did, but still nothing like a night's sleep
+            self._RestAtBreak(self.fatigue_interval_keep)
             PrintInColor(
                 "%s break! End of session %s, Day %s."
                 % (interval, str(self.session - 1), str(self.day)),
@@ -2404,6 +2431,9 @@ class Match:
         finished_day = self.day
         self.session = 1
         self.day += 1
+        # overnight: everyone comes out fresh in the morning, which is the
+        # only thing that fully clears a day in the field
+        self._RestAtBreak(0.0)
         match_ends_at_stumps = self.day > self.max_days
 
         # only pop up "Stumps!" when there's a next day to look forward to -
@@ -3354,6 +3384,10 @@ class Match:
         # get who is on strike
         on_strike = next((x for x in pair if x.onstrike), None)
 
+        # the ball costs the batter something to face, and a good deal more if
+        # he has to run it (see _AddBattingFatigue)
+        self._AddBattingFatigue(on_strike, run)
+
         # in clutch chasing situations, strong batsman on strike may try to
         # keep strike by converting even runs to a single on the last ball.
         # This can sometimes result in a run-out if attempting the risky single.
@@ -4294,9 +4328,94 @@ class Match:
                 dot -= moved
                 scoring = [p + moved * (p / total) for p in scoring]
 
+        # safety net: several effects stack into this one distribution (innings
+        # phase, skill matchup, new-ball swing, old-ball grip, fatigue), each
+        # tuned on its own. Cap the combined result so no pile-up can strangle
+        # an innings into near-total dots.
+        ceiling = 0.90
+        if dot > ceiling:
+            spare = dot - ceiling
+            dot = ceiling
+            total_s = sum(scoring)
+            if total_s > 0:
+                scoring = [p + spare * (p / total_s) for p in scoring]
+            else:
+                dot += spare
+
         out = [wicket, dot] + scoring
         total = sum(out)
         return [p / total for p in out]
+
+    def _ApplyBattingFatigue(self, prob, striker):
+        """
+        A tired batter stops running and starts blocking.
+
+        Twos and threes go first - those are the ones you have to run - and
+        what they were worth turns into singles and dots. On top of that the
+        innings just slows down generally. None of this makes a batter more
+        likely to get out; only genuine exhaustion adds a small rash-shot
+        risk, on the last of the energy going and the shot selection with it.
+
+        Args:
+            prob: distribution over run_array [-1, 0, 1, 2, 3, 4, 5, 6].
+            striker: the batter on strike.
+
+        Returns:
+            list: a new distribution (prob is never mutated).
+        """
+        if not self.fatigue_enabled or striker is None:
+            return prob
+        tired = striker.fatigue
+        if tired <= 0.05:
+            return prob
+
+        out = list(prob)
+        # the running dries up: at full fatigue three-quarters of the twos and
+        # threes become singles and dots instead
+        stop_running = min(tired * 0.75, 0.75)
+        for i in (3, 4):  # twos, threes
+            moved = out[i] * stop_running
+            out[i] -= moved
+            out[2] += moved * 0.6  # scrambled single instead
+            out[1] += moved * 0.4  # or just not taken at all
+        # ... and the scoring generally slows
+        pressure = min(tired * 0.25, 0.25)
+        # only real exhaustion starts costing wickets, and only mildly
+        rash = 1.0 + max(tired - 0.60, 0.0) * 0.9
+        return self._BendDistribution(out, rash, pressure)
+
+    def _ApplyBowlerFatigue(self, prob, bowler):
+        """
+        A tired bowler loses his radar before he loses his wicket-taking.
+
+        The extras column climbs (that is a wide or a no-ball - see
+        UpdateExtras), the batters find it easier to score, and the bowler is
+        a shade less dangerous. The reverse of _ApplyBattingFatigue, applied
+        from the other end.
+
+        Args:
+            prob: distribution over run_array [-1, 0, 1, 2, 3, 4, 5, 6].
+            bowler: the bowler.
+
+        Returns:
+            list: a new distribution (prob is never mutated).
+        """
+        if not self.fatigue_enabled or bowler is None:
+            return prob
+        tired = bowler.fatigue
+        if tired <= 0.05:
+            return prob
+
+        out = list(prob)
+        # the radar goes: up to roughly double the wides and no-balls
+        extra = out[6] * min(tired * 1.0, 1.0)
+        out[6] += extra
+        # paid for out of the dots - a loose ball is not a dot ball
+        out[1] = max(out[1] - extra, 0.0)
+        # tiring bowler, easier to score off, and slightly less potent
+        loosen = -min(tired * 0.18, 0.18)
+        blunt = 1.0 - min(tired * 0.20, 0.20)
+        return self._BendDistribution(out, blunt, loosen)
 
     def _NewBallSwingFactor(self, bowler):
         """
@@ -4392,15 +4511,17 @@ class Match:
         # stream of singles, which is what makes a Test innings read like one.
         # Columns line up with run_array: [wkt, 0, 1, 2, 3, 4, 5, 6].
         #
-        # Two things are deliberate here. A five is a freak event in cricket
-        # (overthrows, penalty runs) rather than a shot a batter plays, so it
-        # sits at zero in every phase. And the wicket rate is held flat across
-        # the phases - the phases change how batters score, not how often they
-        # get out.
-        #                   wkt     dot      1      2      3      4    5     6
-        prob_test_early = [0.018, 0.720, 0.160, 0.060, 0.004, 0.035, 0.0, 0.003]
-        prob_test_set   = [0.018, 0.680, 0.180, 0.067, 0.005, 0.045, 0.0, 0.005]
-        prob_test_late  = [0.018, 0.635, 0.201, 0.075, 0.006, 0.055, 0.0, 0.010]
+        # The "5" column is NOT a five-run shot: PlayOver reads it as the
+        # extras sentinel, a wide or no-ball worth 1 run that doesn't consume
+        # a legal ball (see UpdateExtras). It has to stay non-zero or a Test
+        # innings concedes no extras at all.
+        #
+        # The wicket rate is held flat across the phases - the phases change
+        # how batters score, not how often they get out.
+        #                   wkt      dot        1        2        3        4    xtr        6
+        prob_test_early = [0.018, 0.70900, 0.15756, 0.05908, 0.00394, 0.03447, 0.015, 0.00295]
+        prob_test_set   = [0.018, 0.66962, 0.17725, 0.06598, 0.00492, 0.04431, 0.015, 0.00492]
+        prob_test_late  = [0.018, 0.62530, 0.19793, 0.07385, 0.00591, 0.05416, 0.015, 0.00985]
 
         prob = venue.run_prob_t20
         if self.is_test:
@@ -4454,6 +4575,10 @@ class Match:
                 grip = self._OldBallSpinFactor(bowler)
                 if grip > 1.0:
                     prob = self._BendDistribution(prob, grip, (grip - 1.0) * 0.10)
+            # ... and last, how much is left in the legs at either end
+            if self.fatigue_enabled:
+                prob = self._ApplyBattingFatigue(prob, player_on_strike)
+                prob = self._ApplyBowlerFatigue(prob, bowler)
         elif bowler.attr.bowling - player_on_strike.attr.batting >= 4:
             prob = [0.25, 0.20, 0.20, 0.15, 0.05, 0.05, 0.05, 0.05]
 
@@ -5844,6 +5969,22 @@ class Match:
                 Randomize(commentary.commentary_medium_into_attack), Style.BRIGHT
             )
 
+        # deep into a long day's work the legs start to go, which is worth
+        # saying out loud - otherwise the wides and the extra runs that come
+        # with it (see _ApplyBowlerFatigue) look like nothing but bad luck
+        if (
+            self.is_test
+            and self.fatigue_enabled
+            and bowler.fatigue >= self.fatigue_notice_at
+            and not bowler.fatigue_noted
+        ):
+            bowler.fatigue_noted = True
+            PrintInColor(
+                Randomize(commentary.commentary_bowler_tired)
+                % GetSurname(bowler.name),
+                Style.BRIGHT,
+            )
+
         # first over of this innings for him (balls_bowled is reset per
         # innings): in a Test second innings, recall what he did with the ball
         # when he bowled at this side first time round. Gated to his
@@ -6988,6 +7129,117 @@ class Match:
         in_session = max(self.overs_per_session - self.overs_bowled_this_session, 0)
         sessions_left = max(self.sessions_per_day - self.session, 0)
         return int(in_session + sessions_left * self.overs_per_session)
+
+    def _BowlerFatiguePerOver(self, bowler):
+        """
+        What an over costs this bowler. Seamers pay most - they run in hard
+        every ball - while a spinner can wheel away for long spells. A better
+        bowler is the better-conditioned athlete and pays less.
+
+        Args:
+            bowler: the bowler who just finished an over.
+
+        Returns:
+            float: fatigue to add.
+        """
+        cost = self.fatigue_bowl_per_over
+        # rating 5 pays full whack, rating 10 pays ~70%
+        cost *= max(1.3 - 0.06 * bowler.attr.bowling, 0.55)
+        if bowler.attr.ispacer:
+            cost *= 1.35
+        elif bowler.attr.isspinner:
+            cost *= 0.75
+        return cost
+
+    def _AddBattingFatigue(self, striker, run):
+        """
+        Tire the batter for a ball just faced. Running is what actually costs
+        a batter - twos and threes far more than a dot or a boundary, which is
+        why a tired batter stops running and the twos dry up first (see
+        _ApplyBattingFatigue).
+
+        Args:
+            striker: the batter on strike.
+            run: what the ball produced, over run_array's values.
+
+        Returns:
+            None
+        """
+        if not self.is_test or not self.fatigue_enabled or striker is None:
+            return
+        # running multiples is the expensive part; a boundary costs least of
+        # all because nobody runs it
+        cost = self.fatigue_bat_per_ball * {
+            -1: 1.0, 0: 1.0, 1: 1.7, 2: 3.3, 3: 5.0, 4: 0.7, 5: 0.0, 6: 0.7,
+        }.get(run, 1.0)
+        striker.fatigue = min(striker.fatigue + cost, 1.0)
+
+    def _UpdateFatigue(self):
+        """
+        Run the fatigue clock for one completed over: the bowler who just sent
+        it down pays for it, and everyone not currently bowling or batting
+        gets a breather. Called once an over from _PostOverDisplay.
+
+        This is what makes a bowler's spell length matter - they recover by
+        being taken off, not by waiting for an interval.
+
+        Returns:
+            None
+        """
+        if not self.is_test or not self.fatigue_enabled:
+            return
+        bowler = self.bowling_team.current_bowler
+        if bowler is not None:
+            bowler.fatigue = min(
+                bowler.fatigue + self._BowlerFatiguePerOver(bowler), 1.0
+            )
+        # whoever is out in the middle gets no rest
+        at_work = {id(bowler)} if bowler is not None else set()
+        for p in (self.batting_team.current_pair or []):
+            if p is not None:
+                at_work.add(id(p))
+        for team in (self.batting_team, self.bowling_team):
+            for p in team.team_array:
+                if id(p) not in at_work:
+                    p.fatigue = max(p.fatigue - self.fatigue_recovery_per_over, 0.0)
+
+        # a batter who has been out there long enough to be visibly labouring
+        # gets said out loud once, so the drying-up of his twos reads as
+        # tiredness rather than the innings mysteriously stalling
+        for p in (self.batting_team.current_pair or []):
+            if (
+                p is not None
+                and p.fatigue >= self.fatigue_notice_at
+                and not p.fatigue_noted
+            ):
+                p.fatigue_noted = True
+                PrintInColor(
+                    Randomize(commentary.commentary_batsman_tired)
+                    % GetSurname(p.name),
+                    Style.BRIGHT,
+                )
+
+    def _RestAtBreak(self, keep):
+        """
+        Ease everyone's fatigue at an interval. Drinks and lunch/tea only take
+        the edge off - `keep` is the fraction of fatigue that survives the
+        break - because twenty minutes does not undo a session in the field.
+
+        Args:
+            keep: fraction of current fatigue retained (0.0 clears it).
+
+        Returns:
+            None
+        """
+        if not self.is_test or not self.fatigue_enabled:
+            return
+        for team in (self.batting_team, self.bowling_team):
+            for p in team.team_array:
+                p.fatigue = max(p.fatigue * keep, 0.0)
+                if p.fatigue < self.fatigue_notice_at:
+                    # freshened up enough that it's worth remarking on again
+                    # if they tire a second time
+                    p.fatigue_noted = False
 
     def _InningsStillLive(self):
         """
