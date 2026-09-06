@@ -4731,6 +4731,77 @@ class commentary:
         "gone! the bat-pad trap works, %s takes it at silly point!",
     ]
 
+    # a bowler visibly running out of legs deep into a long day's work (see
+    # Match.GetBowlerComments and Player.fatigue) - one placeholder, surname
+    commentary_bowler_tired = [
+        "%s looks to be feeling it now - hands on knees at the end of that one.",
+        "there's a heaviness in %s's run-up; this has been a long spell.",
+        "%s is blowing hard. The captain must be thinking about a change.",
+        "you can see the fatigue in %s - that run-up has shortened.",
+        "%s has bowled a lot of overs today and it's starting to show.",
+        "the legs are going for %s, and the radar tends to go with them.",
+        "%s is down to his last reserves here - a real effort ball needed.",
+        "a weary walk back to the mark for %s.",
+        "%s wipes his brow; this has been hard, unrewarding work.",
+        "the shoulders have dropped a touch on %s - he's tiring.",
+        "%s is running on empty, and the batters can sense it.",
+        "that's a tired bowler. %s has given everything in this spell.",
+        "%s takes an age to walk back - he's out on his feet.",
+        "the pace is dropping off for %s as the fatigue creeps in.",
+        "%s is labouring now, and the captain has noticed.",
+        "hard yards from %s, but he's just about spent.",
+        "%s pauses at the top of his mark, hands on hips.",
+        "you have to admire the effort, but %s is running out of steam.",
+        "the spring has gone from %s's step.",
+        "%s is toiling now - this spell has taken it out of him.",
+        "%s asks the umpire for a moment - he needs to catch his breath.",
+        "that delivery had nothing on it; %s is bowling on fumes.",
+        "%s stands with his hands on his head, chest heaving.",
+        "the sweat is pouring off %s in this heat.",
+        "%s's follow-through is getting shorter with every ball.",
+        "a long, slow trudge back for %s. He's done a lot of work today.",
+        "%s is grimacing between deliveries - the body is complaining.",
+        "the intensity has dropped for %s; he's bowling within himself now.",
+        "%s has emptied the tank in this spell, and there's little left.",
+        "you can hear %s breathing from the boundary.",
+    ]
+
+    # a batter who has been out there a long time and is running on fumes -
+    # the twos stop first (see Match._ApplyBattingFatigue). One placeholder,
+    # surname
+    commentary_batsman_tired = [
+        "%s is starting to look weary out there - he's been batting a long time.",
+        "the helmet comes off and %s takes a long drink; this has been a marathon.",
+        "%s turned down a comfortable second there - the legs are heavy.",
+        "you can see %s is tiring; the running between the wickets has slowed right down.",
+        "%s leans on his bat between deliveries. He's spent a long time in the middle.",
+        "cramp threatening for %s - he's been out here for hours.",
+        "%s is content to push and block now; the energy has gone.",
+        "the twos have dried up for %s, and that tells its own story.",
+        "%s stretches out a tight hamstring. A long innings taking its toll.",
+        "that's a tired batter. %s is running on memory now.",
+        "%s waves away the quick single - he simply hasn't got it in him.",
+        "the feet aren't moving for %s the way they were an hour ago.",
+        "%s looks exhausted, but he's still there.",
+        "a weary push into the off side from %s, no thought of a run.",
+        "%s is grinding now, purely on willpower.",
+        "the concentration is holding but the body is going for %s.",
+        "%s calls for a fresh pair of gloves; he's soaked through.",
+        "hard, hot work for %s - and he's feeling every ball of it.",
+        "%s jogs the single where earlier he'd have sprinted two.",
+        "the fatigue is written all over %s now.",
+        "%s takes his time between balls now - every second of rest counts.",
+        "the bat has become a walking stick for %s between deliveries.",
+        "%s pulls at his shirt, drenched. This has been a long, hot stay.",
+        "there's no urgency in %s's running any more; the tank is empty.",
+        "%s shakes out his arms - the forearms are burning.",
+        "a physio's eye will be on %s; he's labouring badly out there.",
+        "%s is batting on memory and stubbornness now.",
+        "the sharp singles have gone; %s is picking his moments carefully.",
+        "%s blows out his cheeks. He's been at the crease an awfully long time.",
+        "every run is an effort for %s now.",
+    ]
+
     # an edge off a seamer taken in the slip cordon in a Test - worded to sit
     # equally well behind a brand new ball or an old one, unlike
     # commentary_caught_slip above, which is written for the limited-overs

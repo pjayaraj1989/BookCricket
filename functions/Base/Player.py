@@ -60,6 +60,15 @@ class Player:
             # "point", "deep", "covers", or "keeper"; None until
             # Team.AssignFieldingPositions runs (see Team.StartBowlingInnings)
             "field_position": None,
+            # how tired this player is, 0.0 (fresh) to 1.0 (spent). Test-only
+            # and physical rather than per-innings: it carries across innings
+            # within a day, eases at the intervals, and clears overnight (see
+            # Match._UpdateFatigue). Never reset by Reset*Innings below.
+            "fatigue": 0.0,
+            # whether the commentary has already remarked on this player being
+            # tired since their last rest, so it's said once rather than every
+            # over (cleared by Match._RestAtBreak)
+            "fatigue_noted": False,
         }
         self = FillAttributes(self, attrs, kwargs)
 
