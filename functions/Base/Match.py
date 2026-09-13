@@ -3357,12 +3357,38 @@ class Match:
         Returns:
             list: the combined pool to Randomize() from.
         """
+        # the last over of a limited-overs innings is its own game - every
+        # boundary is a sweep, a scoop, a switch hit or a charge, so the
+        # ordinary pools give way to the adventurous ones entirely
+        if key in (4, 6) and self._InLastOver():
+            pool = list(resources.fields_last_over[key])
+            if bowler.attr.ispacer:
+                pool += resources.fields_last_over_pace[key]
+            return pool
+
         pool = list(resources.fields[key])
         if bowler.attr.ispacer:
             pool += resources.fields_pace[key]
         elif bowler.attr.isspinner:
             pool += resources.fields_spin[key]
         return pool
+
+    def _InLastOver(self):
+        """
+        Whether the ball about to be described is in the final over of a
+        limited-overs innings - the one where batters throw everything at
+        it. Never true in a Test (no fixed innings length).
+
+        Relies on total_balls not yet counting the current delivery, which
+        holds everywhere this is consulted (the shot description and the
+        dismissal both come before the ball is added to the tally).
+
+        Returns:
+            bool
+        """
+        if self.is_test or not self.overs or self.batting_team is None:
+            return False
+        return self.batting_team.total_balls // 6 == self.overs - 1
 
     def Ball(self, run, ball_in_over=None):
         """
@@ -3793,6 +3819,10 @@ class Match:
         # a wicket while no legal ball has been faced yet = first ball of the
         # innings (checked before the ball count below is bumped)
         is_first_ball = batting_team.total_balls == 0
+        # likewise decided before the bump: on the very last ball of the
+        # innings the count has already rolled past the final over by the
+        # time the wicket is announced
+        in_last_over = self._InLastOver()
 
         if "runout" in dismissal:
             bowler.ball_history.append("RO")
@@ -3877,6 +3907,13 @@ class Match:
         )
         if is_wonderful:
             comment = Randomize(commentary.commentary_wonderful_innings) % GetSurname(player_dismissed.name)
+            # the "captain's knock" flavour belongs only to the captain - the
+            # general pool above is written for anyone, so the leadership line
+            # is added here, behind the armband check, rather than mixed in
+            if player_dismissed.attr.iscaptain:
+                comment = "%s %s" % (
+                    comment, Randomize(commentary.commentary_captain_leading)
+                )
             utilities.PushEvent(
                 "wonderful_innings",
                 {
@@ -3891,6 +3928,15 @@ class Match:
             )
 
         PrintInColor("Thats OUT !", Fore.RED)
+        # in the last over of a limited-overs innings every wicket is a
+        # gamble gone wrong, and it's worth saying so (see GenerateDismissal
+        # for the risky dismissal mix that goes with it)
+        if in_last_over:
+            PrintInColor(
+                Randomize(commentary.commentary_last_over_wicket)
+                % GetSurname(player_dismissed.name),
+                Fore.RED,
+            )
         print(
             "%s %s %s (%s) SR: %s"
             % (
@@ -4654,9 +4700,9 @@ class Match:
         pair = team.current_pair
 
         if team.drs_chances <= 0:
-            PrintInColor(
-                Randomize(commentary.commentary_lbw_nomore_drs), Fore.LIGHTRED_EX
-            )
+            # the moment the graphic exists for: given out, and nothing left
+            # to challenge it with
+            self._PushNoReviewsLeft(team, "wanted")
             return False
 
         opt = ChooseFromOptions(
@@ -4715,11 +4761,39 @@ class Match:
                 % (team.name, str(team.drs_chances)),
                 Style.BRIGHT,
             )
+            if team.drs_chances <= 0:
+                self._PushNoReviewsLeft(team, "last_used")
         utilities.PushEvent(
             "drs_result",
             {"out": not overturned, "kind": kind, "comment": result_comment},
         )
         return overturned
+
+    def _PushNoReviewsLeft(self, team, moment, big_screen=True):
+        """
+        The big-screen "NO REVIEWS LEFT" graphic for a side that has none.
+        Two moments earn it: the instant their last review is burned, and
+        any later decision they would have loved to send upstairs but can't.
+
+        Args:
+            team: the Team with no reviews.
+            moment: "last_used" (that review was their last) or "wanted"
+                (they'd review this one if they had any) - the card's
+                subtitle differs, the commentary pool is shared.
+            big_screen: False keeps it to the commentary line and skips the
+                pop-up - for the repeat shouts of a fielding side that has
+                already had the graphic this innings.
+
+        Returns:
+            None
+        """
+        comment = Randomize(commentary.commentary_no_reviews_left) % TeamRef(team)
+        PrintInColor(comment, Fore.LIGHTRED_EX)
+        if big_screen:
+            utilities.PushEvent(
+                "no_reviews_left",
+                {"team": team.name, "moment": moment, "comment": comment},
+            )
 
     def _MaybeBowlingReview(self):
         """
@@ -4734,7 +4808,7 @@ class Match:
             not-out call (the batter is out after all); None if no appeal
             happened, or the not-out call stood.
         """
-        if not self.drs or self.bowling_team.drs_chances <= 0:
+        if not self.drs:
             return None
         if random.random() > 0.04:  # a close shout on roughly 1 in 25 dot balls
             return None
@@ -4748,6 +4822,17 @@ class Match:
             Randomize(commentary.commentary_bowling_appeal) % self.umpire,
             Fore.LIGHTRED_EX,
         )
+        if self.bowling_team.drs_chances <= 0:
+            # the shout still goes up - they just can't take it any further.
+            # A close appeal comes on ~1 in 25 dot balls, so the graphic goes
+            # up for the first one this innings and the commentary carries
+            # the rest; otherwise a Test innings would show it a dozen times
+            team = self.bowling_team
+            self._PushNoReviewsLeft(
+                team, "wanted", big_screen=not team.no_review_graphic_shown
+            )
+            team.no_review_graphic_shown = True
+            return None
         if not self._CheckBowlingReview(kind):
             return None
         return self._GenerateBowlingReviewDismissal(kind)
@@ -4801,6 +4886,8 @@ class Match:
                 % (team.name, str(team.drs_chances)),
                 Style.BRIGHT,
             )
+            if team.drs_chances <= 0:
+                self._PushNoReviewsLeft(team, "last_used")
         utilities.PushEvent(
             "drs_result",
             {"out": overturned, "kind": kind, "comment": result_comment},
@@ -4824,7 +4911,14 @@ class Match:
         if kind == "lbw":
             return "lbw %s" % GetShortName(bowler.name)
 
-        fielder = Randomize(bowling_team.team_array)
+        # a catch that goes upstairs is a nick behind the bat - the appeal
+        # was "did he edge it?", the review checked for the edge, and the
+        # keeper is the one who took it. It was picking a random fielder
+        # here, so the scorecard could credit a slip or long-on for a catch
+        # the whole review sequence had just described as caught behind.
+        fielder = bowling_team.keeper
+        if fielder is None:
+            fielder = Randomize(bowling_team.team_array)
         fielder.catches += 1
         if fielder.catches == 5:
             utilities.PushEvent(
@@ -4835,10 +4929,11 @@ class Match:
                     % fielder.name,
                 },
             )
-        if fielder == bowler:
-            return "c&b %s" % GetShortName(bowler.name)
         if fielder.attr.iskeeper:
             return "c +%s b %s" % (GetShortName(fielder.name), GetShortName(bowler.name))
+        # no keeper to credit (only reachable if the roster check was skipped)
+        if fielder == bowler:
+            return "c&b %s" % GetShortName(bowler.name)
         return "c %s b %s" % (GetShortName(fielder.name), GetShortName(bowler.name))
 
     def _CheckThirdUmpire(self, dismissal, kind):
@@ -6610,7 +6705,22 @@ class Match:
         # "pacer" nor "spinner" flag set - e.g. a part-timer like Kohli);
         # a true fast bowler (attr.ispacer) is never stumped off, the
         # keeper stands back for that pace
-        if bowler.attr.isspinner:
+        last_over = self._InLastOver()
+        if last_over:
+            # the last over of a limited-overs innings: batters holing out
+            # to the deep, stumped charging the spinner, bowled missing a
+            # slog, run out scrambling for the extra run - and almost never
+            # the calm, front-foot lbw of a batter playing properly
+            if bowler.attr.isspinner:
+                dismissal_types = ["c", "st", "runout", "lbw", "b"]
+                dismissal_prob = [0.52, 0.12, 0.12, 0.04, 0.20]
+            elif bowler.attr.ispacer:
+                dismissal_types = ["c", "runout", "lbw", "b"]
+                dismissal_prob = [0.58, 0.14, 0.06, 0.22]
+            else:
+                dismissal_types = ["c", "st", "runout", "lbw", "b"]
+                dismissal_prob = [0.56, 0.06, 0.14, 0.04, 0.20]
+        elif bowler.attr.isspinner:
             dismissal_types = ["c", "st", "runout", "lbw", "b"]
             if self._OldBallSpinFactor(bowler) > 1.0:
                 # a gripping, turning old ball takes the edge or draws the
@@ -6683,6 +6793,9 @@ class Match:
             # an edge carrying through to the keeper than a shot picked out
             # in the field
             nick_chance = 0.60 if self._NewBallSwingFactor(bowler) > 1.0 else 0.45
+            if last_over:
+                # a slog skied to the boundary, far more often than an edge
+                nick_chance = 0.20
             is_nick = random.random() < nick_chance
             # where the catch is taken, decided per delivery rather than from
             # the fielder's standing post: the cordon a captain sets depends
@@ -6732,6 +6845,13 @@ class Match:
                 # by anyone out in the ring
                 if catch_position in ("silly point", "first slip", "leg slip", "slip"):
                     fielder = Randomize(close_in)
+                elif last_over:
+                    # holed out: the ball goes to whoever is patrolling the
+                    # rope (see Team.AssignFieldingPositions), and reads as
+                    # the boundary catch it is
+                    riders = [p for p in candidates if p.field_position == "deep"]
+                    fielder = Randomize(riders) if riders else Randomize(candidates)
+                    catch_position = "deep"
                 else:
                     fielder = Randomize(candidates)
             fielder.catches += 1

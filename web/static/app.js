@@ -2576,6 +2576,17 @@ function renderEvent(kind, data) {
       appendComment(outCard, data && data.comment);
       showEventPane(outCard, 3000, "takeover");
     }
+  } else if (kind === "no_reviews_left") {
+    // the broadcast graphic: a side has burned its last review, or would
+    // love to send one upstairs and can't. Big, red, unmissable.
+    const team = data && data.team ? String(data.team) : "";
+    const sub = data && data.moment === "last_used"
+      ? "That was their last review"
+      : "Nothing left to challenge it with";
+    const card = buildMiscCard("misc/no_reviews", "\uD83D\uDEAB", "NO REVIEWS LEFT", sub, team);
+    card.classList.add("event-no-reviews");
+    appendComment(card, data && data.comment);
+    showEventPane(card, 3500, "takeover");
   } else if (kind === "drs_pending") {
     const wrap = document.createElement("div");
     wrap.className = "event-player";

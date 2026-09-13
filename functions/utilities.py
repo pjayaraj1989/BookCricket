@@ -289,7 +289,7 @@ def PushEvent(kind, data=None):
             "stumping_drama", "appeal_drama", "clean_catch", "first_over_drama",
             "captain_out", "no_ball", "batsman_walks", "bowled_drama",
             "caught_deep_drama", "all_rounder_display", "wonderful_innings",
-            "new_ball_due", "new_ball_taken").
+            "new_ball_due", "new_ball_taken", "no_reviews_left").
         data: Optional dict of extra fields for the frontend to render.
 
     Returns:
