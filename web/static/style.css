@@ -1564,6 +1564,14 @@ main {
 .drs-lights .drs-bulb.red { background: #ff5050; }
 .drs-lights .drs-bulb.green { background: #4ade80; }
 
+/* the "NO REVIEWS LEFT" broadcast graphic (event kind no_reviews_left): the
+   same red as the DRS out-light, so it reads as part of the review family */
+.event-no-reviews .event-player-name {
+  color: #ff5050;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 14px rgba(255, 80, 80, 0.55);
+}
+
 .drs-lights.blinking .drs-bulb {
   animation: drs-blink 0.6s ease-in-out infinite alternate;
 }

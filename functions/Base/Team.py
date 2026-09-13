@@ -19,6 +19,11 @@ class Team:
         attrs = {
             "total_overs": 0,
             "drs_chances": 2,
+            # the "NO REVIEWS LEFT" big-screen graphic has been shown for a
+            # turned-down shout of ours this innings - it goes up once, not on
+            # every close appeal after the reviews are gone (see
+            # Match._MaybeBowlingReview). Reset each bowling innings
+            "no_review_graphic_shown": False,
             "total_score": 0,
             "target": 0,
             "wickets_fell": 0,
@@ -112,6 +117,7 @@ class Team:
         """
         self.last_bowler = None
         self.current_bowler = None
+        self.no_review_graphic_shown = False
         for p in self.team_array:
             p.ResetBowlingInnings()
         self.AssignFieldingPositions(is_test=is_test, overs_limit=overs_limit)

@@ -888,6 +888,43 @@ class commentary:
         "No more reviews left!",
     ]
 
+    # the big-screen graphic: a side has no DRS reviews left. Fired both when
+    # the last one is burned and when a side would love to review a decision
+    # and can't (see Match._PushNoReviewsLeft), so every line here is about
+    # the state, not the moment. One placeholder - the team, via TeamRef
+    commentary_no_reviews_left = [
+        "%s are out of reviews - every decision from here is final.",
+        "no reviews left for %s. The umpire's word is the last word now.",
+        "that's the review cupboard bare for %s!",
+        "%s have nothing left in the DRS bank.",
+        "the big screen says it all: %s, no reviews remaining.",
+        "%s will have to trust the on-field umpires from here on.",
+        "no safety net any more for %s - they've used them all.",
+        "%s are all out of challenges. Whatever is given, stands.",
+        "the reviews are gone for %s, and they'll be kicking themselves.",
+        "%s spent their reviews, and now they're paying for it.",
+        "zero reviews for %s - the umpire is judge and jury now.",
+        "%s have burned through every review they had.",
+        "nothing in reserve for %s; the technology is off the table.",
+        "%s can't go upstairs any more - all their reviews are used.",
+        "the DRS well has run dry for %s.",
+        "%s have no recourse now. Given is given.",
+        "no more second opinions for %s.",
+        "%s are living without a safety net for the rest of this innings.",
+        "the tally reads zero for %s - reviews exhausted.",
+        "%s would love a look at that, but they've got nothing left.",
+        "every review spent, and %s must live with the umpire's call.",
+        "%s have emptied the review locker.",
+        "no reviews in hand for %s, and that could prove costly.",
+        "%s have run out of lifelines.",
+        "the third umpire is out of reach for %s now.",
+        "%s used their last review a while ago - this one stands.",
+        "an expensive habit, reviewing: %s are all out of them.",
+        "%s have no reviews left, and the fielding side know it.",
+        "%s are flying blind now - no technology to fall back on.",
+        "reviews remaining for %s: none. That's the situation.",
+    ]
+
     # last over of a chase - a tension line for each ball (5 are picked at
     # random from this pool at the start of the over)
     commentary_last_over_tension = [
@@ -4731,6 +4768,44 @@ class commentary:
         "gone! the bat-pad trap works, %s takes it at silly point!",
     ]
 
+    # a wicket in the last over of a limited-overs innings, where the batter
+    # was always going for something outrageous and it has just gone wrong -
+    # said alongside the ordinary dismissal line (see Match.UpdateDismissal).
+    # One placeholder, surname. Mode-agnostic: fits a catch, a stumping or a
+    # missed slog onto the stumps alike
+    commentary_last_over_wicket = [
+        "%s went for the big one and it's cost him!",
+        "the adventurous shot proves fatal for %s!",
+        "%s tried the outrageous and paid the price!",
+        "high risk, and this time it doesn't come off for %s!",
+        "%s premeditated that, and the bowler read it perfectly!",
+        "that's the gamble backfiring on %s!",
+        "%s had one thing in mind, and it wasn't survival!",
+        "no fear, no reward - %s departs!",
+        "the improvised shot lets %s down at the crucial moment!",
+        "%s went for glory and found only trouble!",
+        "you live by the sword... %s falls by it!",
+        "%s took the aerial route once too often!",
+        "the bowler kept his nerve and %s lost his!",
+        "a brave shot, a bad outcome - %s has to go!",
+        "%s tried to invent a shot and invented a wicket instead!",
+        "the last-over lottery claims %s!",
+        "%s swung at everything and connected with nothing!",
+        "that was always the risk, and %s has paid for it!",
+        "%s wanted the boundary; the bowler wanted his wicket more!",
+        "a wild attempt from %s, and it's all over!",
+        "%s backed himself, and this time the bowler won!",
+        "the death-over gamble doesn't pay out for %s!",
+        "%s went down swinging - literally!",
+        "too clever by half from %s!",
+        "%s reached for the spectacular and found the ordinary!",
+        "one shot too many for %s!",
+        "the scoreboard pressure got to %s in the end!",
+        "%s tried to manufacture a boundary and manufactured his own downfall!",
+        "bold from %s, but the execution wasn't there!",
+        "%s gambled with the innings, and the house won!",
+    ]
+
     # a bowler visibly running out of legs deep into a long day's work (see
     # Match.GetBowlerComments and Player.fatigue) - one placeholder, surname
     commentary_bowler_tired = [
@@ -5102,7 +5177,7 @@ class commentary:
         "that's a match-winning performance from %s before he departs!",
         "what a brilliant innings from %s - he's left his mark on this game!",
         "%s has played with such style and substance - truly magnificent!",
-        "a captain's knock from %s - exactly what his team needed!",
+        "%s has carried his side with that knock - exactly what the situation demanded!",
         "%s has been the pillar of this innings - absolutely top-class!",
         "he's played with such authority - a wonderful innings from %s!",
         "%s will be remembered for this stunning display of batting!",
@@ -5131,7 +5206,7 @@ class commentary:
         "the captain's gamble works perfectly - what a read of the game!",
         "superb captaincy to break that threatening stand!",
         "the fielding captain's strategy has done the trick!",
-        "a captain's knock - intelligent field placement breaks the partnership!",
+        "a captain's call - intelligent field placement breaks the partnership!",
         "the skipper sets the perfect trap and it works!",
         "that's championship captaincy - the field was set perfectly!",
         "brilliant captaincy just handed the initiative back to the bowling team!",
